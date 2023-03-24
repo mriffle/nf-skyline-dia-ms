@@ -7,6 +7,7 @@ process MSCONVERT {
     input:
         path raw_file
         val do_domultiplex
+        val do_simasspectra
 
     output:
         path("${raw_file.baseName}.mzML"), emit: mzml_file
@@ -14,6 +15,7 @@ process MSCONVERT {
     script:
 
     demultiplex_param = do_domultiplex ? '--filter "demultiplex optimization=overlap_only"' : ''
+    simasspectra = do_simasspectra ? '--simAsSpectra' : ''
 
     """
     wine msconvert \
@@ -21,10 +23,8 @@ process MSCONVERT {
         -v \
         --zlib \
         --mzML \
-        --64 \
-        --simAsSpectra \
-        --filter "peakPicking true 1-" \
-        ${demultiplex_param}
+        --64 ${simasspectra} ${demultiplex_param} \
+        --filter "peakPicking true 1-" 
     """
 
     stub:

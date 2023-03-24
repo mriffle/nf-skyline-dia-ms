@@ -9,12 +9,13 @@ workflow encyclopeda_search_quant {
         spectral_library
         from_raw_files
         do_domultiplex
+        do_simasspectra
     
     main:
 
         // convert raw files to mzML files if necessary
         if(from_raw_files) {
-            mzml_file_ch = MSCONVERT(spectra_file_ch, do_domultiplex)
+            mzml_file_ch = MSCONVERT(spectra_file_ch, do_domultiplex, do_simasspectra)
         } else {
             mzml_file_ch = spectra_file_ch
         }

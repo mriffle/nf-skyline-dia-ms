@@ -69,7 +69,14 @@ workflow {
         }
     }
 
-    encyclopeda_search_quant(spectra_files_ch, fasta, spectral_library, from_raw_files, do_domultiplex)
+    encyclopeda_search_quant(
+        spectra_files_ch, 
+        fasta, 
+        spectral_library, 
+        from_raw_files, 
+        do_domultiplex, 
+        do_simasspectra
+    )
 
 }
 
