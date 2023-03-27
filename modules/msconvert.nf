@@ -6,7 +6,7 @@ process MSCONVERT {
 
     input:
         path raw_file
-        val do_domultiplex
+        val do_demultiplex
         val do_simasspectra
 
     output:
@@ -14,7 +14,7 @@ process MSCONVERT {
 
     script:
 
-    demultiplex_param = do_domultiplex ? '--filter "demultiplex optimization=overlap_only"' : ''
+    demultiplex_param = do_demultiplex ? '--filter "demultiplex optimization=overlap_only"' : ''
     simasspectra = do_simasspectra ? '--simAsSpectra' : ''
 
     """

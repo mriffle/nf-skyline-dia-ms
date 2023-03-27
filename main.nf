@@ -74,8 +74,8 @@ workflow {
         fasta, 
         spectral_library, 
         from_raw_files, 
-        do_domultiplex, 
-        do_simasspectra
+        params.do_demultiplex, 
+        params.do_simasspectra
     )
 
 }
