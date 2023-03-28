@@ -20,5 +20,8 @@ workflow encyclopeda_search_quant {
             mzml_file_ch = spectra_file_ch
         }
 
+        // run encyclopedia for each mzML file
+        
+
 
 }
