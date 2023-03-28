@@ -3,8 +3,43 @@ def exec_java_command(mem) {
     return "java -Djava.aws.headless=true ${xmx} -jar /usr/local/bin/encyclopedia.jar"
 }
 
+process ENCYCLOPEDIA_SEARCH_FILE {
+    publishDir "${params.result_dir}/encyclopedia/search-file", failOnError: true, mode: 'copy'
+    label 'process_high_constant'
+    container 'quay.io/protio/encyclopedia:2.12.30'
+
+    input:
+        path mzml_file
+        path fasta
+        path spectra_library_file
+
+    output:
+        path("*.stderr"), emit: stderr
+        path("*.stdout"), emit: stdout
+        path("${mzml_file.baseName}.elib", emit: elib)
+        path("${mzml_file.baseName}.dia",  emit: dia)
+        path("${mzml_file.baseName}.features.txt.gz", emit: features_gzip)
+        path("${mzml_file.baseName}.encyclopedia.txt", emit: results_targets)
+        path("${mzml_file.baseName}.encyclopedia.decoy.txt", emit: results_decoys)
+        
+
+    script:
+    // todo: research maccoss lab defaults from images in lab manual 
+    """
+    ${exec_java_command(task.memory)} \\
+        -numberOfThreadsUsed {$task.cpus} \\
+        -i ${mzml_file.baseName} \\
+        -f ${fasta} \\
+        -l ${spectra_library_file} \\
+        ${params.encyclopedia.args} \\
+        1>"encyclopedia-${mzml_file.baseName}.stdout" 2>"encyclopedia-${mzml_file.baseName}.stderr"
+    """
+}
+
+
+
 process ENCYCLOPEDIA_CREATE_ELIB {
-    publishDir "${params.result_dir}/encyclopedia", failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/encyclopedia/create-elib", failOnError: true, mode: 'copy'
     label 'process_high_constant'
     container 'quay.io/protio/encyclopedia:2.12.30'
 
@@ -13,26 +48,25 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         path fasta
         path dlib
 
-
-
     output:
-        path("${pin.baseName}.filtered.pin"), emit: filtered_pin
         path("*.stderr"), emit: stderr
+        path("*.stdout"), emit: stdout
+        path("${mzml_file.baseName}.elib", emit: elib)
+        path("${mzml_file.baseName}.dia",  emit: dia)
+        path("${mzml_file.baseName}.features.txt.gz", emit: features_gzip)
+        path("${mzml_file.baseName}.encyclopedia.txt", emit: results_targets)
+        path("${mzml_file.baseName}.encyclopedia.decoy.txt", emit: results_decoys)
+        
 
     script:
-    // todo: set number of threads equal to task cores
     // todo: research maccoss lab defaults from images in lab manual 
     """
     ${exec_java_command(task.memory)} \\
-        -i ${mzml_file} \\
+        -numberOfThreadsUsed {$task.cpus} \\
+        -i ${mzml_file.baseName} \\
         -f ${fasta} \\
         -l ${dlib} \\
         ${params.encyclopedia.args} \\
-        ${params.encyclopedia.local.args} \\
-    """
-
-    stub:
-    """
-    touch "${pin.baseName}.filtered.pin"
+        1>"encyclopedia-${mzml_file.baseName}.stdout" 2>"encyclopedia-${mzml_file.baseName}.stderr"
     """
 }
