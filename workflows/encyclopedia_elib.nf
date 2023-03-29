@@ -1,12 +1,14 @@
 // Modules
 include { MSCONVERT } from "../modules/msconvert"
+include { ENCYCLOPEDIA_SEARCH_FILE } from "../modules/encyclopedia"
+include { ENCYCLOPEDIA_CREATE_ELIB } from "../modules/encyclopedia"
 
-workflow encyclopeda_search_quant {
+workflow encyclopeda_export_elib {
 
     take:
         spectra_file_ch
         fasta
-        spectral_library
+        dlib
         from_raw_files
         do_demultiplex
         do_simasspectra
@@ -21,7 +23,7 @@ workflow encyclopeda_search_quant {
         }
 
         // run encyclopedia for each mzML file
-        
+        ENCYCLOPEDIA_SEARCH_FILE(mzml_file_ch, fasta, dlib)
 
 
 }
