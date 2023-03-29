@@ -5,26 +5,24 @@ nextflow.enable.dsl = 2
 // Sub workflows
 include { get_input_files } from "./workflows/get_input_files"
 include { encyclopeda_export_elib } from "./workflows/encyclopedia_elib"
+include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
 
 //
 // The main workflow
 //
 workflow {
 
-    get_input_files()
+    get_input_files()   // get input files
+    get_narrow_mzmls()  // get narrow windows mzmls
 
     fasta = get_input_files.out.fasta
     dlib = get_input_files.out.dlib
-    spectra_files_ch = get_input_files.out.spectra_files_ch
-    from_raw_files = get_input_files.out.from_raw_files
+    narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
 
     encyclopeda_export_elib(
-        spectra_files_ch, 
+        narrow_mzml_ch, 
         fasta, 
-        dlib, 
-        from_raw_files, 
-        params.do_demultiplex, 
-        params.do_simasspectra
+        dlib
     )
 
 }

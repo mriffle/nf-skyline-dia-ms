@@ -1,31 +1,14 @@
 // modules
-include { PANORAMA_GET_FASTA } from "../modules/panorama"
-include { PANORAMA_GET_DLIB } from "../modules/panorama"
+include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
+include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
+include { MSCONVERT } from "../modules/msconvert"
 
-workflow get_input_files {
+workflow get_narrow_mzmls {
 
    emit:
-       spectra_files_ch
-       fasta
-       dlib
-       from_raw_files
+       narrow_mzml_ch
 
     main:
-
-        // get files from Panorama as necessary
-        if(params.fasta.startsWith("https://")) {
-            PANORAMA_GET_FASTA(params.fasta)
-            fasta = PANORAMA_GET_FASTA.out.panorama_file
-        } else {
-            fasta = file(params.fasta, checkIfExists: true)
-        }
-
-        if(params.dlib_spectral_library.startsWith("https://")) {
-            PANORAMA_GET_DLIB(params.dlib_spectral_library)
-            dlib = PANORAMA_GET_DLIB.out.panorama_file
-        } else {
-            dlib = file(params.dlib_spectral_library, checkIfExists: true)
-        }
 
         if(params.narrow_window_spectra_dir.contains("https://")) {
 
@@ -39,8 +22,11 @@ workflow get_input_files {
             placeholder_ch = PANORAMA_GET_RAW_FILE_LIST.out.raw_file_placeholders.transpose()
             PANORAMA_GET_RAW_FILE(placeholder_ch)
             
-            spectra_files_ch = PANORAMA_GET_RAW_FILE.out.panorama_file
-            from_raw_files = true;
+            narrow_mzml_ch = MSCONVERT(
+                PANORAMA_GET_RAW_FILE.out.panorama_file,
+                params.do_demultiplex,
+                params.do_simasspectra
+            )
 
         } else {
 
@@ -57,11 +43,13 @@ workflow get_input_files {
             }
 
             if(mzml_files.size() > 0) {
-                    spectra_files_ch = Channel.fromList(mzml_files)
-                    from_raw_files = false;
+                    narrow_mzml_ch = Channel.fromList(mzml_files)
             } else {
-                    spectra_files_ch = Channel.fromList(raw_files)
-                    from_raw_files = true;
+                narrow_mzml_ch = MSCONVERT(
+                    Channel.fromList(raw_files),
+                    params.do_demultiplex,
+                    params.do_simasspectra
+                )
             }
         }
 
