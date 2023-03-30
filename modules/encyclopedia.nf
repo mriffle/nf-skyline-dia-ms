@@ -49,21 +49,22 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         path search_encyclopedia_files
         path fasta
         path spectra_library_file
+        val align
 
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        path("*.elib", emit: elib)
-        path("*.log",  emit: log)        
+        path("combined-results.elib", emit: elib)
 
     script:
     // todo: research maccoss lab defaults from images in lab manual 
     """
     ${exec_java_command(task.memory)} \\
         -numberOfThreadsUsed ${task.cpus} \\
-        -libexport
+        -libexport \\
+        -o 'combined-results.elib' \\
         -i ./ \\
-        -a false \\
+        -a ${align} \\
         -f ${fasta} \\
         -l ${spectra_library_file} \\
         ${params.encyclopedia.args} \\

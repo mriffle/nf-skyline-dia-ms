@@ -2,20 +2,17 @@
 include { ENCYCLOPEDIA_SEARCH_FILE } from "../modules/encyclopedia"
 include { ENCYCLOPEDIA_CREATE_ELIB } from "../modules/encyclopedia"
 
-workflow encyclopeda_export_elib {
+workflow encyclopedia_quant {
 
     take:
         mzml_file_ch
         fasta
-        dlib
-
-    emit:
         elib
-
+    
     main:
 
         // run encyclopedia for each mzML file
-        ENCYCLOPEDIA_SEARCH_FILE(mzml_file_ch, fasta, dlib)
+        ENCYCLOPEDIA_SEARCH_FILE(mzml_file_ch, fasta, elib)
 
         // aggregate results into single elib
         ENCYCLOPEDIA_CREATE_ELIB(
@@ -25,10 +22,8 @@ workflow encyclopeda_export_elib {
             ENCYCLOPEDIA_SEARCH_FILE.out.features.collect(),
             ENCYCLOPEDIA_SEARCH_FILE.out.results_targets.collect(),
             fasta,
-            dlib,
-            'false'
+            elib,
+            'true'
         )
-
-        elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib
 
 }
