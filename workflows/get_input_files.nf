@@ -9,6 +9,7 @@ workflow get_input_files {
        fasta
        dlib
        from_raw_files
+       skyline_template_zipfile
 
     main:
 
@@ -25,6 +26,17 @@ workflow get_input_files {
             dlib = PANORAMA_GET_DLIB.out.panorama_file
         } else {
             dlib = file(params.dlib_spectral_library, checkIfExists: true)
+        }
+
+        if(params.skyline_template_file != null) {
+            if(params.skyline_template_file.startsWith("https://")) {
+                PANORAMA_GET_SKYLINE_TEMPLATE(params.skyline_template_file)
+                skyline_template_zipfile = PANORAMA_GET_SKYLINE_TEMPLATE.out.panorama_file
+            } else {
+                skyline_template_zipfile = file(params.skyline_template_file, checkIfExists: true)
+            }
+        } else {
+            skyline_template_zipfile = null
         }
 
         if(params.narrow_window_spectra_dir.contains("https://")) {

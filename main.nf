@@ -7,7 +7,6 @@ include { get_input_files } from "./workflows/get_input_files"
 include { encyclopeda_export_elib } from "./workflows/encyclopedia_elib"
 include { encyclopedia_quant } from "./workflows/encyclopedia_quant"
 include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
-include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
 
 //
 // The main workflow
@@ -21,6 +20,7 @@ workflow {
     // set up some convenience variables
     fasta = get_input_files.out.fasta
     dlib = get_input_files.out.dlib
+    skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
     narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
     wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
 
@@ -30,16 +30,6 @@ workflow {
         fasta, 
         dlib
     )
-
-    elib = encyclopeda_export_elib.out.elib
-
-    // search wide-window data using chromatogram library
-    encyclopedia_quant(
-        wide_mzml_ch, 
-        fasta, 
-        elib
-    )
-
 
 }
 

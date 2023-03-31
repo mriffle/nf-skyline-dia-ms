@@ -8,6 +8,9 @@ workflow encyclopedia_quant {
         mzml_file_ch
         fasta
         elib
+
+    emit:
+        final_elib
     
     main:
 
@@ -26,5 +29,8 @@ workflow encyclopedia_quant {
             'true',
             'wide'
         )
+
+        final_elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib
+
 
 }
