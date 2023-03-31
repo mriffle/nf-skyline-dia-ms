@@ -26,12 +26,8 @@ workflow encyclopeda_export_elib {
             ENCYCLOPEDIA_SEARCH_FILE.out.results_targets.collect(),
             fasta,
             dlib,
-<<<<<<< HEAD
-            'false'
-=======
             'false',
             'narrow'
->>>>>>> dev
         )
 
         elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib

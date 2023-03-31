@@ -23,12 +23,8 @@ workflow encyclopedia_quant {
             ENCYCLOPEDIA_SEARCH_FILE.out.results_targets.collect(),
             fasta,
             elib,
-<<<<<<< HEAD
-            'true'
-=======
             'true',
             'wide'
->>>>>>> dev
         )
 
 }
