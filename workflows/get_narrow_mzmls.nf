@@ -52,5 +52,4 @@ workflow get_narrow_mzmls {
                 )
             }
         }
-
 }
