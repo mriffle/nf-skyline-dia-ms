@@ -20,10 +20,10 @@ process SKYLINE_ADD_LIB {
         --in="${skyline_template_zipfile.baseName}" \
         --log-file=skyline_add_library.log \
         --import-fasta="${fasta}" \
-        --add-library-path="${elib}"
-        --out="results.sky"
-        --save
-        --share-zip="results.sky.zip"
+        --add-library-path="${elib}" \
+        --out="results.sky" \
+        --save \
+        --share-zip="results.sky.zip" \
         --share-type="complete"
     """
 }
