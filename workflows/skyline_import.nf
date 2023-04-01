@@ -19,7 +19,7 @@ workflow skyline_import {
         SKYLINE_ADD_LIB(skyline_template_zipfile, fasta, elib)
         skyline_zipfile = SKYLINE_ADD_LIB.out.skyline_zipfile
 
-        // import encyclopedia results into skyline file
+        // import spectra into skyline file
         SKYLINE_IMPORT_SPECTRA(skyline_zipfile, wide_mzml_file_ch.collect())
         skyline_results = SKYLINE_IMPORT_SPECTRA.out.final_skyline_zipfile
 
