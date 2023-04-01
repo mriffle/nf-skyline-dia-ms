@@ -49,7 +49,8 @@ workflow {
         skyline_import(
             skyline_template_zipfile,
             fasta,
-            final_elib
+            final_elib,
+            wide_mzml_ch
         )
     }
 
