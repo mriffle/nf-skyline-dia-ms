@@ -27,3 +27,32 @@ process SKYLINE_ADD_LIB {
         --share-type="complete"
     """
 }
+
+process SKYLINE_IMPORT_SPECTRA {
+    publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
+    label 'process_medium'
+    label 'error_retry'
+    container 'chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.22335-b595b19'
+
+    input:
+        path skyline_zipfile
+        path mzml_files
+
+    output:
+        path("final.sky.zip"), emit: final_skyline_zipfile
+
+    script:
+    import_files_params = "--import-file=${(mzml_files as List).join(' --import-file=')}"
+    """
+    unzip ${skyline_zipfile}
+
+    wine SkylineCmd \
+        --in="${skyline_zipfile.baseName}" \
+        --log-file=skyline_add_spectra.log \
+        ${import_files_params} \
+        --out="final.sky" \
+        --save \
+        --share-zip="final.sky.zip" \
+        --share-type="complete"
+    """
+}
