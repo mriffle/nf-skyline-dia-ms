@@ -7,6 +7,8 @@ include { get_input_files } from "./workflows/get_input_files"
 include { encyclopeda_export_elib } from "./workflows/encyclopedia_elib"
 include { encyclopedia_quant } from "./workflows/encyclopedia_quant"
 include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
+include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
+include { skyline_import } from "./workflows/skyline_import"
 
 //
 // The main workflow
@@ -30,6 +32,29 @@ workflow {
         fasta, 
         dlib
     )
+
+    elib = encyclopeda_export_elib.out.elib
+
+    // search wide-window data using chromatogram library
+    encyclopedia_quant(
+        wide_mzml_ch, 
+        fasta, 
+        elib
+    )
+
+    final_elib = encyclopedia_quant.out.final_elib
+
+    // create Skyline document
+    if(skyline_template_zipfile != null) {
+        skyline_import(
+            skyline_template_zipfile,
+            fasta,
+            final_elib
+        )
+    }
+
+    // upload results to Panorama
+
 
 }
 
