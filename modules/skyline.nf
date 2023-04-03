@@ -49,6 +49,7 @@ process SKYLINE_IMPORT_SPECTRA {
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" \
         --import-threads=${task.cpus} \
+        --memstamp \
         --log-file=skyline_add_spectra.log \
         ${import_files_params} \
         --out="final.sky" \
