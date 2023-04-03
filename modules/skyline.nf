@@ -30,7 +30,7 @@ process SKYLINE_ADD_LIB {
 
 process SKYLINE_IMPORT_SPECTRA {
     publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
-    label 'process_medium'
+    label 'process_high'
     label 'error_retry'
     container 'chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.22335-b595b19'
 
@@ -48,7 +48,7 @@ process SKYLINE_IMPORT_SPECTRA {
 
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" \
-        --import-process-count=${task.cpus} \
+        --import-threads=${task.cpus} \
         --log-file=skyline_add_spectra.log \
         ${import_files_params} \
         --out="final.sky" \
