@@ -36,7 +36,7 @@ workflow get_input_files {
                 skyline_template_zipfile = file(params.skyline_template_file, checkIfExists: true)
             }
         } else {
-            skyline_template_zipfile = null
+            skyline_template_zipfile = file(params.default_skyline_template_file)
         }
 
         if(params.narrow_window_spectra_dir.contains("https://")) {
