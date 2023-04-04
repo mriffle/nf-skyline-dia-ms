@@ -28,7 +28,35 @@ process SKYLINE_ADD_LIB {
     """
 }
 
-process SKYLINE_IMPORT_SPECTRA {
+process SKYLINE_IMPORT_MZML {
+    publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
+    label 'process_medium'
+    label 'error_retry'
+    container 'chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.22335-b595b19'
+
+    input:
+        path skyline_zipfile
+        path mzml_file
+
+    output:
+        path("*.skyd"), emit: skyd_file
+        path("${mzml_file.baseName}.log"), emit: log_file
+
+    script:
+    """
+    unzip ${skyline_zipfile}
+
+    cp ${mzml_file} /tmp/${mzml_file}
+
+    wine SkylineCmd \
+        --in="${skyline_zipfile.baseName}" \
+        --import-no-join \
+        --log-file="${mzml_file.baseName}.log" \
+        --import-file="/tmp/${mzml_file}" \
+    """
+}
+
+process SKYLINE_MERGE_RESULTS {
     publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
@@ -36,21 +64,20 @@ process SKYLINE_IMPORT_SPECTRA {
 
     input:
         path skyline_zipfile
-        path mzml_files
+        path skyd_files
+        val mzml_files
 
     output:
         path("final.sky.zip"), emit: final_skyline_zipfile
 
     script:
-    import_files_params = "--import-file=${(mzml_files as List).join(' --import-file=')}"
+    import_files_params = "--import-file=${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join(' --import-file=')}"
     """
     unzip ${skyline_zipfile}
 
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" \
-        --import-threads=${task.cpus} \
-        --memstamp \
-        --log-file=skyline_add_spectra.log \
+        --log-file="skyline-merge.log" \
         ${import_files_params} \
         --out="final.sky" \
         --save \
