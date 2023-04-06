@@ -20,7 +20,7 @@ workflow {
 
     // set up some convenience variables
     fasta = get_input_files.out.fasta
-    spectral_library = get_input_files.out.library_file
+    spectral_library = get_input_files.out.spectral_library
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
     wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
 
