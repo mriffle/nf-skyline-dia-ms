@@ -103,7 +103,7 @@ process PANORAMA_GET_FASTA {
     """
 }
 
-process PANORAMA_GET_DLIB {
+process PANORAMA_GET_SPECTRAL_LIBRARY {
     label 'process_low_constant'
     container 'mriffle/panorama-client:1.0.0'
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
