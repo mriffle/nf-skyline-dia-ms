@@ -1,13 +1,13 @@
 // modules
 include { PANORAMA_GET_FASTA } from "../modules/panorama"
-include { PANORAMA_GET_DLIB } from "../modules/panorama"
+include { PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
 
 workflow get_input_files {
 
    emit:
        spectra_files_ch
        fasta
-       dlib
+       spectral_library
        from_raw_files
        skyline_template_zipfile
 
@@ -21,11 +21,11 @@ workflow get_input_files {
             fasta = file(params.fasta, checkIfExists: true)
         }
 
-        if(params.dlib_spectral_library.startsWith("https://")) {
-            PANORAMA_GET_DLIB(params.dlib_spectral_library)
-            dlib = PANORAMA_GET_DLIB.out.panorama_file
+        if(params.spectral_library.startsWith("https://")) {
+            PANORAMA_GET_SPECTRAL_LIBRARY(params.spectral_library)
+            spectral_library = PANORAMA_GET_SPECTRAL_LIBRARY.out.panorama_file
         } else {
-            dlib = file(params.dlib_spectral_library, checkIfExists: true)
+            spectral_library = file(params.spectral_library, checkIfExists: true)
         }
 
         if(params.skyline_template_file != null) {

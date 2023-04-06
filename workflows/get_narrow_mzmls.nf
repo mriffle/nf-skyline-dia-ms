@@ -10,9 +10,9 @@ workflow get_narrow_mzmls {
 
     main:
 
-        if(params.narrow_window_spectra_dir.contains("https://")) {
+        if(params.chromatogram_library_spectra_dir.contains("https://")) {
 
-            spectra_dirs_ch = Channel.from(params.narrow_window_spectra_dir)
+            spectra_dirs_ch = Channel.from(params.chromatogram_library_spectra_dir)
                                     .splitText()               // split multiline input
                                     .map{ it.trim() }          // removing surrounding whitespace
                                     .filter{ it.length() > 0 } // skip empty lines
@@ -30,7 +30,7 @@ workflow get_narrow_mzmls {
 
         } else {
 
-            spectra_dir = file(params.narrow_window_spectra_dir, checkIfExists: true)
+            spectra_dir = file(params.chromatogram_library_spectra_dir, checkIfExists: true)
 
             // get our mzML files
             mzml_files = file("$spectra_dir/*.mzML")

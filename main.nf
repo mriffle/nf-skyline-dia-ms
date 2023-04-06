@@ -16,30 +16,36 @@ include { skyline_import } from "./workflows/skyline_import"
 workflow {
 
     get_input_files()   // get input files
-    get_narrow_mzmls()  // get narrow windows mzmls
     get_wide_mzmls()  // get wide windows mzmls
 
     // set up some convenience variables
     fasta = get_input_files.out.fasta
-    dlib = get_input_files.out.dlib
+    spectral_library = get_input_files.out.library_file
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
-    narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
     wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
 
-    // create chromatogram library
-    encyclopeda_export_elib(
-        narrow_mzml_ch, 
-        fasta, 
-        dlib
-    )
+    // create elib if requested
+    if(params.chromatogram_library_spectra_dir != null) {
+        get_narrow_mzmls()  // get narrow windows mzmls
+        narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
 
-    elib = encyclopeda_export_elib.out.elib
+        // create chromatogram library
+        encyclopeda_export_elib(
+            narrow_mzml_ch, 
+            fasta, 
+            spectral_library
+        )
+
+        quant_library = encyclopeda_export_elib.out.elib
+    } else {
+        quant_library = spectral_library
+    }
 
     // search wide-window data using chromatogram library
     encyclopedia_quant(
         wide_mzml_ch, 
         fasta, 
-        elib
+        quant_library
     )
 
     final_elib = encyclopedia_quant.out.final_elib

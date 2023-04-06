@@ -10,9 +10,9 @@ workflow get_wide_mzmls {
 
     main:
 
-        if(params.wide_window_spectra_dir.contains("https://")) {
+        if(params.quant_spectra_dir.contains("https://")) {
 
-            spectra_dirs_ch = Channel.from(params.wide_window_spectra_dir)
+            spectra_dirs_ch = Channel.from(params.quant_spectra_dir)
                                     .splitText()               // split multiline input
                                     .map{ it.trim() }          // removing surrounding whitespace
                                     .filter{ it.length() > 0 } // skip empty lines
@@ -30,7 +30,7 @@ workflow get_wide_mzmls {
 
         } else {
 
-            spectra_dir = file(params.wide_window_spectra_dir, checkIfExists: true)
+            spectra_dir = file(params.quant_spectra_dir, checkIfExists: true)
 
             // get our mzML files
             mzml_files = file("$spectra_dir/*.mzML")
