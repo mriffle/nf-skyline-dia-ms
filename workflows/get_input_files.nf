@@ -39,42 +39,4 @@ workflow get_input_files {
             skyline_template_zipfile = file(params.default_skyline_template_file)
         }
 
-        if(params.narrow_window_spectra_dir.contains("https://")) {
-
-            spectra_dirs_ch = Channel.from(params.narrow_window_spectra_dir)
-                                    .splitText()               // split multiline input
-                                    .map{ it.trim() }          // removing surrounding whitespace
-                                    .filter{ it.length() > 0 } // skip empty lines
-
-            // get raw files from panorama
-            PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch)
-            placeholder_ch = PANORAMA_GET_RAW_FILE_LIST.out.raw_file_placeholders.transpose()
-            PANORAMA_GET_RAW_FILE(placeholder_ch)
-            
-            spectra_files_ch = PANORAMA_GET_RAW_FILE.out.panorama_file
-            from_raw_files = true;
-
-        } else {
-
-            spectra_dir = file(params.narrow_window_spectra_dir, checkIfExists: true)
-
-            // get our mzML files
-            mzml_files = file("$spectra_dir/*.mzML")
-
-            // get our raw files
-            raw_files = file("$spectra_dir/*.raw")
-
-            if(mzml_files.size() < 1 && raw_files.size() < 1) {
-                error "No raw or mzML files found in: $spectra_dir"
-            }
-
-            if(mzml_files.size() > 0) {
-                    spectra_files_ch = Channel.fromList(mzml_files)
-                    from_raw_files = false;
-            } else {
-                    spectra_files_ch = Channel.fromList(raw_files)
-                    from_raw_files = true;
-            }
-        }
-
 }
