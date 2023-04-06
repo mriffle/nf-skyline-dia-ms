@@ -5,10 +5,8 @@ include { PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
 workflow get_input_files {
 
    emit:
-       spectra_files_ch
        fasta
        spectral_library
-       from_raw_files
        skyline_template_zipfile
 
     main:
