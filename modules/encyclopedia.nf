@@ -25,7 +25,6 @@ process ENCYCLOPEDIA_SEARCH_FILE {
         
 
     script:
-    // todo: research maccoss lab defaults from images in lab manual 
     """
     ${exec_java_command(task.memory)} \\
         -numberOfThreadsUsed ${task.cpus} \\
@@ -61,7 +60,6 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         path("${outputFilePrefix}-combined-results.elib", emit: elib)
 
     script:
-    // todo: research maccoss lab defaults from images in lab manual 
     """
     ${exec_java_command(task.memory)} \\
         -numberOfThreadsUsed ${task.cpus} \\
