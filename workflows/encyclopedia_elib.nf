@@ -15,7 +15,12 @@ workflow encyclopeda_export_elib {
     main:
 
         // run encyclopedia for each mzML file
-        ENCYCLOPEDIA_SEARCH_FILE(mzml_file_ch, fasta, dlib)
+        ENCYCLOPEDIA_SEARCH_FILE(
+            mzml_file_ch,
+            fasta,
+            dlib,
+            encyclopedia.chromatogram.params
+        )
 
         // aggregate results into single elib
         ENCYCLOPEDIA_CREATE_ELIB(
@@ -27,7 +32,8 @@ workflow encyclopeda_export_elib {
             fasta,
             dlib,
             'false',
-            'narrow'
+            'narrow',
+            encyclopedia.chromatogram.params 
         )
 
         elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib

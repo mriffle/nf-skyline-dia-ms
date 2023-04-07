@@ -15,7 +15,12 @@ workflow encyclopedia_quant {
     main:
 
         // run encyclopedia for each mzML file
-        ENCYCLOPEDIA_SEARCH_FILE(mzml_file_ch, fasta, elib)
+        ENCYCLOPEDIA_SEARCH_FILE(
+            mzml_file_ch, 
+            fasta,
+            elib,
+            params.encyclopedia.quant.params
+        )
 
         // aggregate results into single elib
         ENCYCLOPEDIA_CREATE_ELIB(
@@ -27,7 +32,8 @@ workflow encyclopedia_quant {
             fasta,
             elib,
             'true',
-            'wide'
+            'wide',
+            params.encyclopedia.quant.params
         )
 
         final_elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib

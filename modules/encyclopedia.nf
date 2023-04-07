@@ -12,6 +12,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
         path mzml_file
         path fasta
         path spectra_library_file
+        val encyclopedia_params
 
     output:
         path("*.stderr"), emit: stderr
@@ -31,7 +32,8 @@ process ENCYCLOPEDIA_SEARCH_FILE {
         -i ${mzml_file} \\
         -f ${fasta} \\
         -l ${spectra_library_file} \\
-        ${params.encyclopedia.args} \\
+        -percolatorVersion /usr/local/bin/percolator \\
+        ${encyclopedia_params} \\
         1>"encyclopedia-${mzml_file.baseName}.stdout" 2>"encyclopedia-${mzml_file.baseName}.stderr"
     """
 }
@@ -51,6 +53,7 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         path spectra_library_file
         val align
         val outputFilePrefix
+        val encyclopedia_params
 
     output:
         path("*.stderr"), emit: stderr
@@ -68,7 +71,8 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         -a ${align} \\
         -f ${fasta} \\
         -l ${spectra_library_file} \\
-        ${params.encyclopedia.args} \\
+        -percolatorVersion /usr/local/bin/percolator \\
+        ${encyclopedia_params} \\
         1>"encyclopedia-create-elib.stdout" 2>"encyclopedia-create-elib.stderr"
     """
 }
