@@ -24,8 +24,8 @@ workflow get_narrow_mzmls {
             
             narrow_mzml_ch = MSCONVERT(
                 PANORAMA_GET_RAW_FILE.out.panorama_file,
-                params.do_demultiplex,
-                params.do_simasspectra
+                params.msconvert.do_demultiplex,
+                params.msconvert.do_simasspectra
             )
 
         } else {
@@ -47,8 +47,8 @@ workflow get_narrow_mzmls {
             } else {
                 narrow_mzml_ch = MSCONVERT(
                     Channel.fromList(raw_files),
-                    params.do_demultiplex,
-                    params.do_simasspectra
+                    params.msconvert.do_demultiplex,
+                    params.msconvert.do_simasspectra
                 )
             }
         }
