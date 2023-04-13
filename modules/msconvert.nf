@@ -1,5 +1,5 @@
 process MSCONVERT {
-    storeDir "${params.mzml_cache_directory}"
+    storeDir "${params.mzml_cache_directory}/${params.msconvert.do_demultiplex}/${params.msconvert.do_simasspectra}"
     label 'process_medium'
     label 'error_retry'
     container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.22335-b595b19'
