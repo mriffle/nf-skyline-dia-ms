@@ -19,7 +19,7 @@ workflow encyclopeda_export_elib {
             mzml_file_ch,
             fasta,
             dlib,
-            encyclopedia.chromatogram.params
+            params.encyclopedia.chromatogram.params
         )
 
         // aggregate results into single elib
@@ -34,7 +34,7 @@ workflow encyclopeda_export_elib {
             dlib,
             'false',
             'narrow',
-            encyclopedia.chromatogram.params 
+            params.encyclopedia.chromatogram.params 
         )
 
         elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib
