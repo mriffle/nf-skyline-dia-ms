@@ -24,8 +24,8 @@ workflow get_wide_mzmls {
             
             wide_mzml_ch = MSCONVERT(
                 PANORAMA_GET_RAW_FILE.out.panorama_file,
-                params.do_demultiplex,
-                params.do_simasspectra
+                params.msconvert.do_demultiplex,
+                params.msconvert.do_simasspectra
             )
 
         } else {
