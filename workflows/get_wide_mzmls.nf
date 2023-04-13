@@ -47,8 +47,8 @@ workflow get_wide_mzmls {
             } else {
                 wide_mzml_ch = MSCONVERT(
                     Channel.fromList(raw_files),
-                    params.do_demultiplex,
-                    params.do_simasspectra
+                    params.msconvert.do_demultiplex,
+                    params.msconvert.do_simasspectra
                 )
             }
         }
