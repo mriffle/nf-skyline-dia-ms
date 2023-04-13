@@ -47,7 +47,8 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         path search_elib_files
         path search_dia_files
         path search_feature_files
-        path search_encyclopedia_files
+        path search_encyclopedia_targets
+        path search_encyclopedia_decoys
         path fasta
         path spectra_library_file
         val align

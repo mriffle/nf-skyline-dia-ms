@@ -29,6 +29,7 @@ workflow encyclopedia_quant {
             ENCYCLOPEDIA_SEARCH_FILE.out.dia.collect(),
             ENCYCLOPEDIA_SEARCH_FILE.out.features.collect(),
             ENCYCLOPEDIA_SEARCH_FILE.out.results_targets.collect(),
+            ENCYCLOPEDIA_SEARCH_FILE.out.results_decoys.collect(),
             fasta,
             elib,
             'true',
