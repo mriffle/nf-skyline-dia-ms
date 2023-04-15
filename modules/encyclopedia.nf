@@ -39,7 +39,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
 
 process ENCYCLOPEDIA_CREATE_ELIB {
     publishDir "${params.result_dir}/encyclopedia/create-elib", failOnError: true, mode: 'copy'
-    label 'process_high_constant'
+    label 'process_memory_high_constant'
     container 'quay.io/protio/encyclopedia:2.12.30'
 
     input:
