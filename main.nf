@@ -10,6 +10,9 @@ include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
 include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
 
+// modules
+include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
+
 //
 // The main workflow
 //
@@ -24,6 +27,18 @@ workflow {
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
     wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
 
+    // convert blib to dlib if necessary
+    if(spectral_library.endsWith(".blib")) {
+        ENCYCLOPEDIA_BLIB_TO_DLIB(
+            fasta, 
+            spectral_library
+        )
+
+        spectral_library_to_use = ENCYCLOPEDIA_BLIB_TO_DLIB.out.dlib
+    } else {
+        spectral_library_to_use = spectra_library
+    }
+
     // create elib if requested
     if(params.chromatogram_library_spectra_dir != null) {
         get_narrow_mzmls()  // get narrow windows mzmls
@@ -33,7 +48,7 @@ workflow {
         encyclopeda_export_elib(
             narrow_mzml_ch, 
             fasta, 
-            spectral_library
+            spectral_library_to_use
         )
 
         quant_library = encyclopeda_export_elib.out.elib
