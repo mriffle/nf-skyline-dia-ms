@@ -28,7 +28,7 @@ workflow {
     wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
 
     // convert blib to dlib if necessary
-    if(spectral_library.endsWith(".blib")) {
+    if(params.spectral_library.endsWith(".blib")) {
         println(spectral_library)
         ENCYCLOPEDIA_BLIB_TO_DLIB(
             fasta, 
