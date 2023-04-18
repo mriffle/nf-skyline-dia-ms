@@ -81,3 +81,42 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         1>"encyclopedia-create-elib.stdout" 2>"encyclopedia-create-elib.stderr"
     """
 }
+
+process ENCYCLOPEDIA_BLIB_TO_DLIB {
+    publishDir "${params.result_dir}/encyclopedia/create-elib", failOnError: true, mode: 'copy'
+    label 'process_memory_high_constant'
+    container 'quay.io/protio/encyclopedia:2.12.30'
+
+    input:
+        path mzml_files
+        path search_elib_files
+        path search_dia_files
+        path search_feature_files
+        path search_encyclopedia_targets
+        path search_encyclopedia_decoys
+        path fasta
+        path spectra_library_file
+        val align
+        val outputFilePrefix
+        val encyclopedia_params
+
+    output:
+        path("*.stderr"), emit: stderr
+        path("*.stdout"), emit: stdout
+        path("${outputFilePrefix}-combined-results.elib", emit: elib)
+
+    script:
+    """
+    ${exec_java_command(task.memory)} \\
+        -numberOfThreadsUsed ${task.cpus} \\
+        -libexport \\
+        -o '${outputFilePrefix}-combined-results.elib' \\
+        -i ./ \\
+        -a ${align} \\
+        -f ${fasta} \\
+        -l ${spectra_library_file} \\
+        -percolatorVersion /usr/local/bin/percolator \\
+        ${encyclopedia_params} \\
+        1>"encyclopedia-create-elib.stdout" 2>"encyclopedia-create-elib.stderr"
+    """
+}
