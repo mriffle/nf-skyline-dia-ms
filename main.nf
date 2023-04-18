@@ -29,7 +29,7 @@ workflow {
 
     // convert blib to dlib if necessary
     if(params.spectral_library.endsWith(".blib")) {
-        println(spectral_library)
+        println(params.spectral_library)
         ENCYCLOPEDIA_BLIB_TO_DLIB(
             fasta, 
             spectral_library
