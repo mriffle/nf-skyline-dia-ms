@@ -37,7 +37,7 @@ workflow {
 
         spectral_library_to_use = ENCYCLOPEDIA_BLIB_TO_DLIB.out.dlib
     } else {
-        spectral_library_to_use = spectra_library
+        spectral_library_to_use = spectral_library
     }
 
     // create elib if requested
