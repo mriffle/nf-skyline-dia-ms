@@ -53,7 +53,7 @@ workflow {
 
         quant_library = encyclopeda_export_elib.out.elib
     } else {
-        quant_library = spectral_library
+        quant_library = spectral_library_to_use
     }
 
     // search wide-window data using chromatogram library
