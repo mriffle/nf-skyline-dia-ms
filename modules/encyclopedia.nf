@@ -49,7 +49,6 @@ process ENCYCLOPEDIA_CREATE_ELIB {
     container 'quay.io/protio/encyclopedia:2.12.30'
 
     input:
-        path mzml_files
         path search_elib_files
         path search_dia_files
         path search_feature_files
@@ -68,6 +67,8 @@ process ENCYCLOPEDIA_CREATE_ELIB {
 
     script:
     """
+    find * -name '*\\.mzML\\.*' -exec bash -c 'mv \$0 \${0/\\.mzML/\\.dia}' {} \\;
+
     ${exec_java_command(task.memory)} \\
         -numberOfThreadsUsed ${task.cpus} \\
         -libexport \\

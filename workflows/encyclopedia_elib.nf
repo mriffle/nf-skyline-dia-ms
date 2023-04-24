@@ -24,7 +24,6 @@ workflow encyclopeda_export_elib {
 
         // aggregate results into single elib
         ENCYCLOPEDIA_CREATE_ELIB(
-            mzml_file_ch.collect(),
             ENCYCLOPEDIA_SEARCH_FILE.out.elib.collect(),
             ENCYCLOPEDIA_SEARCH_FILE.out.dia.collect(),
             ENCYCLOPEDIA_SEARCH_FILE.out.features.collect(),
