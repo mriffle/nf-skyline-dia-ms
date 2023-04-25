@@ -31,6 +31,7 @@ process SKYLINE_ADD_LIB {
 process SKYLINE_IMPORT_MZML {
     publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
     label 'process_medium'
+    label 'process_high_memory'
     label 'error_retry'
     container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.22335-b595b19'
 
