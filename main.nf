@@ -24,67 +24,67 @@ workflow {
         if(params.chromatogram_library_spectra_dir != null) {
             get_narrow_mzmls()
         }
-        return
-    }
-
-    get_input_files()   // get input files
-    get_wide_mzmls()  // get wide windows mzmls
-
-    // set up some convenience variables
-    fasta = get_input_files.out.fasta
-    spectral_library = get_input_files.out.spectral_library
-    skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
-    wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
-
-    // convert blib to dlib if necessary
-    if(params.spectral_library.endsWith(".blib")) {
-        ENCYCLOPEDIA_BLIB_TO_DLIB(
-            fasta, 
-            spectral_library
-        )
-
-        spectral_library_to_use = ENCYCLOPEDIA_BLIB_TO_DLIB.out.dlib
     } else {
-        spectral_library_to_use = spectral_library
-    }
 
-    // create elib if requested
-    if(params.chromatogram_library_spectra_dir != null) {
-        get_narrow_mzmls()  // get narrow windows mzmls
-        narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
+        get_input_files()   // get input files
+        get_wide_mzmls()  // get wide windows mzmls
 
-        // create chromatogram library
-        encyclopeda_export_elib(
-            narrow_mzml_ch, 
+        // set up some convenience variables
+        fasta = get_input_files.out.fasta
+        spectral_library = get_input_files.out.spectral_library
+        skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
+        wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
+
+        // convert blib to dlib if necessary
+        if(params.spectral_library.endsWith(".blib")) {
+            ENCYCLOPEDIA_BLIB_TO_DLIB(
+                fasta, 
+                spectral_library
+            )
+
+            spectral_library_to_use = ENCYCLOPEDIA_BLIB_TO_DLIB.out.dlib
+        } else {
+            spectral_library_to_use = spectral_library
+        }
+
+        // create elib if requested
+        if(params.chromatogram_library_spectra_dir != null) {
+            get_narrow_mzmls()  // get narrow windows mzmls
+            narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
+
+            // create chromatogram library
+            encyclopeda_export_elib(
+                narrow_mzml_ch, 
+                fasta, 
+                spectral_library_to_use
+            )
+
+            quant_library = encyclopeda_export_elib.out.elib
+        } else {
+            quant_library = spectral_library_to_use
+        }
+
+        // search wide-window data using chromatogram library
+        encyclopedia_quant(
+            wide_mzml_ch, 
             fasta, 
-            spectral_library_to_use
+            quant_library
         )
 
-        quant_library = encyclopeda_export_elib.out.elib
-    } else {
-        quant_library = spectral_library_to_use
+        final_elib = encyclopedia_quant.out.final_elib
+
+        // create Skyline document
+        if(skyline_template_zipfile != null) {
+            skyline_import(
+                skyline_template_zipfile,
+                fasta,
+                final_elib,
+                wide_mzml_ch
+            )
+        }
+
+        // upload results to Panorama
     }
-
-    // search wide-window data using chromatogram library
-    encyclopedia_quant(
-        wide_mzml_ch, 
-        fasta, 
-        quant_library
-    )
-
-    final_elib = encyclopedia_quant.out.final_elib
-
-    // create Skyline document
-    if(skyline_template_zipfile != null) {
-        skyline_import(
-            skyline_template_zipfile,
-            fasta,
-            final_elib,
-            wide_mzml_ch
-        )
-    }
-
-    // upload results to Panorama
 
 
 }
