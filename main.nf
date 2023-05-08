@@ -18,6 +18,15 @@ include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 //
 workflow {
 
+    // only perform msconvert and terminate
+    if(params.msconvert_only) {
+        get_wide_mzmls()  // get wide windows mzmls
+        if(params.chromatogram_library_spectra_dir != null) {
+            get_narrow_mzmls()
+        }
+        return
+    }
+
     get_input_files()   // get input files
     get_wide_mzmls()  // get wide windows mzmls
 
