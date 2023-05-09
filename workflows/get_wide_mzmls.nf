@@ -49,6 +49,8 @@ workflow get_wide_mzmls {
             mzml_files = data_files.findAll { it.endsWith('.mzML') }
             raw_files = data_files.findAll { it.endsWith('.raw') }
 
+            println raw_files
+
             if(mzml_files.size() < 1 && raw_files.size() < 1) {
                 error "No raw or mzML files found in: $spectra_dir"
             }
