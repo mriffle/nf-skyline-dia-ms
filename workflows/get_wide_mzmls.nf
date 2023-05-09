@@ -44,6 +44,8 @@ workflow get_wide_mzmls {
                 error "No files found for: $spectra_dir/${file_glob}"
             }
 
+            println data_files
+
             mzml_files = data_files.findAll { it.endsWith('.mzML') }
             raw_files = data_files.findAll { it.endsWith('.raw') }
 
