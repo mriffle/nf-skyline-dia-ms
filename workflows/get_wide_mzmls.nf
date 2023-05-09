@@ -46,8 +46,11 @@ workflow get_wide_mzmls {
 
             println data_files
 
-            mzml_files = data_files.findAll { it -> it.endsWith('.mzML') }
-            raw_files = data_files.findAll { it -> it.endsWith('.raw') }
+            mzml_files = data_files.findAll { it.endsWith('.mzML') }
+            raw_files = data_files.findAll {
+                println it 
+                it.endsWith('.raw')
+            }
 
             println raw_files
 
