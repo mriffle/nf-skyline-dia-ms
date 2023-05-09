@@ -49,7 +49,7 @@ workflow get_wide_mzmls {
             mzml_files = data_files.findAll { it.endsWith('.mzML') }
             raw_files = data_files.findAll {
                 println it 
-                it.getAbsolutePath().endsWith('.raw')
+                it.name.endsWith('.raw')
             }
 
             println raw_files
