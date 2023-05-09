@@ -54,6 +54,8 @@ workflow get_wide_mzmls {
             raw_matcher = FileSystems.getDefault().getPathMatcher("glob:*.raw")
             raw_files = data_files.findAll { raw_matcher.matches(Paths.get(it)) }
 
+            println raw_files
+
             if(mzml_files.size() < 1 && raw_files.size() < 1) {
                 error "No raw or mzML files found in: $spectra_dir"
             }
