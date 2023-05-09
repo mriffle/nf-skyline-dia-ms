@@ -1,6 +1,3 @@
-import groovy.io.FileType
-import groovy.io.FileTreeBuilder
-
 // modules
 include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
 include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
@@ -47,18 +44,8 @@ workflow get_wide_mzmls {
                 error "No files found for: $spectra_dir/${file_glob}"
             }
 
-            mzml_files = new FileTreeBuilder()
-                .include('*.mzML')
-                .setType(FileType.FILES)
-                .visit(files)
-                .files
-
-
-            raw_files = new FileTreeBuilder()
-                .include('*.raw')
-                .setType(FileType.FILES)
-                .visit(files)
-                .files
+            mzml_files = data_files.findAll { it.toLowerCase().endsWith('.mzml') }
+            raw_files = data_files.findAll { it.toLowerCase().endsWith('.raw') }
 
             if(mzml_files.size() < 1 && raw_files.size() < 1) {
                 error "No raw or mzML files found in: $spectra_dir"
