@@ -44,19 +44,15 @@ workflow get_wide_mzmls {
                 error "No files found for: $spectra_dir/${file_glob}"
             }
 
-            println data_files
-
             mzml_files = data_files.findAll { it.name.endsWith('.mzML') }
             raw_files = data_files.findAll { it.name.endsWith('.raw') }
-
-            println raw_files
 
             if(mzml_files.size() < 1 && raw_files.size() < 1) {
                 error "No raw or mzML files found in: $spectra_dir"
             }
 
             if(mzml_files.size() > 0 && raw_files.size() > 0) {
-                error "Matched raw files and mzML files in: $spectra_dir. Please choose a file matching string that will only match one or the other."
+                error "Matched raw files and mzML files for: $spectra_dir/${file_glob}. Please choose a file matching string that will only match one or the other."
             }
 
             if(mzml_files.size() > 0) {

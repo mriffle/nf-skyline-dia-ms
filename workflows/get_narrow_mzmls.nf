@@ -30,16 +30,23 @@ workflow get_narrow_mzmls {
 
         } else {
 
+            file_glob = params.chromatogram_library_spectra_glob
             spectra_dir = file(params.chromatogram_library_spectra_dir, checkIfExists: true)
+            data_files = file("$spectra_dir/${file_glob}")
 
-            // get our mzML files
-            mzml_files = file("$spectra_dir/*.mzML")
+            if(data_files.size() < 1) {
+                error "No files found for: $spectra_dir/${file_glob}"
+            }
 
-            // get our raw files
-            raw_files = file("$spectra_dir/*.raw")
+            mzml_files = data_files.findAll { it.name.endsWith('.mzML') }
+            raw_files = data_files.findAll { it.name.endsWith('.raw') }
 
             if(mzml_files.size() < 1 && raw_files.size() < 1) {
                 error "No raw or mzML files found in: $spectra_dir"
+            }
+
+            if(mzml_files.size() > 0 && raw_files.size() > 0) {
+                error "Matched raw files and mzML files for: $spectra_dir/${file_glob}. Please choose a file matching string that will only match one or the other."
             }
 
             if(mzml_files.size() > 0) {
