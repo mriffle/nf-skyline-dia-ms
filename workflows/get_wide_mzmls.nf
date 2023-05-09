@@ -1,7 +1,17 @@
+import java.nio.file.FileSystems
+import java.nio.file.PathMatcher
+import java.nio.file.Paths
+
 // modules
 include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
 include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
 include { MSCONVERT } from "../modules/msconvert"
+
+def convertFileGlobsToRegexPattern(String pattern) {
+    def regex = pattern.replaceAll('\\.', '\\\\.')
+    regex = regex.replaceAll('\\*', '.*')
+    "^${regex}\$"
+}
 
 workflow get_wide_mzmls {
 
@@ -30,16 +40,26 @@ workflow get_wide_mzmls {
 
         } else {
 
+            file_glob = params.quant_spectra_glob
             spectra_dir = file(params.quant_spectra_dir, checkIfExists: true)
+            data_files = file("$spectra_dir/${file_glob}")
 
-            // get our mzML files
-            mzml_files = file("$spectra_dir/*.mzML")
+            if(data_files.size() < 1) {
+                error "No files found for: $spectra_dir/${file_glob}"
+            }
 
-            // get our raw files
-            raw_files = file("$spectra_dir/*.raw")
+            mzml_matcher = FileSystems.getDefault().getPathMatcher("glob:*.mzML")
+            mzml_files = data_files.findAll { matcher.matches(Paths.get(it)) }
+
+            raw_matcher = FileSystems.getDefault().getPathMatcher("glob:*.raw")
+            raw_files = data_files.findAll { matcher.matches(Paths.get(it)) }
 
             if(mzml_files.size() < 1 && raw_files.size() < 1) {
                 error "No raw or mzML files found in: $spectra_dir"
+            }
+
+            if(mzml_files.size() > 0 && raw_files.size() > 0) {
+                error "Matched raw files and mzML files in: $spectra_dir. Please choose a file matching string that will only match one or the other."
             }
 
             if(mzml_files.size() > 0) {
