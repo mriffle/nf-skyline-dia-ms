@@ -12,7 +12,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.decoy.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     label 'process_high_constant'
-    container 'quay.io/protio/encyclopedia:3.0.0-SNAPSHOT-global'
+    container 'quay.io/protio/encyclopedia:3.0.0-rc.2'
 
     input:
         path mzml_file
@@ -46,7 +46,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
 process ENCYCLOPEDIA_CREATE_ELIB {
     publishDir "${params.result_dir}/encyclopedia/create-elib", failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
-    container 'quay.io/protio/encyclopedia:3.0.0-SNAPSHOT-global'
+    container 'quay.io/protio/encyclopedia:3.0.0-rc.2'
 
     input:
         path search_elib_files
@@ -87,7 +87,7 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
     publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
-    container 'quay.io/protio/encyclopedia:3.0.0-SNAPSHOT-global'
+    container 'quay.io/protio/encyclopedia:3.0.0-rc.2'
 
     input:
         path fasta
