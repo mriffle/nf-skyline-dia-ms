@@ -19,6 +19,11 @@ workflow get_narrow_mzmls {
 
             // get raw files from panorama
             PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch)
+
+            // subscribe and scan PANORAMA_GET_RAW_FILE_LIST.out.raw_file_placeholder to ensure
+            // only mzML xor raw files are present
+            // then transpose it and send to get raw file, then only msconvert if it's raw files
+
             placeholder_ch = PANORAMA_GET_RAW_FILE_LIST.out.raw_file_placeholders.transpose()
             PANORAMA_GET_RAW_FILE(placeholder_ch)
             
