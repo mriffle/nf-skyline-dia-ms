@@ -12,6 +12,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
 
     input:
         each web_dav_url
+        val file_glob
 
     output:
         tuple val(web_dav_url), path("*.download"), emit: raw_file_placeholders
@@ -19,6 +20,10 @@ process PANORAMA_GET_RAW_FILE_LIST {
         path("*.stderr"), emit: stderr
 
     script:
+
+    // convert glob to regex that we can use to grep lines from a file of filenames
+    String regex = '^' + Pattern.quote(file_glob).replaceAll("\\*", ".*") + '$'
+
     """
     echo "Running file list from Panorama..."
         ${exec_java_command(task.memory)} \
@@ -28,7 +33,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
         -k \$PANORAMA_API_KEY \
         -o panorama_files.txt \
         1>panorama-get-files.stdout 2>panorama-get-files.stderr && \
-        cat panorama_files.txt | xargs -I % sh -c 'touch %.download'
+        grep -P '${regex}' panorama_files.txt | xargs -I % sh -c 'touch %.download'
 
     echo "Done!" # Needed for proper exit
     """

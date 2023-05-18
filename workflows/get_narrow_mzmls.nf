@@ -18,7 +18,7 @@ workflow get_narrow_mzmls {
                                     .filter{ it.length() > 0 } // skip empty lines
 
             // get raw files from panorama
-            PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch)
+            PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, params.chromatogram_library_spectra_glob)
 
             // subscribe and scan PANORAMA_GET_RAW_FILE_LIST.out.raw_file_placeholder to ensure
             // only mzML xor raw files are present
