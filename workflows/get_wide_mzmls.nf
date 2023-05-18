@@ -1,3 +1,5 @@
+import java.util.regex.Pattern
+
 // modules
 include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
 include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
