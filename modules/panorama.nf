@@ -32,7 +32,6 @@ process PANORAMA_GET_RAW_FILE_LIST {
     echo "Running file list from Panorama..."
         ${exec_java_command(task.memory)} \
         -l \
-        -e raw \
         -w "${web_dav_url}" \
         -k \$PANORAMA_API_KEY \
         -o panorama_files.txt \
