@@ -1,14 +1,12 @@
 // Modules/process for interacting with PanoramaWeb
 
-import java.util.regex.Matcher
-
 def exec_java_command(mem) {
     def xmx = "-Xmx${mem.toGiga()-1}G"
     return "java -Djava.aws.headless=true ${xmx} -jar /usr/local/bin/PanoramaClient.jar"
 }
 
-def escapeRegex(String str) {
-    return str.replaceAll(/([.\^$*+?{}\[\]\\|()])/) { Matcher m -> '\\' + m.group(1) }
+String escapeRegex(String str) {
+    return str.replaceAll(/([.\^$*+?{}\[\]\\|()])/) { match, group -> '\\' + group }
 }
 
 process PANORAMA_GET_RAW_FILE_LIST {
