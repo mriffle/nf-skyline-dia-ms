@@ -1,6 +1,6 @@
 // Modules/process for interacting with PanoramaWeb
 
-import import java.util.regex.Matcher
+import java.util.regex.Matcher
 
 def exec_java_command(mem) {
     def xmx = "-Xmx${mem.toGiga()-1}G"
