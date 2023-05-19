@@ -3,12 +3,6 @@ include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
 include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
 include { MSCONVERT } from "../modules/msconvert"
 
-def convertFileGlobsToRegexPattern(String pattern) {
-    def regex = pattern.replaceAll('\\.', '\\\\.')
-    regex = regex.replaceAll('\\*', '.*')
-    "^${regex}\$"
-}
-
 workflow get_wide_mzmls {
 
    emit:
