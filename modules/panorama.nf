@@ -1,10 +1,12 @@
 // Modules/process for interacting with PanoramaWeb
 
-import java.util.regex.Pattern
-
 def exec_java_command(mem) {
     def xmx = "-Xmx${mem.toGiga()-1}G"
     return "java -Djava.aws.headless=true ${xmx} -jar /usr/local/bin/PanoramaClient.jar"
+}
+
+def escapeRegex(String str) {
+    return str.replaceAll(/([.\^$*+?{}\[\]\\|()])/) { Matcher m -> '\\' + m.group(1) }
 }
 
 process PANORAMA_GET_RAW_FILE_LIST {
@@ -24,7 +26,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
     script:
 
     // convert glob to regex that we can use to grep lines from a file of filenames
-    String regex = '^' + Pattern.quote(file_glob).replaceAll("\\*", ".*") + '$'
+    String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
 
     """
     echo "Running file list from Panorama..."
