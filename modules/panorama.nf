@@ -6,7 +6,7 @@ def exec_java_command(mem) {
 }
 
 String escapeRegex(String str) {
-    return str.replaceAll(/([.\^$*+?{}\[\]\\|()])/) { match, group -> '\\' + group }
+    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { match, group -> '\\' + group }
 }
 
 process PANORAMA_GET_RAW_FILE_LIST {
