@@ -32,11 +32,19 @@ Once installed you can easily access the command line of your new Ubuntu LTS ins
     All steps must be performed on the command line. If you are on MacOS or Linux, open a terminal and run the given commands. If you are on Windows, open a command line as described above.
 
 Install Nextflow
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+================
 Follow the instructions at: https://www.nextflow.io/docs/latest/getstarted.html. 
 
+Set up placeholder credentials
+==============================
+The workflow currently needs a placeholder value for the secret key for PanoramaWeb to run. Enter the following on the command line where nextflow is being run:
+
+.. code::
+    
+    nextflow secrets set PANORAMA_API_KEY "PLACEHOLDER"
+
 Optional: Set up AWS CLI on local system
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+========================================
 This step needs to be performed if AWS Batch or S3 are going to be used.
 
 On **Ubuntu** (which you have if you follows the Windows directions above):
@@ -47,16 +55,8 @@ On **Ubuntu** (which you have if you follows the Windows directions above):
 
 If you are on **MacOS** or another Linux distribution, follow Amazon's directions here: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
-Set up placeholder credentials
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The workflow currently needs a placeholder value for the secret key for PanoramaWeb to run. Enter the following on the command line where nextflow is being run:
-
-.. code::
-    
-    nextflow secrets set PANORAMA_API_KEY "PLACEHOLDER"
-
 Optional: Set up AWS credentials
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+================================
 If you are going to run workflows on AWS Batch or use S3, set up your AWS credentials.
 
     1. Obtain the access key and secret key from the user’s AWS account. This can be found at https://us-east-1.console.aws.amazon.com/iamv2/home?region=us-east-1#/security_credentials?section=IAM_credentials. After logging in, click the “Create access key” button in the “Access keys” section, choose the “Command Line Interface” option, optionally give the access key a name, then create the key. Then copy and paste the access key and secret access key to a text editor for the next part.
@@ -69,7 +69,7 @@ If you are going to run workflows on AWS Batch or use S3, set up your AWS creden
 Detailed instructions can be found at: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html. 
 
 Optional: Set up PanoramaWeb credentials
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+==========================================
 If you will be downloading files from Panorama for processing, you will need to set up your Panorama API key. Follow these instructions:
 
 1. After logging into PanoramaWeb, click the user-shaped icon in the top-right next to your username and choose “External Tool Access”.
@@ -80,12 +80,12 @@ If you will be downloading files from Panorama for processing, you will need to 
     **Be sure to replace “xxxxxxxxxxxxxxxxxxxxxxxx” with your access key.**
 
 Optional: Install Docker on local system
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+=========================================
 This step needs to be performed if processes (e.g., encyclopedia) are going to be run on your local computer. That is, the actual processing steps will be run locally.
 
 Follow the Docker install guide at: https://docs.docker.com/engine/install/
 
 Optional: Set up Docker credentials
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+===================================
 If you are going to be running the steps of the workflow on the local system (e.g. running Encyclopedia on your computer), you will need access to execute Docker containers without having to use sudo. Instructions to set this up can be found at https://docs.docker.com/engine/install/linux-postinstall/, under the heading “Manage Docker as a non-root user”. 
 
