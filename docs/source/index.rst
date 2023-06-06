@@ -12,6 +12,7 @@ If you need help, have ideas for new features, encounter a problem, or have any 
    :maxdepth: 2
 
    self
+   overview
    how_to_install
    how_to_run
    workflow_parameters
