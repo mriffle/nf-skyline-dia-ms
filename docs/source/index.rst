@@ -14,6 +14,6 @@ If you need help, have ideas for new features, encounter a problem, or have any 
    self
    how_to_install
    how_to_run
-   workflow_options
+   workflow_parameters
    results
    set_up_aws

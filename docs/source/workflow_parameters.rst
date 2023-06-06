@@ -1,4 +1,4 @@
 ===================================
-Workflow Options
+Workflow Parameters
 ===================================
 asdf
