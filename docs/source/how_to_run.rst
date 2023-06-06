@@ -47,7 +47,7 @@ Follow these steps to run a workflow:
 
         *MacOS or Linux*: You can directly edit ``~/my-nextflow-run/pipeline.config`` using your favorite GUI editor.
         
-        *Windows*: The file is a little tricker to find. In your file open dialogue, type in ``\\wsl$\`` and hit enter.
+        *Windows*: The file is a little tricky to find. In your file open dialogue, type in ``\\wsl$\`` and hit enter.
         This should reveal a ``Ubuntu-22.04`` directory (or something close to it). Go into that and double click on ``home``, then double
         click on your username, then ``my-nextflow-run``. The ``pipeline.config`` file should be present and you can edit it like a normal file.
     

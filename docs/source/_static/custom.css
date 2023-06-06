@@ -6,6 +6,10 @@ a:visited {
     font-weight:1000;
 }
 
+.wy-table-responsive table td {
+    white-space: normal;
+}
+
 h2 {
     margin-top: 30px;
     margin-bottom: 20px;
