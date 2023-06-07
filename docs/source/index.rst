@@ -6,7 +6,10 @@ describing how to install and run the workflow, how to retrieve results, and how
 
 Getting Help, Providing Feedback, or Reporting Problems
 =======================================================
-If you need help, have ideas for new features, encounter a problem, or have any questions, please contact Michael Riffle at mriffle@uw.edu.
+If you need help, have ideas for new features, encounter a problem, or have any questions or comments, please contact Michael Riffle at mriffle@uw.edu.
+
+Documentation Sections
+=======================================================
 
 .. toctree::
    :maxdepth: 2
