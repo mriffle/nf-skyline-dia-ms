@@ -18,6 +18,10 @@ h2 {
     width: 75%;
 }
 
+.rst-content .section ul li {
+    margin-bottom:10px;
+}
+
 /** bold **/
 :not(dt) > strong, :not(dt) > b {
     color: #001fbf;
