@@ -52,7 +52,7 @@ drectory. A full description of output files can be found below.
 
 Output Files
 ============
-Below are each subdirectory created in ``results/nf-teirex-dia`` by running the workflow and a description of files
+Below are each subdirectory created in ``results/nf-teirex-dia`` and a description of files
 that will be found in those directories.
 
 ``panorama`` Subdirectory
