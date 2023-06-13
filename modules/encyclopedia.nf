@@ -79,7 +79,7 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         -l ${spectra_library_file} \\
         -percolatorVersion /usr/local/bin/percolator \\
         ${encyclopedia_params} \\
-        1>"encyclopedia-create-elib.stdout" 2>"encyclopedia-create-elib.stderr"
+        1>"${outputFilePrefix}.stdout" 2>"${outputFilePrefix}.stderr"
     """
 }
 

@@ -282,4 +282,3 @@ The AWS Batch configuration is now complete. You will need the following informa
 - AWS Batch job queue name
 - AWS S3 bucket name
 
-

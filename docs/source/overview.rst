@@ -3,7 +3,8 @@ Workflow Overview
 ===================================
 
 These documents describe a standardized Nextflow workflow for processing **DIA mass spectrometry
-data to quantify peptides and proteins**. The workflow is described in the following paper: 
+data to quantify peptides and proteins**. The source code for the workflow can be found at: 
+https://github.com/mriffle/nf-teirex-dia. The workflow is described in the following paper: 
 
 **Chromatogram libraries improve peptide detection and quantification by data independent acquisition mass spectrometry.**
 Searle BC, Pino LK, Egertson JD, Ting YS, Lawrence RT, MacLean BX, Villén J, MacCoss MJ. *Nat Commun.* 2018 Dec 3;9(1):5128. 

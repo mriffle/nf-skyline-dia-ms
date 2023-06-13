@@ -11,6 +11,7 @@ process SKYLINE_ADD_LIB {
 
     output:
         path("results.sky.zip"), emit: skyline_zipfile
+        path("skyline_add_library.log"), emit: log
 
     script:
     """
@@ -70,6 +71,7 @@ process SKYLINE_MERGE_RESULTS {
 
     output:
         path("final.sky.zip"), emit: final_skyline_zipfile
+        path("skyline-merge.log"), emit: log
 
     script:
     import_files_params = "--import-file=${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join(' --import-file=')}"
