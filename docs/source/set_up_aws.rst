@@ -17,7 +17,7 @@ Before you begin, you will need the following to be configured and available:
 * An AWS Identity and Access Management (IAM) user with administrator permissions (`link <https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-an-admin>`_)
 * Choose the Region where you want to run the Nextflow workflows
 
-    * We recommend choosing a region geographically closest to you to reduce latency and costs.
+   * We recommend choosing a region geographically closest to you to reduce latency and costs.
 
 * Optional: Install the AWS Command Line Interface (AWS CLI) (`link <https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#install-aws-cli>`_)
 
@@ -49,9 +49,20 @@ Follow the instructions `here <https://docs.aws.amazon.com/batch/latest/userguid
 
 Create an AMI with Nextflow installed
 =====================================
-**TODO** - Add instructions to create an AMI with Nextflow installed in a separate page and link here 
+A custom AMI is required to run Nextflow workflows on AWS Batch. The custom AMI is based on the Amazon ECS-optimized Amazon Linux 2 AMI. The custom AMI requires the AWScli to be installed. To create the custom AMI, you will need to 
 
-**Question**: Should we provide a public AMI with Nextflow installed? If so, we can skip this step and just provide the AMI ID.
+1. Create an EC2 instance using the latest version of the "Amazon ECS-optimized Amazon Linux 2" AMI which you be found in the AWS Marketplace.
+2. Connect to the EC2 instance using SSH
+3. install the AWScli, and then create an AMI from the EC2 instance.
+
+    .. code-block:: bash
+        sudo yum update
+        sudo yum install unzip
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+
+4. Create an AMI from the EC2 instance
 
 
 Create IAM roles for Spot fleet role
@@ -269,6 +280,7 @@ Create a new IAM user for each user who will be submitting Nextflow workflows. I
 Follow the instructions to create an IAM user `here <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html>`
 
 When creating the IAM user, you will be asked to add permissions: 
+
 - Add the IAM policy created in the *Create IAM Policy to enable running AWS Batch jobs* section above
 - Add the IAM policy created in the *IAM Policy to enable read/write access to the S3 bucket* section above
 
@@ -281,4 +293,5 @@ The AWS Batch configuration is now complete. You will need the following informa
 
 - AWS Batch job queue name
 - AWS S3 bucket name
+- AWS CloudWatch log group name
 
