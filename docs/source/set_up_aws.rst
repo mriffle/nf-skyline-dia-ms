@@ -56,6 +56,7 @@ A custom AMI is required to run Nextflow workflows on AWS Batch. The custom AMI 
 3. install the AWScli, and then create an AMI from the EC2 instance.
 
     .. code-block:: bash
+        
         sudo yum update
         sudo yum install unzip
         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
