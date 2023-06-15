@@ -13,13 +13,10 @@ Before you begin
 ================
 Before you begin, you will need the following to be configured and available:
 
-* An AWS account (`link <https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#sign-up-for-aws>`_)
-* An AWS Identity and Access Management (IAM) user with administrator permissions (`link <https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-an-admin>`_)
-* Choose the Region where you want to run the Nextflow workflows
-
-   * We recommend choosing a region geographically closest to you to reduce latency and costs.
-
-* Optional: Install the AWS Command Line Interface (AWS CLI) (`link <https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#install-aws-cli>`_)
+* An AWS account: https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#sign-up-for-aws
+* An AWS Identity and Access Management (IAM) user with administrator permissions: https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-an-admin
+* Choose the Region where you want to run the Nextflow workflows *(We recommend choosing a region geographically closest to you to reduce latency and costs)*.
+* Optional: Install the AWS Command Line Interface (AWS CLI): https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#install-aws-cli
 
 
 Setup the Required AWS Services and resources
@@ -30,13 +27,13 @@ Create a key pair
 -----------------
 AWS uses public-key cryptography to secure the login information for your instance. A Linux instance, such as an AWS Batch compute environment container instance, has no password to use for SSH access. You use a key pair to log in to your instance securely. You specify the name of the key pair when you create your compute environment, then provide the private key when you log in using SSH
 
-To create the key pair, follow the instructions `here <https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-a-key-pair>`_.
+To create the key pair, follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-a-key-pair.
 
 Create a VPC
 ------------
 With Amazon Virtual Private Cloud (Amazon VPC), you can launch AWS resources into a virtual network that you've defined. 
 
-If you have an existing VPC, you can use that and skip to the next step. Otherwise, follow the instructions `here <https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-a-vpc>`_ to create a VPC.
+If you have an existing VPC, you can use that and skip to the next step. Otherwise, follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-a-vpc to create a VPC.
 
 
 
@@ -44,7 +41,7 @@ Create a security group
 -----------------------
 Security groups act as a firewall for associated compute environment container instances, controlling both inbound and outbound traffic at the container instance level. A security group can be used only in the VPC for which it is created
 
-Follow the instructions `here <https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-a-security-group>`_ to create a security group(s) required for AWS Batch.
+Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-a-security-group to create a security group(s) required for AWS Batch.
 
 
 Create an AMI with Nextflow installed
@@ -56,7 +53,7 @@ A custom AMI is required to run Nextflow workflows on AWS Batch. The custom AMI 
 3. install the AWScli, and then create an AMI from the EC2 instance.
 
     .. code-block:: bash
-        
+
         sudo yum update
         sudo yum install unzip
         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -70,14 +67,14 @@ Create IAM roles for Spot fleet role
 ====================================
 MacCoss Lab used Amazon EC2 Spot Instances to run the Nextflow workflows. This reduces the cost by 50-70%. To use Spot Instances, you must create an IAM role that allows AWS Batch to launch Spot Instances on your behalf.
 
-Follow the instructions `here <https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html>`_ to create a security group(s) required for AWS Batch.
+Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html to create a security group(s) required for AWS Batch.
 
 
 Create the Compute Environment to run Nextflow workflows
 ========================================================
 We will create a new compute environment which uses Amazon Elastic Compute Cloud(Amazon EC2) instances. The compute environment is where the Nextflow workflows will run.
 
-To create the compute environment, see `Create a compute environment <https://docs.aws.amazon.com/batch/latest/userguide/getting-started-ec2.html>` in the AWS Batch User Guide. Refer to the following table to determine what options to select.
+To create the compute environment, see *Create a compute environment* in https://docs.aws.amazon.com/batch/latest/userguide/getting-started-ec2.html in the AWS Batch User Guide. Refer to the following table to determine what options to select.
 
 =====================================  ============
 Option                                 Value
@@ -121,7 +118,7 @@ You can configure your AWS Batch jobs (ie Nextflow workflows) to send detailed l
 
 Add a CloudWatch Logs IAM policy
 --------------------------------
-Follow the instructions `here <https://docs.aws.amazon.com/batch/latest/userguide/using_cloudwatch_logs.html#cwl_iam_policy>`_ to add a CloudWatch Logs IAM policy. 
+Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/using_cloudwatch_logs.html#cwl_iam_policy to add a CloudWatch Logs IAM policy. 
 
 In the instructions, you will be asked to add the new policy to the IAM role used by AWS Batch (called the `ecsInstanceRole`). **TODO** add the name of the role here. Find after testing.
 
@@ -132,7 +129,7 @@ Create AWS Cloud Watch Log Group for Nextflow workflows
 
 Make S3 bucket 
 ==============
-Create a new S3 bucket to store the Nextflow workflow files and results. To create the S3 bucket, see `Creating a bucket <https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html>`. Refer to the following table to determine what options to select.
+Create a new S3 bucket to store the Nextflow workflow files and results. To create the S3 bucket, see *Creating a bucket* in https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html. Refer to the following table to determine what options to select.
 
 =====================================  ============
 Option                                 Value
@@ -278,7 +275,7 @@ Create IAM Users
 ----------------
 Create a new IAM user for each user who will be submitting Nextflow workflows. If the users already have an IAM user, you can use that IAM user and skip the instructions for creating the user. Ideally the IAM user should have both programmatic and console access.
 
-Follow the instructions to create an IAM user `here <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html>`
+Follow the instructions to create an IAM user at https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html
 
 When creating the IAM user, you will be asked to add permissions: 
 
