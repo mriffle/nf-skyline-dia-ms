@@ -1,6 +1,7 @@
 // modules
 include { PANORAMA_GET_FASTA } from "../modules/panorama"
 include { PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
+include { PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
 
 workflow get_input_files {
 
