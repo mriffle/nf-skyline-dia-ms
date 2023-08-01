@@ -91,7 +91,10 @@ The ``params`` Section
      - EncyclopeDIA generates many intermediate files that are subsequently processed by the workflow to generate the final results. These intermediate files may be large. If this is set to ``'true'``, these intermediate files will be saved locally in your ``results`` directory. Default: ``'false'``.
    * - 
      - ``skyline_template_file``
-     - The Skyline template file used to generate the final Skyline file. By default a pre-made Skyline template file suitable for EncyclopeDIA will be used. Specify a file location here to use your own template.
+     - The Skyline template file used to generate the final Skyline file. By default a
+       pre-made Skyline template file suitable for EncyclopeDIA will be used. Specify a file
+       location here to use your own template. Note: The filenames in the .zip file must match
+       the name of the zip file, itself. E.g., ``my-skyline-template.zip`` must contain ``my-skyline-template.sky``.
    * - 
      - ``email``
      - The email address to which a notification should be sent upon workflow completion. If no email is specified, no email will be sent. To send email, you must configure mail server settings (see below).
