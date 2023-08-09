@@ -36,7 +36,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
         -w "${web_dav_url}" \
         -k \$PANORAMA_API_KEY \
         -o panorama_files.txt \
-        1>panorama-get-files.stdout 2>panorama-get-files.stderr && \
+        > >(tee "panorama-get-files.stdout") 2> >(tee "panorama-get-files.stderr" >&2) && \
         grep -P '${regex}' panorama_files.txt | xargs -I % sh -c 'touch %.download'
 
     echo "Done!" # Needed for proper exit
@@ -70,7 +70,7 @@ process PANORAMA_GET_SKYLINE_TEMPLATE {
             -d \
             -w "${web_dav_dir_url}" \
             -k \$PANORAMA_API_KEY \
-            1>"panorama-get-${file_name}.stdout" 2>"panorama-get-${file_name}.stderr"
+            > >(tee "panorama-get-${file_name}.stdout") 2> >(tee "panorama-get-${file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
         """
 
@@ -102,7 +102,7 @@ process PANORAMA_GET_FASTA {
             -d \
             -w "${web_dav_dir_url}" \
             -k \$PANORAMA_API_KEY \
-            1>"panorama-get-${file_name}.stdout" 2>"panorama-get-${file_name}.stderr"
+            > >(tee "panorama-get-${file_name}.stdout") 2> >(tee "panorama-get-${file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
         """
 
@@ -134,7 +134,7 @@ process PANORAMA_GET_SPECTRAL_LIBRARY {
             -d \
             -w "${web_dav_dir_url}" \
             -k \$PANORAMA_API_KEY \
-            1>"panorama-get-${file_name}.stdout" 2>"panorama-get-${file_name}.stderr"
+            > >(tee "panorama-get-${file_name}.stdout") 2> >(tee "panorama-get-${file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
         """
 
@@ -165,7 +165,7 @@ process PANORAMA_GET_RAW_FILE {
             -d \
             -w "${web_dav_dir_url}${raw_file_name}" \
             -k \$PANORAMA_API_KEY \
-            1>"panorama-get-${raw_file_name}.stdout" 2>"panorama-get-${raw_file_name}.stderr"
+            > >(tee "panorama-get-${raw_file_name}.stdout") 2> >(tee "panorama-get-${raw_file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
         """
 

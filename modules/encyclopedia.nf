@@ -39,7 +39,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
         -l ${spectra_library_file} \\
         -percolatorVersion /usr/local/bin/percolator \\
         ${encyclopedia_params} \\
-        1>"encyclopedia-${mzml_file.baseName}.stdout" 2>"encyclopedia-${mzml_file.baseName}.stderr"
+        > >(tee "encyclopedia-${mzml_file.baseName}.stdout") 2> >(tee "encyclopedia-${mzml_file.baseName}.stderr" >&2)
     """
 }
 
@@ -79,7 +79,7 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         -l ${spectra_library_file} \\
         -percolatorVersion /usr/local/bin/percolator \\
         ${encyclopedia_params} \\
-        1>"${outputFilePrefix}.stdout" 2>"${outputFilePrefix}.stderr"
+        > >(tee "${outputFilePrefix}.stdout") 2> >(tee "${outputFilePrefix}.stderr" >&2)
     """
 }
 
@@ -107,6 +107,6 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
         -o "${blib.baseName}.dlib" \\
         -i "${blib}" \\
         -f "${fasta}" \\
-        1>"encyclopedia-convert-blib.stdout" 2>"encyclopedia-convert-blib.stderr"
+        > >(tee "encyclopedia-convert-blib.stdout") 2> >(tee "encyclopedia-convert-blib.stderr" >&2)
     """
 }
