@@ -129,4 +129,10 @@ workflow dummy {
 }
 
 // Email notifications:
-workflow.onComplete { email() }
+workflow.onComplete {
+    try {
+        email()
+    } catch (Exception e) {
+        println "Warning: Error sending completion email."
+    }
+}
