@@ -25,8 +25,8 @@ process MSCONVERT {
         --zlib \
         --mzML \
         --ignoreUnknownInstrumentError \
-        --64 ${simasspectra} ${demultiplex_param} \
-        --filter "peakPicking true 1-" 
+        --filter "peakPicking true 1-" \
+        --64 ${simasspectra} ${demultiplex_param}
     """
 
     stub:
