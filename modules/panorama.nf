@@ -174,3 +174,31 @@ process PANORAMA_GET_RAW_FILE {
     touch "{$download_file_placeholder.baseName}"
     """
 }
+
+process UPLOAD_FILE {
+    label 'process_low_constant'
+    container 'mriffle/panorama-client:1.0.0'
+    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
+    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+
+    input:
+        tuple path(file_to_upload), val(web_dav_dir_url)
+
+    output:
+        path("*.stdout"), emit: stdout
+        path("*.stderr"), emit: stderr
+
+    script:
+        file_name = file(file_to_upload).name
+        """
+        echo "Uploading ${file_to_upload} to Panorama..."
+            ${exec_java_command(task.memory)} \
+            -u \
+            -f "${file_to_upload}" \
+            -w "${web_dav_dir_url}" \
+            -k \$PANORAMA_API_KEY \
+            -c \
+            > >(tee "panorama-upload-${file_name}.stdout") 2> >(tee "panorama-upload-${file_name}.stderr" >&2)
+        echo "Done!" # Needed for proper exit
+        """
+}

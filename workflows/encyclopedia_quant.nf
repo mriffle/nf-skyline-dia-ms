@@ -10,6 +10,7 @@ workflow encyclopedia_quant {
         elib
 
     emit:
+        individual_elibs
         final_elib
     
     main:
@@ -21,6 +22,8 @@ workflow encyclopedia_quant {
             elib,
             params.encyclopedia.quant.params
         )
+
+        individual_elibs = ENCYCLOPEDIA_SEARCH_FILE.out.elib
 
         // aggregate results into single elib
         ENCYCLOPEDIA_CREATE_ELIB(

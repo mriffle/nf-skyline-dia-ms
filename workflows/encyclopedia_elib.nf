@@ -10,6 +10,7 @@ workflow encyclopeda_export_elib {
         dlib
 
     emit:
+        individual_elibs
         elib
 
     main:
@@ -21,6 +22,8 @@ workflow encyclopeda_export_elib {
             dlib,
             params.encyclopedia.chromatogram.params
         )
+
+        individual_elibs = ENCYCLOPEDIA_SEARCH_FILE.out.elib
 
         // aggregate results into single elib
         ENCYCLOPEDIA_CREATE_ELIB(

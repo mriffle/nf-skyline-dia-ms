@@ -9,6 +9,7 @@ include { encyclopedia_quant } from "./workflows/encyclopedia_quant"
 include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
 include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
+include { panorama_upload_results } from "./workflows/panorama_upload"
 
 // modules
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
@@ -49,9 +50,13 @@ workflow {
     }
 
     // create elib if requested
+    all_mzml_ch = null
+    all_elib_ch = null
     if(params.chromatogram_library_spectra_dir != null) {
         get_narrow_mzmls()  // get narrow windows mzmls
         narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
+
+        all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
 
         // create chromatogram library
         encyclopeda_export_elib(
@@ -61,8 +66,13 @@ workflow {
         )
 
         quant_library = encyclopeda_export_elib.out.elib
+
+        all_elib_ch = encyclopeda_export_elib.out.elib.concat(
+            encyclopeda_export_elib.out.individual_elibs
+        )
     } else {
         quant_library = spectral_library_to_use
+        all_mzml_ch = wide_mzml_ch
     }
 
     // search wide-window data using chromatogram library
@@ -74,6 +84,11 @@ workflow {
 
     final_elib = encyclopedia_quant.out.final_elib
 
+    all_elib_ch = all_elib_ch.concat(
+        encyclopedia_quant.out.individual_elibs,
+        encyclopedia_quant.out.final_elib,
+    )
+
     // create Skyline document
     if(skyline_template_zipfile != null) {
         skyline_import(
@@ -84,8 +99,19 @@ workflow {
         )
     }
 
-    // upload results to Panorama
+    final_skyline_file = skyline_import.out.skyline_results
 
+    // upload results to Panorama
+    if(params.panorama.upload) {
+        panorama_upload_results(
+            params.panorama.upload_url,
+            all_elib_ch,
+            final_skyline_file,
+            all_mzml_ch,
+            fasta,
+            spectral_library
+        )
+    }
 
 }
 
