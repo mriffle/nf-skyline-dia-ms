@@ -12,12 +12,17 @@ include { skyline_import } from "./workflows/skyline_import"
 include { panorama_upload_results } from "./workflows/panorama_upload"
 
 // modules
+include { SAVE_RUN_DETAILS } from "./modules/save_run_details"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 
 //
 // The main workflow
 //
 workflow {
+
+    // save details about this run
+    SAVE_RUN_DETAILS()
+    run_details_file = SAVE_RUN_DETAILS.out.run_details
 
     // only perform msconvert and terminate
     if(params.msconvert_only) {
@@ -109,7 +114,8 @@ workflow {
             final_skyline_file,
             all_mzml_ch,
             fasta,
-            spectral_library
+            spectral_library,
+            run_details_file
         )
     }
 

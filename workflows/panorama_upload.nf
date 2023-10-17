@@ -15,19 +15,19 @@ workflow panorama_upload_results {
         mzml_file_ch
         fasta_file
         user_supplied_spectral_lib
+        nextflow_run_details
     
     main:
 
         upload_webdav_url = webdav_url + "/" + get_upload_directory()
 
         mzml_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/msconvert") }
+            .concat(nextflow_run_details.map { path -> tuple(path, upload_webdav_url) })
             .concat(fasta_file.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(user_supplied_spectral_lib.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(all_elib_files.map { path -> tuple(path, upload_webdav_url + "/results/encyclopedia") })
             .concat(final_skyline_file.map { path -> tuple(path, upload_webdav_url + "/results/skyline") })
             .set { all_file_upload_ch }
-
-        all_file_upload_ch.view()
 
         UPLOAD_FILE(all_file_upload_ch)
 }
