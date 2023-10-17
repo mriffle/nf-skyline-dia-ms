@@ -16,6 +16,7 @@ workflow panorama_upload_results {
         fasta_file
         user_supplied_spectral_lib
         nextflow_run_details
+        nextflow_config_file
     
     main:
 
@@ -23,6 +24,7 @@ workflow panorama_upload_results {
 
         mzml_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/msconvert") }
             .concat(nextflow_run_details.map { path -> tuple(path, upload_webdav_url) })
+            .concat(nextflow_config_file.map { path -> tuple(path, upload_webdav_url) })
             .concat(fasta_file.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(user_supplied_spectral_lib.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(all_elib_files.map { path -> tuple(path, upload_webdav_url + "/results/encyclopedia") })

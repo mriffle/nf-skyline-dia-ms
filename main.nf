@@ -41,6 +41,7 @@ workflow {
     spectral_library = get_input_files.out.spectral_library
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
     wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
+    config_file = file(workflow.configFiles[1])
 
     // convert blib to dlib if necessary
     if(params.spectral_library.endsWith(".blib")) {
@@ -115,7 +116,8 @@ workflow {
             all_mzml_ch,
             fasta,
             spectral_library,
-            run_details_file
+            run_details_file,
+            config_file
         )
     }
 
