@@ -34,6 +34,27 @@ workflow panorama_upload_results {
         UPLOAD_FILE(all_file_upload_ch)
 }
 
+workflow panorama_upload_mzmls {
+
+    take:
+        webdav_url
+        mzml_file_ch
+        nextflow_run_details
+        nextflow_config_file
+    
+    main:
+
+        upload_webdav_url = webdav_url + "/" + get_upload_directory()
+
+        mzml_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/msconvert") }
+            .concat(nextflow_run_details.map { path -> tuple(path, upload_webdav_url) })
+            .concat(Channel.fromPath(nextflow_config_file).map { path -> tuple(path, upload_webdav_url) })
+            .set { all_file_upload_ch }
+
+        UPLOAD_FILE(all_file_upload_ch)
+}
+
+
 def get_upload_directory() {
     directory = "nextflow/${getCurrentTimestamp()}/${workflow.sessionId}"
 }
