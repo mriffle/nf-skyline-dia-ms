@@ -99,6 +99,7 @@ workflow {
     } else {
         quant_library = spectral_library_to_use
         all_mzml_ch = wide_mzml_ch
+        all_elib_ch = Channel.empty()
     }
 
     // search wide-window data using chromatogram library
