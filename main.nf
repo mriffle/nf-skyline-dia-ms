@@ -9,6 +9,7 @@ include { encyclopedia_quant } from "./workflows/encyclopedia_quant"
 include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
 include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
+include { skyline_reports } from "./workflows/skyline_run_reports"
 include { panorama_upload_results } from "./workflows/panorama_upload"
 include { panorama_upload_mzmls } from "./workflows/panorama_upload"
 
@@ -64,6 +65,7 @@ workflow {
     spectral_library = get_input_files.out.spectral_library
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
     wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
+    skyr_file_ch = get_input_files.out.skyr_files
 
     // convert blib to dlib if necessary
     if(params.spectral_library.endsWith(".blib")) {
@@ -128,6 +130,18 @@ workflow {
 
     final_skyline_file = skyline_import.out.skyline_results
 
+    // run reports if requested
+    skyline_reports_ch = null;
+    if(params.skyline_skyr_file) {
+        skyline_reports(
+            final_skyline_file,
+            skyr_file_ch
+        )
+        skyline_reports_ch = skyline_reports.out.skyline_report_files.flatten()
+    } else {
+        skyline_reports_ch = Channel.empty()
+    }
+
     // upload results to Panorama
     if(params.panorama.upload) {
         panorama_upload_results(
@@ -138,7 +152,9 @@ workflow {
             fasta,
             spectral_library,
             run_details_file,
-            config_file
+            config_file,
+            skyr_file_ch,
+            skyline_reports_ch
         )
     }
 

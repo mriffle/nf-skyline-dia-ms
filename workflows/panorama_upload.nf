@@ -17,6 +17,8 @@ workflow panorama_upload_results {
         user_supplied_spectral_lib
         nextflow_run_details
         nextflow_config_file
+        skyr_file_ch
+        skyline_report_ch
     
     main:
 
@@ -29,6 +31,8 @@ workflow panorama_upload_results {
             .concat(user_supplied_spectral_lib.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(all_elib_files.map { path -> tuple(path, upload_webdav_url + "/results/encyclopedia") })
             .concat(final_skyline_file.map { path -> tuple(path, upload_webdav_url + "/results/skyline") })
+            .concat(skyr_file_ch.map { path -> tuple(path, upload_webdav_url + "/input-files") })
+            .concat(skyline_report_ch.map { path -> tuple(path, upload_webdav_url + "/results/skyline_reports") })
             .set { all_file_upload_ch }
 
         UPLOAD_FILE(all_file_upload_ch)
