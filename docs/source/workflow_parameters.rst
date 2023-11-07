@@ -90,6 +90,12 @@ The ``params`` Section
      - ``encyclopedia.save_output``
      - EncyclopeDIA generates many intermediate files that are subsequently processed by the workflow to generate the final results. These intermediate files may be large. If this is set to ``'true'``, these intermediate files will be saved locally in your ``results`` directory. Default: ``'false'``.
    * - 
+     - ``panorama.upload``
+     - Whether or not to upload results to PanoramaWeb Default: ``false``.
+   * - 
+     - ``panorama.upload_url``
+     - The WebDAV URL of a directory in PanoramaWeb to which to upload the results. Note that ``panorama.upload`` must be set to ``true`` to upload results.
+   * - 
      - ``skyline_template_file``
      - The Skyline template file used to generate the final Skyline file. By default a
        pre-made Skyline template file suitable for EncyclopeDIA will be used. Specify a file
