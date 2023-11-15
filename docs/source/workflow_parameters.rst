@@ -74,7 +74,7 @@ The ``params`` Section
    * - 
      - ``chromatogram_library_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
-    * - 
+   * - 
      - ``skyline_document_name``
      - The base of the file name of the generated Skyline document. If set to ``'human_dia'``, the output file name would be ``human_dia.sky.zip``. Note: If importing into PanoramaWeb, this is also the name that appears in the list of imported Skyline documents on the project page. Default: ``final``.
    * - 
