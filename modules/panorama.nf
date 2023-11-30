@@ -146,6 +146,7 @@ process PANORAMA_GET_SPECTRAL_LIBRARY {
 
 process PANORAMA_GET_RAW_FILE {
     label 'process_low_constant'
+    maxForks 8
     container 'quay.io/protio/panorama-client:1.0.0'
     storeDir "${params.panorama_cache_directory}"
 
@@ -209,6 +210,7 @@ process PANORAMA_GET_SKYR_FILE {
 
 process UPLOAD_FILE {
     label 'process_low_constant'
+    maxForks 8
     container 'mriffle/panorama-client:1.0.0'
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
