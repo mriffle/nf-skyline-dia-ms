@@ -12,7 +12,7 @@ String escapeRegex(String str) {
 process PANORAMA_GET_RAW_FILE_LIST {
     label 'process_low_constant'
     label 'error_retry'
-    container 'mriffle/panorama-client:1.0.0'
+    container 'mriffle/panorama-client:1.1.0'
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy'
 
     input:
@@ -52,7 +52,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
 process PANORAMA_GET_SKYLINE_TEMPLATE {
     label 'process_low_constant'
     label 'error_retry'
-    container 'mriffle/panorama-client:1.0.0'
+    container 'mriffle/panorama-client:1.1.0'
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
 
@@ -85,7 +85,7 @@ process PANORAMA_GET_SKYLINE_TEMPLATE {
 process PANORAMA_GET_FASTA {
     label 'process_low_constant'
     label 'error_retry'
-    container 'mriffle/panorama-client:1.0.0'
+    container 'mriffle/panorama-client:1.1.0'
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
 
@@ -118,7 +118,7 @@ process PANORAMA_GET_FASTA {
 process PANORAMA_GET_SPECTRAL_LIBRARY {
     label 'process_low_constant'
     label 'error_retry'
-    container 'mriffle/panorama-client:1.0.0'
+    container 'mriffle/panorama-client:1.1.0'
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
 
@@ -152,7 +152,7 @@ process PANORAMA_GET_RAW_FILE {
     label 'process_low_constant'
     label 'error_retry'
     maxForks 8
-    container 'quay.io/protio/panorama-client:1.0.0'
+    container 'quay.io/protio/panorama-client:1.1.0'
     storeDir "${params.panorama_cache_directory}"
 
     input:
@@ -184,7 +184,7 @@ process PANORAMA_GET_RAW_FILE {
 process PANORAMA_GET_SKYR_FILE {
     label 'process_low_constant'
     label 'error_retry'
-    container 'mriffle/panorama-client:1.0.0'
+    container 'mriffle/panorama-client:1.1.0'
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
 
@@ -218,7 +218,7 @@ process UPLOAD_FILE {
     label 'process_low_constant'
     label 'error_retry'
     maxForks 4
-    container 'mriffle/panorama-client:1.0.0'
+    container 'mriffle/panorama-client:1.1.0'
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
 
