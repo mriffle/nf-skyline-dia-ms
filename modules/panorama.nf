@@ -32,8 +32,8 @@ process PANORAMA_GET_RAW_FILE_LIST {
     # Generate a timestamp
     echo "$(date)" > timestamp.txt
     """
-    script:
 
+    script:
     // convert glob to regex that we can use to grep lines from a file of filenames
     String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
 
