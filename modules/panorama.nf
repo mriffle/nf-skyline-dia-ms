@@ -24,6 +24,14 @@ process PANORAMA_GET_RAW_FILE_LIST {
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
+
+    beforeScript:
+    // force the process to run even if -resume is used, ensure we get current
+    // contents of directory
+    """
+    # Generate a timestamp
+    echo "$(date)" > timestamp.txt
+    """
     script:
 
     // convert glob to regex that we can use to grep lines from a file of filenames
