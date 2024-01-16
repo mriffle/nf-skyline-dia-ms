@@ -18,7 +18,7 @@ process DIANN_SEARCH {
          * dia-nn will produce different results if the order of the input files is different
          * sort the files to ensure they are in the same order in every run
          */
-        sorted_ms_files = ms_files.toList().sort { a, b -> a <=> b }
+        sorted_ms_files = ms_files.toList().sort { a, b -> a.toString() <=> b.toString() }
 
         ms_file_args = "--f '${sorted_ms_files.join('\' --f \'')}'"
 
