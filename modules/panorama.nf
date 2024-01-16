@@ -30,7 +30,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
     // contents of directory
     """
     # Generate a timestamp
-    echo "$(date)" > timestamp.txt
+    echo "\$(date)" > timestamp.txt
     """
 
     script:
