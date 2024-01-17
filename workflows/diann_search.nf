@@ -12,6 +12,9 @@ workflow diann_search {
 
     emit:
         blib
+        quant_files
+        speclib
+        precursor_tsv
 
     main:
         DIANN_SEARCH (
@@ -24,4 +27,7 @@ workflow diann_search {
                            DIANN_SEARCH.out.precursor_tsv)
 
         blib = BLIB_BUILD_LIBRARY.out.blib
+        quant_files = DIANN_SEARCH.out.quant_files
+        speclib = DIANN_SEARCH.out.speclib
+        precursor_tsv = DIANN_SEARCH.out.precursor_tsv
 }
