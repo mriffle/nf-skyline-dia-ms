@@ -10,6 +10,7 @@ String escapeRegex(String str) {
 }
 
 process PANORAMA_GET_RAW_FILE_LIST {
+    cache false
     label 'process_low_constant'
     label 'error_retry'
     container 'mriffle/panorama-client:1.1.0'
