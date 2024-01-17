@@ -11,6 +11,7 @@ process DIANN_SEARCH {
     output:
         path("report.tsv.speclib"), emit: speclib
         path("report.tsv"), emit: precursor_tsv
+        path("*.quant"), emit: quant_files
 
     script:
 
