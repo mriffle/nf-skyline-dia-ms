@@ -186,8 +186,6 @@ workflow {
             diann_search.out.precursor_tsv
         ).concat(
             diann_search.out.blib
-        ).concat(
-            diann_search.out.quant_files
         )
         
         // .concat(
