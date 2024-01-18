@@ -179,9 +179,7 @@ workflow {
         final_elib = diann_search.out.blib
 
         // all files to upload to panoramaweb (if requested)
-        all_diann_file_ch = diann_search.out.blib.concat(
-            diann_search.out.quant_files
-        ).concat(
+        all_diann_file_ch = diann_search.out.quant_files.concat(
             diann_search.out.speclib
         ).concat(
             diann_search.out.precursor_tsv
