@@ -182,7 +182,9 @@ workflow {
         //all_diann_file_ch = diann_search.out.quant_files
         //all_diann_file_ch = Channel.empty()
         
-        all_diann_file_ch = diann_search.out.speclib
+        all_diann_file_ch = diann_search.out.speclib.concat(
+            diann_search.out.precursor_tsv
+        )
         
         // .concat(
         //     diann_search.out.speclib
