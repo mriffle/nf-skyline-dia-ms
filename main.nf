@@ -184,6 +184,8 @@ workflow {
         
         all_diann_file_ch = diann_search.out.speclib.concat(
             diann_search.out.precursor_tsv
+        ).concat(
+            diann_search.out.blib
         )
         
         // .concat(
