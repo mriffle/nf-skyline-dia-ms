@@ -179,7 +179,8 @@ workflow {
         final_elib = diann_search.out.blib
 
         // all files to upload to panoramaweb (if requested)
-        all_diann_file_ch = diann_search.out.quant_files
+        //all_diann_file_ch = diann_search.out.quant_files
+        all_diann_file_ch = Channel.empty()
         
         
         // .concat(
