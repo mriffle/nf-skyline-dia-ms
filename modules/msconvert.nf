@@ -3,7 +3,7 @@ process MSCONVERT {
     publishDir "${params.result_dir}/msconvert", pattern: "*.mzML", failOnError: true, mode: 'copy', enabled: params.msconvert_only && !params.panorama.upload
     label 'process_medium'
     label 'error_retry'
-    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.23187-2243781'
+    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24020-c3a52ef'
 
     input:
         path raw_file
