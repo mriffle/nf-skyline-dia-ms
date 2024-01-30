@@ -4,7 +4,7 @@ process MSCONVERT {
     label 'process_medium'
     label 'process_high_memory'
     label 'error_retry'
-    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24020-c3a52ef'
+    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24030-7a308cd'
 
     input:
         path raw_file
