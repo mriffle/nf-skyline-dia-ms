@@ -75,6 +75,9 @@ The ``params`` Section
      - ``chromatogram_library_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
    * - 
+     - ``search_engine``
+     - Must be set to either ``'encyclopedia'`` or ``'diann'``. If set to ``'dian'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
+   * - 
      - ``skyline_document_name``
      - The base of the file name of the generated Skyline document. If set to ``'human_dia'``, the output file name would be ``human_dia.sky.zip``. Note: If importing into PanoramaWeb, this is also the name that appears in the list of imported Skyline documents on the project page. Default: ``final``.
    * - 
@@ -98,6 +101,9 @@ The ``params`` Section
    * - 
      - ``panorama.upload_url``
      - The WebDAV URL of a directory in PanoramaWeb to which to upload the results. Note that ``panorama.upload`` must be set to ``true`` to upload results.
+   * - 
+     - ``skyline_skyr_file``
+     - The path (local file system or Panorama WebDAV) to a ``.skyr`` file, which is a Skyline file that specifies reports. Any reports specified in the ``.skyr`` file will be run automatically as the last step of the workflow and the results saved in your ``results`` directory and (if requested) uploaded to Panorama.
    * - 
      - ``skyline_template_file``
      - The Skyline template file used to generate the final Skyline file. By default a
