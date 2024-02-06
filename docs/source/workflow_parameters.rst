@@ -96,6 +96,9 @@ The ``params`` Section
      - ``encyclopedia.save_output``
      - EncyclopeDIA generates many intermediate files that are subsequently processed by the workflow to generate the final results. These intermediate files may be large. If this is set to ``'true'``, these intermediate files will be saved locally in your ``results`` directory. Default: ``'false'``.
    * - 
+     - ``diann.params``
+     - The parameters passed to DIA-NN when it is run. Default: ``'--unimod4 --qvalue 0.01 --cut \'K*,R*,!*P\' --reanalyse --smart-profiling'``
+   * - 
      - ``panorama.upload``
      - Whether or not to upload results to PanoramaWeb Default: ``false``.
    * - 
