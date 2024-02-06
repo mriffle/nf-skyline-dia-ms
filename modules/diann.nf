@@ -7,8 +7,11 @@ process DIANN_SEARCH {
         path ms_files
         path fasta_file
         path spectral_library
+        val diann_params
     
     output:
+        path("*.stderr"), emit: stderr
+        path("*.stdout"), emit: stdout
         path("report.tsv.speclib"), emit: speclib
         path("report.tsv"), emit: precursor_tsv
         path("*.quant"), emit: quant_files
@@ -28,7 +31,8 @@ process DIANN_SEARCH {
             --threads ${task.cpus} \
             --fasta "${fasta_file}" \
             --lib "${spectral_library}" \
-            --unimod4 --qvalue 0.01 --cut 'K*,R*,!*P' --reanalyse --smart-profiling
+            ${diann_params} \
+            > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
         mv -v lib.tsv.speclib report.tsv.speclib
         """
 

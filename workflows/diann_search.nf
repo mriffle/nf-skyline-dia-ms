@@ -20,7 +20,8 @@ workflow diann_search {
         DIANN_SEARCH (
             ms_file_ch.collect(),
             fasta,
-            spectral_library
+            spectral_library,
+            params.diann.params
         )
 
         BLIB_BUILD_LIBRARY(DIANN_SEARCH.out.speclib,
