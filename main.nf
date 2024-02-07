@@ -30,6 +30,11 @@ workflow {
 
     config_file = file(workflow.configFiles[1]) // the config file used
 
+    // check for required params
+    if(params.panorama.upload && !params.panorama.upload_url) {
+        error "Panorama upload requested, but missing param: \'panorama.upload_url\'."
+    }
+
     // save details about this run
     SAVE_RUN_DETAILS()
     run_details_file = SAVE_RUN_DETAILS.out.run_details
