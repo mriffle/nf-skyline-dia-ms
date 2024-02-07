@@ -65,8 +65,14 @@ workflow {
     get_wide_mzmls()  // get wide windows mzmls
 
     // set up some convenience variables
+    
+    if(params.spectral_library) {
+        spectral_library = get_input_files.out.spectral_library
+    } else {
+        spectral_library = Channel.empty()
+    }
+
     fasta = get_input_files.out.fasta
-    spectral_library = get_input_files.out.spectral_library
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
     wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
     skyr_file_ch = get_input_files.out.skyr_files
@@ -74,6 +80,10 @@ workflow {
     final_elib = null
 
     if(params.search_engine.toLowerCase() == 'encyclopedia') {
+
+        if(!params.spectral_library) {
+            error "The parameter \'spectral_library\' is required when using EncyclopeDIA."
+        }
 
         all_diann_file_ch = Channel.empty()  // will be no diann
 
@@ -142,28 +152,34 @@ workflow {
             log.warn "The parameter 'encyclopedia.chromatogram.params' is set to a value (${params.encyclopedia.chromatogram.params}) but will be ignored."
         }
 
-        // convert spectral library to required format for dia-nn
-        if(params.spectral_library.endsWith(".blib")) {
-            ENCYCLOPEDIA_BLIB_TO_DLIB(
-                fasta, 
-                spectral_library
-            )
+        if(params.spectral_library) {
 
-            ENCYCLOPEDIA_DLIB_TO_TSV(
-                ENCYCLOPEDIA_BLIB_TO_DLIB.out.dlib
-            )
+            // convert spectral library to required format for dia-nn
+            if(params.spectral_library.endsWith(".blib")) {
+                ENCYCLOPEDIA_BLIB_TO_DLIB(
+                    fasta, 
+                    spectral_library
+                )
 
-            spectral_library_to_use = ENCYCLOPEDIA_DLIB_TO_TSV.out.tsv
+                ENCYCLOPEDIA_DLIB_TO_TSV(
+                    ENCYCLOPEDIA_BLIB_TO_DLIB.out.dlib
+                )
 
-        } else if(params.spectral_library.endsWith(".dlib")) {
-            ENCYCLOPEDIA_DLIB_TO_TSV(
-                spectral_library
-            )
+                spectral_library_to_use = ENCYCLOPEDIA_DLIB_TO_TSV.out.tsv
 
-            spectral_library_to_use = ENCYCLOPEDIA_DLIB_TO_TSV.out.tsv
-        
+            } else if(params.spectral_library.endsWith(".dlib")) {
+                ENCYCLOPEDIA_DLIB_TO_TSV(
+                    spectral_library
+                )
+
+                spectral_library_to_use = ENCYCLOPEDIA_DLIB_TO_TSV.out.tsv
+            
+            } else {
+                spectral_library_to_use = spectral_library
+            }
         } else {
-            spectral_library_to_use = spectral_library
+            // no spectral library
+            spectral_library_to_use = Channel.empty()
         }
 
 
@@ -185,6 +201,10 @@ workflow {
             diann_search.out.quant_files.flatten()
         ).concat(
             diann_search.out.blib
+        ).concat(
+            diann_search.out.stdout
+        ).concat(
+            diann_search.out.stderr
         )
 
     } else {

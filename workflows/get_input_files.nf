@@ -22,11 +22,15 @@ workflow get_input_files {
             fasta = file(params.fasta, checkIfExists: true)
         }
 
-        if(params.spectral_library.startsWith("https://")) {
-            PANORAMA_GET_SPECTRAL_LIBRARY(params.spectral_library)
-            spectral_library = PANORAMA_GET_SPECTRAL_LIBRARY.out.panorama_file
+        if(params.spectral_library) {
+            if(params.spectral_library.startsWith("https://")) {
+                PANORAMA_GET_SPECTRAL_LIBRARY(params.spectral_library)
+                spectral_library = PANORAMA_GET_SPECTRAL_LIBRARY.out.panorama_file
+            } else {
+                spectral_library = file(params.spectral_library, checkIfExists: true)
+            }
         } else {
-            spectral_library = file(params.spectral_library, checkIfExists: true)
+            spectral_library = null
         }
 
         if(params.skyline_template_file != null) {

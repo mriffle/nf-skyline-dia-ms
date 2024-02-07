@@ -56,9 +56,9 @@ The ``params`` Section
    * - Req?
      - Parameter Name
      - Description
-   * - ✓
+   * - 
      - ``spectral_library``
-     - That path to the spectral library to use. If you are creating a chromatogram library, this is used for that step and the resulting library is used for quantification. May be a ``dlib``, ``elib`` or ``blib``.
+     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. This parameter is required for EncyclopeDIA. If ommitted when using DIA-NN, DIA-NN will be run in library-free mode.
    * - ✓
      - ``fasta``
      - The path to the background FASTA file to use.
