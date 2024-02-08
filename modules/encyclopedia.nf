@@ -3,6 +3,8 @@ def exec_java_command(mem) {
     return "java -Djava.aws.headless=true ${xmx} -jar /usr/local/bin/encyclopedia.jar"
 }
 
+ENCYCLOPEDIA_CONTAINER = 'quay.io/protio/encyclopedia:2.12.30-2'
+
 process ENCYCLOPEDIA_SEARCH_FILE {
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stderr", failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stdout", failOnError: true, mode: 'copy'
@@ -12,7 +14,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.decoy.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     label 'process_high_constant'
-    container 'quay.io/protio/encyclopedia:2.12.30-2'
+    container ENCYCLOPEDIA_CONTAINER
 
     input:
         path mzml_file
@@ -46,7 +48,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
 process ENCYCLOPEDIA_CREATE_ELIB {
     publishDir "${params.result_dir}/encyclopedia/create-elib", failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
-    container 'quay.io/protio/encyclopedia:2.12.30-2'
+    container ENCYCLOPEDIA_CONTAINER
 
     input:
         path search_elib_files
@@ -87,7 +89,7 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
     publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
-    container 'quay.io/protio/encyclopedia:2.12.30-2'
+    container ENCYCLOPEDIA_CONTAINER
 
     input:
         path fasta
