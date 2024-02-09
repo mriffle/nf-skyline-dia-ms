@@ -25,11 +25,11 @@ process ENCYCLOPEDIA_SEARCH_FILE {
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        path("${mzml_file}.elib", emit: elib)
-        path("${mzml_file.baseName}.dia",  emit: dia)
-        path("${mzml_file}.features.txt", emit: features)
-        path("${mzml_file}.encyclopedia.txt", emit: results_targets)
-        path("${mzml_file}.encyclopedia.decoy.txt", emit: results_decoys)
+        path("${mzml_file}.elib"), emit: elib
+        path("${mzml_file.baseName}.dia"),  emit: dia
+        path("${mzml_file}.features.txt"), emit: features
+        path("${mzml_file}.encyclopedia.txt"), emit: results_targets
+        path("${mzml_file}.encyclopedia.decoy.txt"), emit: results_decoys
         
 
     script:
@@ -65,7 +65,7 @@ process ENCYCLOPEDIA_CREATE_ELIB {
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        path("${outputFilePrefix}-combined-results.elib", emit: elib)
+        path("${outputFilePrefix}-combined-results.elib"), emit: elib
 
     script:
     """
@@ -98,7 +98,7 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        path("${blib.baseName}.dlib", emit: dlib)
+        path("${blib.baseName}.dlib"), emit: dlib
 
     script:
     """
@@ -125,7 +125,7 @@ process ENCYCLOPEDIA_DLIB_TO_TSV {
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        path("${dlib.baseName}.tsv", emit: tsv)
+        path("${dlib.baseName}.tsv"), emit: tsv
 
     script:
     """
