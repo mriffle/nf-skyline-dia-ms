@@ -113,7 +113,7 @@ The ``params`` Section
    * - 
      - ``skyline_template_file``
      - The Skyline template file used to generate the final Skyline file. By default a
-       pre-made Skyline template file suitable for EncyclopeDIA will be used. Specify a file
+       pre-made Skyline template file suitable for EncyclopeDIA or DIA-NN will be used. Specify a file
        location here to use your own template. Note: The filenames in the .zip file must match
        the name of the zip file, itself. E.g., ``my-skyline-template.zip`` must contain ``my-skyline-template.sky``.
    * - 
