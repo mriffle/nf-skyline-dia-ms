@@ -2,7 +2,6 @@
 // modules
 include { DIANN_SEARCH } from "../modules/diann"
 include { DIANN_SEARCH_LIB_FREE } from "../modules/diann"
-include { BLIB_BUILD_LIBRARY } from "../modules/diann"
 
 workflow diann_search {
     
@@ -12,7 +11,6 @@ workflow diann_search {
         spectral_library
 
     emit:
-        blib
         quant_files
         speclib
         precursor_tsv
@@ -37,13 +35,9 @@ workflow diann_search {
             )
         }
 
-        BLIB_BUILD_LIBRARY(diann_results.speclib,
-                           diann_results.precursor_tsv)
-
-        blib = BLIB_BUILD_LIBRARY.out.blib
-        quant_files = diann_results.quant_files
-        speclib = diann_results.speclib
+        quant_files   = diann_results.quant_files
+        speclib       = diann_results.speclib
         precursor_tsv = diann_results.precursor_tsv
-        stdout = diann_results.stdout
-        stderr = diann_results.stderr
+        stdout        = diann_results.stdout
+        stderr        = diann_results.stderr
 }

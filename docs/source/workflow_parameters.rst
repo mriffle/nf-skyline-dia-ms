@@ -78,6 +78,9 @@ The ``params`` Section
      - ``search_engine``
      - Must be set to either ``'encyclopedia'`` or ``'diann'``. If set to ``'dian'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
    * - 
+     - ``skip_skyline``
+     - If set to ``true``, will skip the creation of a Skyline document. Default: ``false``.
+   * - 
      - ``skyline_document_name``
      - The base of the file name of the generated Skyline document. If set to ``'human_dia'``, the output file name would be ``human_dia.sky.zip``. Note: If importing into PanoramaWeb, this is also the name that appears in the list of imported Skyline documents on the project page. Default: ``final``.
    * - 
