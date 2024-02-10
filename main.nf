@@ -142,6 +142,8 @@ workflow {
         all_elib_ch = all_elib_ch.concat(
             encyclopedia_quant.out.individual_elibs,
             encyclopedia_quant.out.final_elib,
+            encyclopedia_quant.out.peptide_quant,
+            encyclopedia_quant.out.protein_quant
         )
 
     } else if(params.search_engine.toLowerCase() == 'diann') {

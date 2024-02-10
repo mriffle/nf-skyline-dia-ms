@@ -12,6 +12,8 @@ workflow encyclopedia_quant {
     emit:
         individual_elibs
         final_elib
+        peptide_quant
+        protein_quant
     
     main:
 
@@ -40,6 +42,7 @@ workflow encyclopedia_quant {
         )
 
         final_elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib
-
+        peptide_quant = ENCYCLOPEDIA_CREATE_ELIB.out.peptide_quant
+        protein_quant = ENCYCLOPEDIA_CREATE_ELIB.out.protein_quant
 
 }

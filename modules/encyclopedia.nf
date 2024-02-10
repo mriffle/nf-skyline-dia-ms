@@ -66,6 +66,8 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
         path("${outputFilePrefix}-combined-results.elib"), emit: elib
+        path("${outputFilePrefix}-combined-results.elib.peptides.txt"), emit: peptide_quant, optional: true
+        path("${outputFilePrefix}-combined-results.elib.proteins.txt"), emit: protein_quant, optional: true
 
     script:
     """
