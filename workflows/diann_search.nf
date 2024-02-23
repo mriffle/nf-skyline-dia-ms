@@ -16,6 +16,7 @@ workflow diann_search {
         precursor_tsv
         stdout
         stderr
+        predicted_speclib
 
     main:
 
@@ -27,17 +28,21 @@ workflow diann_search {
                 spectral_library,
                 params.diann.params
             )
+
+            predicted_speclib = Channel.empty()
         } else {
             diann_results = DIANN_SEARCH_LIB_FREE (
                 ms_file_ch.collect(),
                 fasta,
                 params.diann.params
             )
+
+            predicted_speclib = diann_results.predicted_speclib
         }
 
-        quant_files   = diann_results.quant_files
-        speclib       = diann_results.speclib
-        precursor_tsv = diann_results.precursor_tsv
-        stdout        = diann_results.stdout
-        stderr        = diann_results.stderr
+        quant_files       = diann_results.quant_files
+        speclib           = diann_results.speclib
+        precursor_tsv     = diann_results.precursor_tsv
+        stdout            = diann_results.stdout
+        stderr            = diann_results.stderr
 }

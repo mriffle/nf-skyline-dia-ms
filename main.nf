@@ -221,6 +221,8 @@ workflow {
             diann_search.out.stdout
         ).concat(
             diann_search.out.stderr
+        ).concat(
+            diann_search.out.predicted_speclib
         )
 
     } else {

@@ -58,6 +58,7 @@ process DIANN_SEARCH_LIB_FREE {
         path("report.tsv.speclib"), emit: speclib
         path("report.tsv"), emit: precursor_tsv
         path("*.quant"), emit: quant_files
+        path("lib.predicted.speclib"), emit: predicted_speclib
 
     script:
 
