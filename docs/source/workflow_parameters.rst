@@ -108,6 +108,9 @@ The ``params`` Section
      - ``panorama.upload_url``
      - The WebDAV URL of a directory in PanoramaWeb to which to upload the results. Note that ``panorama.upload`` must be set to ``true`` to upload results.
    * - 
+     - ``panorama.import_skyline``
+     - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the named used for the ``skyline_document_name`` parameter. Default: ``false``. Note: ``panorama_upload`` must be set to ``true`` and ``skip_skyline`` must be set to ``false`` to use this feature.
+   * - 
      - ``skyline_skyr_file``
      - The path (local file system or Panorama WebDAV) to a ``.skyr`` file, which is a Skyline file that specifies reports. Any reports specified in the ``.skyr`` file will be run automatically as the last step of the workflow and the results saved in your ``results`` directory and (if requested) uploaded to Panorama.
    * - 
