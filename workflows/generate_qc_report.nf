@@ -1,16 +1,15 @@
 
-include { SKYLINE_EXPORT_REPORT as export_replicate_report } from "../modules/skyline.nf"
-include { SKYLINE_EXPORT_REPORT as export_precursor_report } from "../modules/skyline.nf"
-include { UNZIP_SKY_FILE } from "../modules/skyline.nf"
+include { SKYLINE_RUN_REPORTS } from "../modules/skyline.nf"
 include { GENERATE_DIA_QC_REPORT_DB } from "../modules/qc_report.nf"
 include { RENDER_QC_REPORT } from "../modules/qc_report.nf"
 
+// include { UNZIP_SKY_FILE } from "../modules/skyline.nf"
 
 workflow generate_dia_qc_report {
 
     take:
         sky_zip_file
-        qc_report_title
+        replicate_metadata
 
     emit:
         qc_reports
@@ -18,21 +17,18 @@ workflow generate_dia_qc_report {
         qc_report_db
     
     main:
-        
-        UNZIP_SKY_FILE(sky_zip_file)
 
-        sky_file = UNZIP_SKY_FILE.out.sky_file
-        sky_artifacts = UNZIP_SKY_FILE.out.sky_artifacts
+        // export skyline reports
+        skyr_files = Channel.fromList([params.replicate_report_template,
+                                       params.precursor_report_template]).map{ file(it) }
+        SKYLINE_RUN_REPORTS(sky_zip_file, skyr_files.collect())
+        sky_reports = SKYLINE_RUN_REPORTS.out.skyline_report_files.flatten().map{ it -> tuple(it.name, it) }
+        precursor_report = sky_reports.filter{ it[0] =~ /^precursor_quality\.report\.tsv$/ }.map{ it -> it[1] }
+        replicate_report = sky_reports.filter{ it[0] =~ /^replicate_quality\.report\.tsv$/ }.map{ it -> it[1] }
 
-        export_replicate_report(sky_file, sky_artifacts,
-                                params.qc_report.replicate_report_template) 
-        export_precursor_report(sky_file, sky_artifacts,
-                                params.qc_report.precursor_report_template) 
-        
-        GENERATE_DIA_QC_REPORT_DB(export_replicate_report.out.report,
-                                  export_precursor_report.out.report,
-                                  params.qc_report.standard_proteins,
-                                  qc_report_title)
+        GENERATE_DIA_QC_REPORT_DB(replicate_report,
+                                  precursor_report,
+                                  replicate_metadata)
 
         qc_report_qmd = GENERATE_DIA_QC_REPORT_DB.out.qc_report_qmd
         qc_report_db = GENERATE_DIA_QC_REPORT_DB.out.qc_report_db

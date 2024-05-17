@@ -12,6 +12,7 @@ include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
 include { skyline_annotate_doc } from "./workflows/skyline_annotate_document"
 include { skyline_reports } from "./workflows/skyline_run_reports"
+include { generate_dia_qc_report } from "./workflows/generate_qc_report"
 include { panorama_upload_results } from "./workflows/panorama_upload"
 include { panorama_upload_mzmls } from "./workflows/panorama_upload"
 
@@ -82,7 +83,7 @@ workflow {
     get_wide_mzmls()  // get wide windows mzmls
 
     // set up some convenience variables
-    
+
     if(params.spectral_library) {
         spectral_library = get_input_files.out.spectral_library
     } else {
@@ -107,7 +108,7 @@ workflow {
         // convert blib to dlib if necessary
         if(params.spectral_library.endsWith(".blib")) {
             ENCYCLOPEDIA_BLIB_TO_DLIB(
-                fasta, 
+                fasta,
                 spectral_library
             )
 
@@ -125,8 +126,8 @@ workflow {
 
             // create chromatogram library
             encyclopeda_export_elib(
-                narrow_mzml_ch, 
-                fasta, 
+                narrow_mzml_ch,
+                fasta,
                 spectral_library_to_use
             )
 
@@ -143,8 +144,8 @@ workflow {
 
         // search wide-window data using chromatogram library
         encyclopedia_quant(
-            wide_mzml_ch, 
-            fasta, 
+            wide_mzml_ch,
+            fasta,
             quant_library
         )
 
@@ -176,7 +177,7 @@ workflow {
             // convert spectral library to required format for dia-nn
             if(params.spectral_library.endsWith(".blib")) {
                 ENCYCLOPEDIA_BLIB_TO_DLIB(
-                    fasta, 
+                    fasta,
                     spectral_library
                 )
 
@@ -192,7 +193,7 @@ workflow {
                 )
 
                 spectral_library_to_use = ENCYCLOPEDIA_DLIB_TO_TSV.out.tsv
-            
+
             } else {
                 spectral_library_to_use = spectral_library
             }
@@ -204,7 +205,7 @@ workflow {
 
         all_elib_ch = Channel.empty()  // will be no encyclopedia
         all_mzml_ch = wide_mzml_ch
-        
+
         diann_search(
             wide_mzml_ch,
             fasta,
@@ -262,6 +263,7 @@ workflow {
         }
 
         // generate QC report
+        generate_dia_qc_report(final_skyline_file, get_input_files.out.replicate_metadata)
 
         // run reports if requested
         skyline_reports_ch = null;
@@ -280,6 +282,7 @@ workflow {
         skyline_reports_ch = Channel.empty()
         skyr_file_ch = Channel.empty()
         final_skyline_file = Channel.empty()
+        qc_report_files = Channel.empty()
     }
 
     // upload results to Panorama
