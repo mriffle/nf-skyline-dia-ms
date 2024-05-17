@@ -37,6 +37,7 @@ process SKYLINE_IMPORT_MZML {
     label 'process_short'
     label 'error_retry'
     container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
+    stageInMode "${workflow.profile == 'aws' ? 'symlink' : 'link'}"
 
     input:
         path skyline_zipfile
@@ -65,6 +66,7 @@ process SKYLINE_MERGE_RESULTS {
     label 'process_high'
     label 'error_retry'
     container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
+    stageInMode "${workflow.profile == 'aws' ? 'symlink' : 'link'}"
 
     input:
         path skyline_zipfile
@@ -79,6 +81,8 @@ process SKYLINE_MERGE_RESULTS {
     import_files_params = "--import-file=${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join(' --import-file=')}"
     """
     unzip ${skyline_zipfile}
+
+    cp -v ${skyd_files} /tmp/
 
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" \
