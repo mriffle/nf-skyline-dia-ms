@@ -224,7 +224,8 @@ process SKYLINE_RUN_REPORTS {
                 --log-file="\$reportname.report-generation.log" \
                 --report-name="\$reportname" \
                 --report-file="./\$reportname.report.tsv" \
-                --report-format="TSV"
+                --report-format="TSV" \
+                --report-invariant
         done
     done
     """
