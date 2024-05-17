@@ -3,6 +3,8 @@ include { PANORAMA_GET_FASTA } from "../modules/panorama"
 include { PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
 include { PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
 include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
+include { PANORAMA_GET_FASTA as PANORAMA_GET_METADATA } from "../modules/panorama"
+include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
 workflow get_input_files {
 
@@ -11,6 +13,7 @@ workflow get_input_files {
        spectral_library
        skyline_template_zipfile
        skyr_files
+       replicate_metadata
 
     main:
 
@@ -76,4 +79,15 @@ workflow get_input_files {
             skyr_files = Channel.empty()
         }
 
+        if(params.replicate_metadata != null) {
+            if(params.replicate_metadata.trim().startsWith("https://panoramaweb.org")) {
+                PANORAMA_GET_METADATA(params.replicate_metadata)
+                replicate_metadata = PANORAMA_GET_METADATA.out.panorama_file
+            } else {
+                replicate_metadata = params.replicate_metadata
+            }
+        } else {
+            METADATA_PLACEHOLDER('EMPTY')
+            replicate_metadata = METADATA_PLACEHOLDER.out
+        }
 }

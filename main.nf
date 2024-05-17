@@ -10,6 +10,7 @@ include { diann_search } from "./workflows/diann_search"
 include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
 include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
+include { skyline_annotate_doc } from "./workflows/skyline_annotate_document"
 include { skyline_reports } from "./workflows/skyline_run_reports"
 include { panorama_upload_results } from "./workflows/panorama_upload"
 include { panorama_upload_mzmls } from "./workflows/panorama_upload"
@@ -251,7 +252,16 @@ workflow {
             )
         }
 
-        final_skyline_file = skyline_import.out.skyline_results
+        // annotate skyline document if replicate_metadata was specified
+        if(params.replicate_metadata != null) {
+            skyline_annotate_doc(skyline_import.out.skyline_results,
+                                 get_input_files.out.replicate_metadata)
+            final_skyline_file = skyline_annotate_doc.out.skyline_results
+        } else {
+            final_skyline_file = skyline_import.out.skyline_results
+        }
+
+        // generate QC report
 
         // run reports if requested
         skyline_reports_ch = null;
