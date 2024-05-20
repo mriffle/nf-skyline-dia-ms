@@ -33,7 +33,7 @@ process GENERATE_DIA_QC_REPORT_DB {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:1.15'
+    container 'quay.io/mauraisa/dia_qc_report:1.16'
 
     input:
         path replicate_report
@@ -59,6 +59,36 @@ process GENERATE_DIA_QC_REPORT_DB {
             qc_report_data.db3 \
             > >(tee "make_qmd.stdout") 2> >(tee "make_qmd.stderr")
         """
+
+    stub:
+        """
+        touch stub.stdout stub.stderr stub.db3 stub.qmd
+        """
+}
+
+process EXPORT_TABLES {
+    publishDir "${params.result_dir}/qc_report/tables", pattern: '*.tsv', failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
+    label 'process_high_memory'
+    container 'quay.io/mauraisa/dia_qc_report:1.16'
+
+    input:
+        path precursor_db
+
+    output:
+        path('*.tsv'), emit: tables
+
+    script:
+        """
+        export_tables --precursorTables=03 --proteinTables=03 ${precursor_db} \
+            > >(tee "export_tables.stdout") 2> >(tee "export_tables.stderr")
+        """
+
+    stub:
+        """
+        touch stub.stdout stub.stderr stub.tsv
+        """
 }
 
 process RENDER_QC_REPORT {
@@ -66,7 +96,7 @@ process RENDER_QC_REPORT {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:1.15'
+    container 'quay.io/mauraisa/dia_qc_report:1.16'
 
     input:
         path qmd

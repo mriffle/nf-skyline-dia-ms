@@ -121,7 +121,7 @@ process ANNOTATION_TSV_TO_CSV {
 
 process SKYLINE_MINIMIZE_DOCUMENT {
     label 'error_retry'
-    container "proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:${params.skyline.docker_version}"
+    container 'proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
 
     input:
         path skyline_zipfile

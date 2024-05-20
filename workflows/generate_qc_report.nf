@@ -2,6 +2,7 @@
 include { SKYLINE_RUN_REPORTS } from "../modules/skyline.nf"
 include { GENERATE_DIA_QC_REPORT_DB } from "../modules/qc_report.nf"
 include { RENDER_QC_REPORT } from "../modules/qc_report.nf"
+include { EXPORT_TABLES } from "../modules/qc_report.nf"
 
 // include { UNZIP_SKY_FILE } from "../modules/skyline.nf"
 
@@ -15,7 +16,8 @@ workflow generate_dia_qc_report {
         qc_reports
         qc_report_qmd
         qc_report_db
-    
+        qc_tables
+
     main:
 
         // export skyline reports
@@ -38,5 +40,12 @@ workflow generate_dia_qc_report {
                          GENERATE_DIA_QC_REPORT_DB.out.qc_report_db,
                          report_formats)
         qc_reports = RENDER_QC_REPORT.out.qc_report
+
+        if(params.qc_report.export_tables) {
+            EXPORT_TABLES(GENERATE_DIA_QC_REPORT_DB.out.qc_report_db)
+            qc_tables = EXPORT_TABLES.out.tables
+        } else {
+            qc_tables = Channel.empty()
+        }
 }
 
