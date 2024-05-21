@@ -14,7 +14,7 @@ workflow skyline_annotate_doc {
     main:
         ANNOTATION_TSV_TO_CSV(replicate_metadata)
 
-        if(params.skyline_minimize) {
+        if(params.skyline.minimize) {
             SKYLINE_MINIMIZE_DOCUMENT(skyline_input)
             annotate_sky_input = SKYLINE_MINIMIZE_DOCUMENT.out.final_skyline_zipfile
         } else {
@@ -23,8 +23,7 @@ workflow skyline_annotate_doc {
 
         SKYLINE_ANNOTATE_DOCUMENT(annotate_sky_input,
                                   ANNOTATION_TSV_TO_CSV.out.annotation_csv,
-                                  ANNOTATION_TSV_TO_CSV.out.annotation_definitions,
-                                  "final_${params.skyline_minimize ? 'minimized_' : ''}annotated.sky.zip")
+                                  ANNOTATION_TSV_TO_CSV.out.annotation_definitions)
 
-        skyline_results = SKYLINE_ANNOTATE_DOCUMENT.out.sky_zip_file
+        skyline_results = SKYLINE_ANNOTATE_DOCUMENT.out.final_skyline_zipfile
 }

@@ -36,22 +36,22 @@ workflow get_input_files {
             spectral_library = null
         }
 
-        if(params.skyline_template_file != null) {
-            if(params.skyline_template_file.startsWith("https://")) {
-                PANORAMA_GET_SKYLINE_TEMPLATE(params.skyline_template_file)
+        if(params.skyline.template_file != null) {
+            if(params.skyline.template_file.startsWith("https://")) {
+                PANORAMA_GET_SKYLINE_TEMPLATE(params.skyline.template_file)
                 skyline_template_zipfile = PANORAMA_GET_SKYLINE_TEMPLATE.out.panorama_file
             } else {
-                skyline_template_zipfile = file(params.skyline_template_file, checkIfExists: true)
+                skyline_template_zipfile = file(params.skyline.template_file, checkIfExists: true)
             }
         } else {
             skyline_template_zipfile = file(params.default_skyline_template_file)
         }
 
-        if(params.skyline_skyr_file != null) {
-            if(params.skyline_skyr_file.trim().startsWith("https://")) {
+        if(params.skyline.skyr_file != null) {
+            if(params.skyline.skyr_file.trim().startsWith("https://")) {
                 
                 // get file(s) from Panorama
-                skyr_location_ch = Channel.from(params.skyline_skyr_file)
+                skyr_location_ch = Channel.from(params.skyline.skyr_file)
                                         .splitText()               // split multiline input
                                         .map{ it.trim() }          // removing surrounding whitespace
                                         .filter{ it.length() > 0 } // skip empty lines
@@ -62,7 +62,7 @@ workflow get_input_files {
 
             } else {
                 // files are local
-                skyr_files = Channel.from(params.skyline_skyr_file)
+                skyr_files = Channel.from(params.skyline.skyr_file)
                                         .splitText()               // split multiline input
                                         .map{ it.trim() }          // removing surrounding whitespace
                                         .filter{ it.length() > 0 } // skip empty lines

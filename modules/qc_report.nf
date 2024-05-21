@@ -48,6 +48,7 @@ process GENERATE_DIA_QC_REPORT_DB {
         def metadata_arg = replicate_metadata.name == 'EMPTY' ? '' : "-m $replicate_metadata"
         """
         parse_data --ofname qc_report_data.db3 ${metadata_arg} \
+            --groupBy ${params.skyline.group_by_gene ? 'gene' : 'protein'} \
             '${replicate_report}' '${precursor_report}' \
             > >(tee "parse_data.stdout") 2> >(tee "parse_data.stderr")
 

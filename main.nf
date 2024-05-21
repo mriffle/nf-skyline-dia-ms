@@ -42,8 +42,8 @@ workflow {
         if(!params.panorama.upload) {
             error "Import of Skyline document in Panorama requested, but \'panorama.upload\' is not set to true."
         }
-        if(params.skip_skyline) {
-            error "Import of Skyline document in Panorama requested, but \'skip_skyline\' is set to true."
+        if(params.skyline.skip) {
+            error "Import of Skyline document in Panorama requested, but \'skyline.skip\' is set to true."
         }
     }
 
@@ -213,7 +213,7 @@ workflow {
         )
 
         // create compatible spectral library for Skyline, if needed
-        if(!params.skip_skyline) {
+        if(!params.skyline.skip) {
             BLIB_BUILD_LIBRARY(diann_search.out.speclib,
                                diann_search.out.precursor_tsv)
 
@@ -241,7 +241,7 @@ workflow {
         error "'${params.search_engine}' is an invalid argument for params.search_engine!"
     }
 
-    if(!params.skip_skyline) {
+    if(!params.skyline.skip) {
 
         // create Skyline document
         if(skyline_template_zipfile != null) {
@@ -267,7 +267,7 @@ workflow {
 
         // run reports if requested
         skyline_reports_ch = null;
-        if(params.skyline_skyr_file) {
+        if(params.skyline.skyr_file) {
             skyline_reports(
                 final_skyline_file,
                 skyr_file_ch
