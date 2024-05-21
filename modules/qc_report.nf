@@ -33,7 +33,7 @@ process GENERATE_DIA_QC_REPORT_DB {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:1.16'
+    container 'quay.io/mauraisa/dia_qc_report:1.17'
 
     input:
         path replicate_report
@@ -72,7 +72,7 @@ process EXPORT_TABLES {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:1.16'
+    container 'quay.io/mauraisa/dia_qc_report:1.17'
 
     input:
         path precursor_db
@@ -97,7 +97,7 @@ process RENDER_QC_REPORT {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:1.16'
+    container 'quay.io/mauraisa/dia_qc_report:1.17'
 
     input:
         path qmd
