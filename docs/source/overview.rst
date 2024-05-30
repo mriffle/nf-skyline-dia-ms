@@ -11,14 +11,14 @@ workflow can automatically generate requested reports from the Skyline document 
 upload and (optionally) import the Skyline document into PanoramaWeb and ProteomeXchange.
 
 DIA-NN workflow:
-^^^^^^^^^^^^^^^^^^^^^^^^^
+===================================
 The workflow will quantify peptides and proteins using user-supplied DIA RAW (or mzML) files, FASTA file, and spectral
 library (optional). If the user does not specify a spectral library, DIA-NN will be run in "library-free" mode, where
 it will create its own library using AI. Finally the workflow will generate a Skyline document using the quantified peptides
 and proteins.
 
 EncyclopeDIA workflow:
-^^^^^^^^^^^^^^^^^^^^^^^^^
+===================================
 
 This workflow is summarized in the following article:
 
