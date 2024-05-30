@@ -1,8 +1,12 @@
 ===================================
-TEI-REX DIA Nextflow Documentation
+Skyline DIA Nextflow Documentation
 ===================================
-This workflow will run the DIA workflow developed as part of the IARPA TEI-REX project. Please use the links below to navigate to pages
-describing how to install and run the workflow, how to retrieve results, and how to set up AWS Batch to run the workflow in the cloud.
+This workflow is designed to go from RAW files to a Skyline document with search and quantification
+results. These results may be optionally uploaded to PanoramaWeb/ProteomeXchange. It makes use of
+either DIA-NN or EncyclopeDIA to perform the search.
+
+Please use the links below to navigate to pages describing how to install and run the workflow,
+how to retrieve results, and how to set up AWS Batch to run the workflow in the cloud.
 
 Getting Help, Providing Feedback, or Reporting Problems
 =======================================================
