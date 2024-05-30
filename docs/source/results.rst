@@ -9,7 +9,7 @@ When running the workflow you should see output similar to:
 .. code-block:: console
 
     N E X T F L O W  ~  version 22.10.5
-    Launching `/home/mriffle/tmp/nf-teirex-dia/main.nf` [stoic_feynman] DSL2 - revision: 34335bd586
+    Launching `/home/mriffle/tmp/nf-skyline-dia-ms/main.nf` [stoic_feynman] DSL2 - revision: 34335bd586
     executor >  slurm (10)
     [16/ab4074] process > get_input_files:PANORAMA_GET_FASTA                   [100%] 1 of 1 ✔
     [skipped  ] process > get_wide_mzmls:MSCONVERT (1)                         [100%] 1 of 1, stored: 1 ✔
@@ -44,7 +44,7 @@ which will be described below.
 
 Workflow Results
 ================
-All results will be output to the ``results/nf-teirex-dia`` subdirectory in the directory in which the workflow was
+All results will be output to the ``results/nf-skyline-dia-ms`` subdirectory in the directory in which the workflow was
 run. In this directory is a subdirectory for each program that was run as part of the workflow. By default, the final
 Skyline document called ``final.sky.zip`` will be present in the ``skyline/import-spectra`` directory (this file name
 can be customized). The final EncyclopeDIA results file called ``wide-combined-results.elib`` will be present in the
@@ -52,7 +52,7 @@ can be customized). The final EncyclopeDIA results file called ``wide-combined-r
 
 Output Files
 ============
-Below are each subdirectory created in ``results/nf-teirex-dia`` and a description of files
+Below are each subdirectory created in ``results/nf-skyline-dia-ms`` and a description of files
 that will be found in those directories.
 
 ``panorama`` Subdirectory
