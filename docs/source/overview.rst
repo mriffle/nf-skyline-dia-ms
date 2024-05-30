@@ -6,7 +6,9 @@ These documents describe a standardized Nextflow workflow for processing **DIA m
 data to quantify peptides and proteins**. The source code for the workflow can be found at: 
 https://github.com/mriffle/nf-skyline-dia-ms. 
 
-Multiple specific workflows may be run with this Nextflow workflow.
+Multiple specific workflows may be run with this Nextflow workflow. Note that in all cases, the 
+workflow can automatically generate requested reports from the Skyline document and can automatically
+upload and (optionally) import the Skyline document into PanoramaWeb and ProteomeXchange.
 
 DIA-NN workflow:
 ^^^^^^^^^^^^^^^^^^^^^^^^^
