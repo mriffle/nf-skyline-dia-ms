@@ -82,7 +82,7 @@ process EXPORT_TABLES {
 
     script:
         """
-        export_tables --precursorTables=03 --proteinTables=03 ${precursor_db} \
+        export_tables --precursorTables=30 --proteinTables=30 ${precursor_db} \
             > >(tee "export_tables.stdout") 2> >(tee "export_tables.stderr")
         """
 
