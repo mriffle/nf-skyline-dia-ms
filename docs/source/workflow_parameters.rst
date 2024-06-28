@@ -4,7 +4,7 @@ Workflow Parameters
 
 The workflow parameters should be included in a configuration file, an example
 of which can be found at
-https://raw.githubusercontent.com/mriffle/nf-teirex-dia/main/resources/pipeline.config
+https://raw.githubusercontent.com/mriffle/nf-skyline-dia-ms/main/resources/pipeline.config
 
 The parameters in this file should be changed to indicate the locations of your data, the
 options you'd like to use for the software included in the workflow, and the capabilities and
@@ -140,7 +140,7 @@ The example configuration file includes this ``profiles`` section:
             params.max_cpus = 4
             params.max_time = '240.h'
 
-            params.mzml_cache_directory = '/data/mass_spec/nextflow/nf-teirex-dda/mzml_cache'
+            params.mzml_cache_directory = '/data/mass_spec/nextflow/nf-skyline-dia-ms/mzml_cache'
             params.panorama_cache_directory = '/data/mass_spec/nextflow/panorama/raw_cache'
         }
     }

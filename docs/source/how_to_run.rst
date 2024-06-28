@@ -25,13 +25,13 @@ Follow these steps to run a workflow:
 
     This will create a directory named ``my-nextflow-run`` in your home directory and move into that directory.
 
-2. Copy in or create a pipeline.config file. A template can be found at: https://raw.githubusercontent.com/mriffle/nf-teirex-dia/main/resources/pipeline.config
+2. Copy in or create a pipeline.config file. A template can be found at: https://raw.githubusercontent.com/mriffle/nf-skyline-dia-ms/main/resources/pipeline.config
 
     Example command:
 
     .. code-block:: bash
 
-       wget https://raw.githubusercontent.com/mriffle/nf-teirex-dia/main/resources/pipeline.config
+       wget https://raw.githubusercontent.com/mriffle/nf-skyline-dia-ms/main/resources/pipeline.config
 
     You may edit this config file in two ways:
         
@@ -68,13 +68,13 @@ Follow these steps to run a workflow:
     
     .. code-block:: bash
 
-        nextflow pull -r main mriffle/nf-teirex-dia
+        nextflow pull -r main mriffle/nf-skyline-dia-ms
 
    Then, to run the steps of the workflow on your **local computer**, execute this command:
 
     .. code-block:: bash
 
-        nextflow run -resume -r main mriffle/nf-teirex-dia -c pipeline.config
+        nextflow run -resume -r main mriffle/nf-skyline-dia-ms -c pipeline.config
     
     .. note::
 
@@ -87,7 +87,7 @@ Follow these steps to run a workflow:
 
     .. code-block:: bash
 
-        nextflow run -resume -r main -profile aws mriffle/nf-teirex-dia -bucket-dir s3://bucket/dir -c pipeline.config
+        nextflow run -resume -r main -profile aws mriffle/nf-skyline-dia-ms -bucket-dir s3://bucket/dir -c pipeline.config
 
     .. important::
 

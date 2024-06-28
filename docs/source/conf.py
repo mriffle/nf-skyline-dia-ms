@@ -17,7 +17,7 @@ import subprocess
 sys.path.insert(0, os.path.abspath(os.path.join("..", "..")))
 
 # -- Project information -----------------------------------------------------
-project = "nf-teirex-dia"
+project = "nf-skyline-dia-ms"
 copyright = "2023, Michael Riffle"
 author = "Michael Riffle"
 
