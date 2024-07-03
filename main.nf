@@ -288,7 +288,9 @@ workflow {
         }
 
         // generate QC report
-        generate_dia_qc_report(final_skyline_file, get_input_files.out.replicate_metadata)
+        if(!params.qc_report.skip) {
+            generate_dia_qc_report(final_skyline_file, get_input_files.out.replicate_metadata)
+        }
 
         // run reports if requested
         skyline_reports_ch = null;
