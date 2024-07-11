@@ -3,10 +3,10 @@ Workflow Overview
 ===================================
 
 These documents describe a standardized Nextflow workflow for processing **DIA mass spectrometry
-data to quantify peptides and proteins**. The source code for the workflow can be found at: 
-https://github.com/mriffle/nf-skyline-dia-ms. 
+data to quantify peptides and proteins**. The source code for the workflow can be found at:
+https://github.com/mriffle/nf-skyline-dia-ms.
 
-Multiple specific workflows may be run with this Nextflow workflow. Note that in all cases, the 
+Multiple specific workflows may be run with this Nextflow workflow. Note that in all cases, the
 workflow can automatically generate requested reports from the Skyline document and can automatically
 upload and (optionally) import the Skyline document into PanoramaWeb and ProteomeXchange.
 
@@ -23,7 +23,7 @@ EncyclopeDIA workflow:
 This workflow is summarized in the following article:
 
 **Chromatogram libraries improve peptide detection and quantification by data independent acquisition mass spectrometry.**
-Searle BC, Pino LK, Egertson JD, Ting YS, Lawrence RT, MacLean BX, Villén J, MacCoss MJ. *Nat Commun.* 2018 Dec 3;9(1):5128. 
+Searle BC, Pino LK, Egertson JD, Ting YS, Lawrence RT, MacLean BX, Villén J, MacCoss MJ. *Nat Commun.* 2018 Dec 3;9(1):5128.
 (https://pubmed.ncbi.nlm.nih.gov/30510204/)
 
 The workflow will quantify peptides and proteins using user-supplied DIA RAW (or mzML) files, FASTA file, and spectral
@@ -40,7 +40,7 @@ The workflow is summarized graphically as:
    Figure 1. An overview of the computational pipeline implemented by this workflow. (A) the optional
    generation of a chromatogram library that can be fed into part (B) for peptide and
    protein quantification using DIA. If part (A) is not run, a user-supplied spectral library
-   or chromatogram library may be used for quantification in part (B). 
+   or chromatogram library may be used for quantification in part (B).
 
 How to Run
 ===================
@@ -58,7 +58,7 @@ supply the locations of your data and execute a simple Nextflow command, such as
     nextflow run -resume -r main mriffle/nf-skyline-dia-ms -c pipeline.config
 
 The entire workflow will be run automatically, downloading Docker images as necessary, and the results output to
-the ``results`` directory. See :doc:`how_to_install` for more details on how to install Nextflow and Docker. See 
+the ``results`` directory. See :doc:`how_to_install` for more details on how to install Nextflow and Docker. See
 :doc:`how_to_run` for more details on how to run the workflow. And see :doc:`results` for more details on how to
 retrieve the results.
 

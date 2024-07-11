@@ -56,7 +56,7 @@ The ``params`` Section
    * - Req?
      - Parameter Name
      - Description
-   * - 
+   * -
      - ``spectral_library``
      - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. This parameter is required for EncyclopeDIA. If ommitted when using DIA-NN, DIA-NN will be run in library-free mode.
    * - ✓
@@ -65,61 +65,85 @@ The ``params`` Section
    * - ✓
      - ``quant_spectra_dir``
      - The path to the directory containing the raw data to be quantified. If using narrow window DIA and GPF to generated a chromatogram library this is the location of the wide-window data to be searched using the chromatogram library.
-   * - 
+   * -
      - ``quant_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
-   * - 
+   * -
      - ``chromatogram_library_spectra_dir``
      - If you are creating a chromatogram library using GPF and narrow window DIA, this is the path to the directory containing the narrow-window raw data.
-   * - 
+   * -
      - ``chromatogram_library_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
-   * - 
+   * -
      - ``search_engine``
      - Must be set to either ``'encyclopedia'`` or ``'diann'``. If set to ``'dian'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
-   * - 
-     - ``skip_skyline``
+   * -
+     - ``skyline.skip``
      - If set to ``true``, will skip the creation of a Skyline document. Default: ``false``.
-   * - 
-     - ``skyline_document_name``
+   * -
+     - ``skyline.document_name``
      - The base of the file name of the generated Skyline document. If set to ``'human_dia'``, the output file name would be ``human_dia.sky.zip``. Note: If importing into PanoramaWeb, this is also the name that appears in the list of imported Skyline documents on the project page. Default: ``final``.
-   * - 
+   * -
      - ``msconvert.do_demultiplex``
      - If starting with raw files, this is the value used by ``msconvert`` for the ``do_demultiplex`` parameter. Default: ``true``.
-   * - 
+   * -
      - ``msconvert.do_simasspectra``
      - If starting with raw files, this is the value used by ``msconvert`` for the ``do_simasspectra`` parameter. Default: ``true``.
-   * - 
+   * -
      - ``encyclopedia.chromatogram.params``
      - If you are generating a chromatogram library for quantification, this is the command line options passed to EncyclopeDIA during the chromatogram generation step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
-   * - 
+   * -
      - ``encyclopedia.quant.params``
      - The command line options passed to EncyclopeDIA during the quantification step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
-   * - 
+   * -
      - ``encyclopedia.save_output``
      - EncyclopeDIA generates many intermediate files that are subsequently processed by the workflow to generate the final results. These intermediate files may be large. If this is set to ``'true'``, these intermediate files will be saved locally in your ``results`` directory. Default: ``'false'``.
-   * - 
+   * -
      - ``diann.params``
      - The parameters passed to DIA-NN when it is run. Default: ``'--unimod4 --qvalue 0.01 --cut \'K*,R*,!*P\' --reanalyse --smart-profiling'``
-   * - 
+   * -
      - ``panorama.upload``
      - Whether or not to upload results to PanoramaWeb Default: ``false``.
-   * - 
+   * -
      - ``panorama.upload_url``
      - The WebDAV URL of a directory in PanoramaWeb to which to upload the results. Note that ``panorama.upload`` must be set to ``true`` to upload results.
-   * - 
+   * -
      - ``panorama.import_skyline``
      - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the named used for the ``skyline_document_name`` parameter. Default: ``false``. Note: ``panorama_upload`` must be set to ``true`` and ``skip_skyline`` must be set to ``false`` to use this feature.
-   * - 
-     - ``skyline_skyr_file``
+   * -
+     - ``skyline.skyr_file``
      - The path (local file system or Panorama WebDAV) to a ``.skyr`` file, which is a Skyline file that specifies reports. Any reports specified in the ``.skyr`` file will be run automatically as the last step of the workflow and the results saved in your ``results`` directory and (if requested) uploaded to Panorama.
-   * - 
-     - ``skyline_template_file``
+   * -
+     - ``skyline.template_file``
      - The Skyline template file used to generate the final Skyline file. By default a
        pre-made Skyline template file suitable for EncyclopeDIA or DIA-NN will be used. Specify a file
        location here to use your own template. Note: The filenames in the .zip file must match
        the name of the zip file, itself. E.g., ``my-skyline-template.zip`` must contain ``my-skyline-template.sky``.
-   * - 
+   * -
+     - ``qc_report.skip``
+     - If set to ``true``, will skip the creation of a the QC report. Default: ``true``.
+   * -
+     - ``qc_report.normalization_method``
+     - Normalization method to use for plots in QC report. Available options are ``DirectLFQ`` and ``median``.
+       Default is ``median``
+   * -
+     - ``qc_report.standard_proteins``
+     - List of protein names in Skyline document to plot retention times for.
+
+       For example: ``['iRT', 'sp|P00924|ENO1_YEAST']``
+
+       If ``null``, the standard protein retention time plot is skipped. Default is ``null``
+   * -
+     - ``qc_report.color_vars``
+     - List of metadata variables to color PCA plots by.
+
+       For example: ``['sample_type', 'strain']``
+
+       If ``null``, only a single PCA plot colored by file acquisition order is generated. Default is ``null``
+   * -
+     - ``qc_report.export_tables``
+     - Export tsv files containing normalized precursor and protein quantities? Default is ``false``
+   * -
      - ``email``
      - The email address to which a notification should be sent upon workflow completion. If no email is specified, no email will be sent. To send email, you must configure mail server settings (see below).
 
@@ -209,10 +233,10 @@ Below is a description of each parameter:
    * - ✓
      - ``smtp.port``
      - The port on the host to connect to. Most likely will be ``587``.
-   * - 
+   * -
      - ``smtp.user``
      - If authentication is required, this is the username.
-   * - 
+   * -
      - ``smtp.password``
      - If authentication is required, this is the password.
    * - ✓
