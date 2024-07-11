@@ -46,7 +46,7 @@ How to Run
 ===================
 This workflow uses the Nextflow standardized workflow platform. The Nextflow platform emphasizes ease of use, workflow portability,
 and containerization of the individual steps. To run this workflow, **you do not need to install any of the software components of
-the workflow**. There is no need to worry about installing necessary software libararies, version incompatibilities, or compiling or
+the workflow**. There is no need to worry about installing necessary software libraries, version incompatibilities, or compiling or
 installing complex and fickle software.
 
 To run the workflow you need only install Nextflow, which is relatively simple. To run the individual steps of the workflow on your

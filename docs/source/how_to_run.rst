@@ -34,7 +34,7 @@ Follow these steps to run a workflow:
        wget https://raw.githubusercontent.com/mriffle/nf-skyline-dia-ms/main/resources/pipeline.config
 
     You may edit this config file in two ways:
-        
+
     **Command Line**:
 
     .. code-block:: bash
@@ -46,14 +46,14 @@ Follow these steps to run a workflow:
     **GUI Editor in your Operating System:**
 
         *MacOS or Linux*: You can directly edit ``~/my-nextflow-run/pipeline.config`` using your favorite GUI editor.
-        
+
         *Windows*: The file is a little tricky to find. In your file open dialogue, type in ``\\wsl$\`` and hit enter.
         This should reveal a ``Ubuntu-22.04`` directory (or something close to it). Go into that and double click on ``home``, then double
         click on your username, then ``my-nextflow-run``. The ``pipeline.config`` file should be present and you can edit it like a normal file.
-    
+
     .. important::
 
-        For a complete desciption of all parameters see 
+        For a complete description of all parameters see
         :doc:`workflow_parameters`.
 
 
@@ -61,11 +61,11 @@ Follow these steps to run a workflow:
 
    Nextflow workflows may be run with a variety of *executors*. Executors are what run the actual steps of the pipeline; that is, they are
    the systems on which steps like Encyclopedia and msconvert will be run. Examples of executors are your local computer, a computer cluster, or
-   AWS Batch. The example below describes how to run the workflow using your local system or AWS Batch as the executor. 
+   AWS Batch. The example below describes how to run the workflow using your local system or AWS Batch as the executor.
 
 
    A good first step is to ensure you have the latest version of the workflow. Execute this command:
-    
+
     .. code-block:: bash
 
         nextflow pull -r main mriffle/nf-skyline-dia-ms
@@ -75,7 +75,7 @@ Follow these steps to run a workflow:
     .. code-block:: bash
 
         nextflow run -resume -r main mriffle/nf-skyline-dia-ms -c pipeline.config
-    
+
     .. note::
 
         It is important to only launch one workflow at a time if you are running on your local computer. Launching multiple

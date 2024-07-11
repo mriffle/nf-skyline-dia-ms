@@ -58,7 +58,7 @@ The ``params`` Section
      - Description
    * -
      - ``spectral_library``
-     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. This parameter is required for EncyclopeDIA. If ommitted when using DIA-NN, DIA-NN will be run in library-free mode.
+     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. This parameter is required for EncyclopeDIA. If omitted when using DIA-NN, DIA-NN will be run in library-free mode.
    * - ✓
      - ``fasta``
      - The path to the background FASTA file to use.

@@ -140,6 +140,6 @@ If ``.skyr`` files are specified in the parameters, all reports defined in those
 The files generated are:
 
 - ``qc_report_data.db3`` - The sqlite database with all the data used to generate the QC report.
-- ``qc_report.qmd`` - The quarto document which is renderered to generate the QC report.
+- ``qc_report.qmd`` - The quarto document which is rendered to generate the QC report.
 - ``qc_report.html`` - The rendered QC report in *html* format. This file can be viewed in a web browser.
 - ``qc_report.pdf`` - The rendered QC report in *pdf* format.
