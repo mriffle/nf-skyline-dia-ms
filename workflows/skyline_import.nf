@@ -27,7 +27,8 @@ workflow skyline_import {
         SKYLINE_MERGE_RESULTS(
             skyline_zipfile,
             SKYLINE_IMPORT_MZML.out.skyd_file.collect(),
-            wide_mzml_file_ch.collect()
+            wide_mzml_file_ch.collect(),
+            fasta
         )
 
         skyline_results = SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile

@@ -10,7 +10,9 @@ include { diann_search } from "./workflows/diann_search"
 include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
 include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
+include { skyline_annotate_doc } from "./workflows/skyline_annotate_document"
 include { skyline_reports } from "./workflows/skyline_run_reports"
+include { generate_dia_qc_report } from "./workflows/generate_qc_report"
 include { panorama_upload_results } from "./workflows/panorama_upload"
 include { panorama_upload_mzmls } from "./workflows/panorama_upload"
 
@@ -19,6 +21,21 @@ include { SAVE_RUN_DETAILS } from "./modules/save_run_details"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
+
+// Check if old Skyline parameter variables are defined.
+// If the old variable is defnied, return the params value of the old variable,
+// otherwise return the params value of the new variable
+def check_old_param_name(old_var, new_var) {
+    def(section, param) = new_var.split(/\./)
+    if(params[old_var] != null) {
+        if(params[section][param] != null) {
+            log.warn "Both params.$old_var and params.$new_var are defined!"
+        }
+        log.warn "Setting params.$new_var = params.$old_var"
+        return params[old_var]
+    }
+    return params[section][param]
+}
 
 //
 // The main workflow
@@ -31,6 +48,16 @@ workflow {
 
     config_file = file(workflow.configFiles[1]) // the config file used
 
+    // check for old param variable names
+    params.skyline.document_name = check_old_param_name('skyline_document_name',
+                                                        'skyline.document_name')
+    params.skyline.skip = check_old_param_name('skip_skyline',
+                                               'skyline.skip')
+    params.skyline.template_file = check_old_param_name('skyline_template_file',
+                                                        'skyline.template_file')
+    params.skyline.skyr_file = check_old_param_name('skyline_skyr_file',
+                                                    'skyline.skyr_file')
+
     // check for required params or incompatible params
     if(params.panorama.upload && !params.panorama.upload_url) {
         error "Panorama upload requested, but missing param: \'panorama.upload_url\'."
@@ -40,8 +67,8 @@ workflow {
         if(!params.panorama.upload) {
             error "Import of Skyline document in Panorama requested, but \'panorama.upload\' is not set to true."
         }
-        if(params.skip_skyline) {
-            error "Import of Skyline document in Panorama requested, but \'skip_skyline\' is set to true."
+        if(params.skyline.skip) {
+            error "Import of Skyline document in Panorama requested, but \'skyline.skip\' is set to true."
         }
     }
 
@@ -81,7 +108,7 @@ workflow {
     get_wide_mzmls()  // get wide windows mzmls
 
     // set up some convenience variables
-    
+
     if(params.spectral_library) {
         spectral_library = get_input_files.out.spectral_library
     } else {
@@ -106,7 +133,7 @@ workflow {
         // convert blib to dlib if necessary
         if(params.spectral_library.endsWith(".blib")) {
             ENCYCLOPEDIA_BLIB_TO_DLIB(
-                fasta, 
+                fasta,
                 spectral_library
             )
 
@@ -124,8 +151,8 @@ workflow {
 
             // create chromatogram library
             encyclopeda_export_elib(
-                narrow_mzml_ch, 
-                fasta, 
+                narrow_mzml_ch,
+                fasta,
                 spectral_library_to_use
             )
 
@@ -142,8 +169,8 @@ workflow {
 
         // search wide-window data using chromatogram library
         encyclopedia_quant(
-            wide_mzml_ch, 
-            fasta, 
+            wide_mzml_ch,
+            fasta,
             quant_library
         )
 
@@ -175,7 +202,7 @@ workflow {
             // convert spectral library to required format for dia-nn
             if(params.spectral_library.endsWith(".blib")) {
                 ENCYCLOPEDIA_BLIB_TO_DLIB(
-                    fasta, 
+                    fasta,
                     spectral_library
                 )
 
@@ -191,7 +218,7 @@ workflow {
                 )
 
                 spectral_library_to_use = ENCYCLOPEDIA_DLIB_TO_TSV.out.tsv
-            
+
             } else {
                 spectral_library_to_use = spectral_library
             }
@@ -203,7 +230,7 @@ workflow {
 
         all_elib_ch = Channel.empty()  // will be no encyclopedia
         all_mzml_ch = wide_mzml_ch
-        
+
         diann_search(
             wide_mzml_ch,
             fasta,
@@ -211,7 +238,7 @@ workflow {
         )
 
         // create compatible spectral library for Skyline, if needed
-        if(!params.skip_skyline) {
+        if(!params.skyline.skip) {
             BLIB_BUILD_LIBRARY(diann_search.out.speclib,
                                diann_search.out.precursor_tsv)
 
@@ -239,7 +266,7 @@ workflow {
         error "'${params.search_engine}' is an invalid argument for params.search_engine!"
     }
 
-    if(!params.skip_skyline) {
+    if(!params.skyline.skip) {
 
         // create Skyline document
         if(skyline_template_zipfile != null) {
@@ -251,11 +278,23 @@ workflow {
             )
         }
 
-        final_skyline_file = skyline_import.out.skyline_results
+        // annotate skyline document if replicate_metadata was specified
+        if(params.replicate_metadata != null) {
+            skyline_annotate_doc(skyline_import.out.skyline_results,
+                                 get_input_files.out.replicate_metadata)
+            final_skyline_file = skyline_annotate_doc.out.skyline_results
+        } else {
+            final_skyline_file = skyline_import.out.skyline_results
+        }
+
+        // generate QC report
+        if(!params.qc_report.skip) {
+            generate_dia_qc_report(final_skyline_file, get_input_files.out.replicate_metadata)
+        }
 
         // run reports if requested
         skyline_reports_ch = null;
-        if(params.skyline_skyr_file) {
+        if(params.skyline.skyr_file) {
             skyline_reports(
                 final_skyline_file,
                 skyr_file_ch
@@ -270,6 +309,7 @@ workflow {
         skyline_reports_ch = Channel.empty()
         skyr_file_ch = Channel.empty()
         final_skyline_file = Channel.empty()
+        qc_report_files = Channel.empty()
     }
 
     // upload results to Panorama

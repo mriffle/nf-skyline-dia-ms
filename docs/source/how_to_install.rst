@@ -3,7 +3,7 @@ How to Install the Workflow
 ===================================
 There are two parts to the Nextflow workflow:
 
-1. The Nextflow system that orchestrates the worfklow
+1. The Nextflow system that orchestrates the workflow
 2. The actual running of the programs that are part of the workflow
 
 These instructions will primarily describe how to install Nextflow on your computer so that you may start workflows using your computer. It does **not** assume that you will be running
@@ -33,14 +33,14 @@ Once installed you can easily access the command line of your new Ubuntu LTS ins
 
 Install Nextflow
 ================
-Follow the instructions at: https://www.nextflow.io/docs/latest/getstarted.html. 
+Follow the instructions at: https://www.nextflow.io/docs/latest/getstarted.html.
 
 Set up placeholder credentials
 ==============================
 The workflow currently needs a placeholder value for the secret key for PanoramaWeb to run. Enter the following on the command line where nextflow is being run:
 
 .. code::
-    
+
     nextflow secrets set PANORAMA_API_KEY "PLACEHOLDER"
 
 Optional: Set up AWS CLI on local system
@@ -66,7 +66,7 @@ If you are going to run workflows on AWS Batch or use S3, set up your AWS creden
 	Enter the secret key for “AWS Secret Access Key”.
 	Hit <ENTER> for the other options.
 
-Detailed instructions can be found at: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html. 
+Detailed instructions can be found at: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html.
 
 Optional: Set up PanoramaWeb credentials
 ==========================================
@@ -87,5 +87,5 @@ Follow the Docker install guide at: https://docs.docker.com/engine/install/
 
 Optional: Set up Docker credentials
 ===================================
-If you are going to be running the steps of the workflow on the local system (e.g. running Encyclopedia on your computer), you will need access to execute Docker containers without having to use sudo. Instructions to set this up can be found at https://docs.docker.com/engine/install/linux-postinstall/, under the heading “Manage Docker as a non-root user”. 
+If you are going to be running the steps of the workflow on the local system (e.g. running Encyclopedia on your computer), you will need access to execute Docker containers without having to use sudo. Instructions to set this up can be found at https://docs.docker.com/engine/install/linux-postinstall/, under the heading “Manage Docker as a non-root user”.
 
