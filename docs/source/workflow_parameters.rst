@@ -120,6 +120,9 @@ The ``params`` Section
        location here to use your own template. Note: The filenames in the .zip file must match
        the name of the zip file, itself. E.g., ``my-skyline-template.zip`` must contain ``my-skyline-template.sky``.
    * -
+     - ``replicate_metadata``
+     - Metadata annotations for each ``raw`` or ``mzML`` file. Can be in ``tsv`` or ``csv`` format. See the :ref:`replicate_metadata` section for details of how the file should be formatted. If a metadata file is specified it will be used to add annotations to the final Skyline document and can be used to color PCA plots in the QC report by specifying the ``qc_report.color_vars`` parameter. If this parameter is set to ``null`` the skyline document annotation step is skipped.
+   * -
      - ``qc_report.skip``
      - If set to ``true``, will skip the creation of a the QC report. Default: ``true``.
    * -
@@ -146,6 +149,32 @@ The ``params`` Section
    * -
      - ``email``
      - The email address to which a notification should be sent upon workflow completion. If no email is specified, no email will be sent. To send email, you must configure mail server settings (see below).
+
+
+.. _replicate_metadata:
+
+Providing replicate metadata
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``replicate_metadata`` file can be a ``tsv`` or ``csv`` file where the first column has the header ``Replicate``. The values under the replicate column should match exactly the names of the mzML or raw files which will be in the Skyline document. The headers of subsequent columns are the names of each metadata variable and the values in each column are the annotations corresponding to each replicate.
+
+.. list-table:: Example replicate metadata file format
+   :widths: 20 20 20
+   :header-rows: 1
+
+   * - Replicate
+     - sample_type
+     - strain
+   * - replicate_1.raw
+     - test
+     - BALB/cJ
+   * - replicate_2.raw
+     - test
+     - C57BL/6J
+   * - replicate_3.raw
+     - IBQC
+     - Pool
+
 
 The ``profiles`` Section
 ^^^^^^^^^^^^^^^^^^^^^^^^
