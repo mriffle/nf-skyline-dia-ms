@@ -4,7 +4,7 @@
 process SAVE_RUN_DETAILS {
     label 'process_low_constant'
     publishDir "${params.result_dir}", failOnError: true, mode: 'copy'
-    container "${workflow.profile == 'aws' ? 'public.ecr.aws/docker/library/ubuntu:22.04' : 'ubuntu:22.04'}"
+    container params.images.ubuntu
 
     output:
         path("nextflow_run_details.txt"), emit: run_details

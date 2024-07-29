@@ -12,7 +12,7 @@ def format_flags(vars, flag) {
 }
 
 process MAKE_EMPTY_FILE {
-    container "${workflow.profile == 'aws' ? 'public.ecr.aws/docker/library/ubuntu:22.04' : 'ubuntu:22.04'}"
+    container params.images.ubuntu
     label 'process_low'
 
     input:
@@ -32,7 +32,7 @@ process PARSE_REPORTS {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:2.0.0'
+    container params.images.qc_pipeline
 
     input:
         path replicate_report
@@ -64,7 +64,7 @@ process NORMALIZE_DB {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:2.0.0'
+    container params.images.qc_pipeline
 
     input:
         path qc_report_db
@@ -94,7 +94,7 @@ process GENERATE_QC_QMD {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high'
-    container 'quay.io/mauraisa/dia_qc_report:2.0.0'
+    container params.images.qc_pipeline
 
     input:
         path qc_report_db
@@ -123,7 +123,7 @@ process EXPORT_TABLES {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:2.0.0'
+    container params.images.qc_pipeline
 
     input:
         path precursor_db
@@ -150,7 +150,7 @@ process RENDER_QC_REPORT {
     publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'quay.io/mauraisa/dia_qc_report:2.0.0'
+    container params.images.qc_pipeline
 
     input:
         path qmd

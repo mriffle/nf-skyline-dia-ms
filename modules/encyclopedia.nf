@@ -3,7 +3,7 @@ def exec_java_command(mem) {
     return "java -Djava.aws.headless=true ${xmx} -jar /usr/local/bin/encyclopedia.jar"
 }
 
-ENCYCLOPEDIA_CONTAINER = 'quay.io/protio/encyclopedia:2.12.30-2'
+ENCYCLOPEDIA_CONTAINER = params.images.encyclopedia
 
 process ENCYCLOPEDIA_SEARCH_FILE {
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stderr", failOnError: true, mode: 'copy'
@@ -119,7 +119,7 @@ process ENCYCLOPEDIA_DLIB_TO_TSV {
     publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
-    container 'quay.io/protio/encyclopedia:3.0.0-MRIFFLE'
+    container encyclopedia3_mriffle
 
     input:
         path dlib
