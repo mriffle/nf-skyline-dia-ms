@@ -8,7 +8,7 @@ process SKYLINE_ADD_LIB {
     label 'process_medium'
     label 'process_short'
     label 'error_retry'
-    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
+    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24172-63d00b1'
 
     input:
         path skyline_template_zipfile
@@ -41,7 +41,7 @@ process SKYLINE_IMPORT_MZML {
     label 'process_high_memory'
     label 'process_short'
     label 'error_retry'
-    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
+    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24172-63d00b1'
     stageInMode "${workflow.profile == 'aws' ? 'symlink' : 'link'}"
 
     input:
@@ -70,7 +70,7 @@ process SKYLINE_MERGE_RESULTS {
     publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
-    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
+    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24172-63d00b1'
     stageInMode "${workflow.profile == 'aws' ? 'symlink' : 'link'}"
 
     input:
@@ -137,7 +137,7 @@ process ANNOTATION_TSV_TO_CSV {
 process SKYLINE_MINIMIZE_DOCUMENT {
     label 'error_retry'
     label 'process_high'
-    container 'proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
+    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24172-63d00b1'
 
     input:
         path skyline_zipfile
@@ -176,7 +176,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 process SKYLINE_ANNOTATE_DOCUMENT {
     publishDir "${params.result_dir}/skyline/annotate", failOnError: true, mode: 'copy'
     label 'process_high_memory'
-    container 'proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
+    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24172-63d00b1'
 
     input:
         path skyline_zipfile
@@ -218,7 +218,7 @@ process SKYLINE_RUN_REPORTS {
     publishDir "${params.result_dir}/skyline/reports", failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
-    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24054-2352758'
+    container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24172-63d00b1'
 
     input:
         path skyline_zipfile
