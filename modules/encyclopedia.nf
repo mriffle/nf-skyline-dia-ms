@@ -3,8 +3,6 @@ def exec_java_command(mem) {
     return "java -Djava.aws.headless=true ${xmx} -jar /usr/local/bin/encyclopedia.jar"
 }
 
-ENCYCLOPEDIA_CONTAINER = params.images.encyclopedia
-
 process ENCYCLOPEDIA_SEARCH_FILE {
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stderr", failOnError: true, mode: 'copy'
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stdout", failOnError: true, mode: 'copy'
@@ -14,7 +12,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.decoy.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     label 'process_high_constant'
-    container ENCYCLOPEDIA_CONTAINER
+    container params.images.encyclopedia
 
     input:
         path mzml_file
@@ -48,7 +46,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
 process ENCYCLOPEDIA_CREATE_ELIB {
     publishDir "${params.result_dir}/encyclopedia/create-elib", failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
-    container ENCYCLOPEDIA_CONTAINER
+    container params.images.encyclopedia
 
     input:
         path search_elib_files
@@ -91,7 +89,7 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
     publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
-    container ENCYCLOPEDIA_CONTAINER
+    container params.images.encyclopedia
 
     input:
         path fasta
