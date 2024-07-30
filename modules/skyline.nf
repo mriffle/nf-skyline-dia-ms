@@ -125,7 +125,7 @@ process ANNOTATION_TSV_TO_CSV {
 
     shell:
     """
-    metadata_to_sky_annotations ${replicate_metadata}
+    dia_qc metadata_convert -o skyline ${replicate_metadata}
     """
 
     stub:
