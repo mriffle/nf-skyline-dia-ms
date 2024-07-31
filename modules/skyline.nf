@@ -42,7 +42,7 @@ process SKYLINE_IMPORT_MZML {
     label 'process_short'
     label 'error_retry'
     container params.images.proteowizard
-    stageInMode "${workflow.profile == 'aws' ? 'symlink' : 'link'}"
+    stageInMode "${params.skyline.use_hardlinks && workflow.profile != 'aws' ? 'link' : 'symlink'}"
 
     input:
         path skyline_zipfile
@@ -71,7 +71,7 @@ process SKYLINE_MERGE_RESULTS {
     label 'process_high'
     label 'error_retry'
     container params.images.proteowizard
-    stageInMode "${workflow.profile == 'aws' ? 'symlink' : 'link'}"
+    stageInMode "${params.skyline.use_hardlinks && workflow.profile != 'aws' ? 'link' : 'symlink'}"
 
     input:
         path skyline_zipfile
