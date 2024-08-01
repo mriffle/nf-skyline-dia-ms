@@ -1,9 +1,9 @@
 // modules
-include { PANORAMA_GET_FASTA } from "../modules/panorama"
-include { PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
-include { PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
+include { PANORAMA_GET_FILE as PANORAMA_GET_FASTA } from "../modules/panorama"
+include { PANORAMA_GET_FILE as PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
+include { PANORAMA_GET_FILE as PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
 include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
-include { PANORAMA_GET_FASTA as PANORAMA_GET_METADATA } from "../modules/panorama"
+include { PANORAMA_GET_FILE as PANORAMA_GET_METADATA } from "../modules/panorama"
 include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
 workflow get_input_files {
