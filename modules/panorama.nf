@@ -11,17 +11,17 @@ String escapeRegex(String str) {
 
 /**
  * Get the Panorama project webdav URL for the given Panorama webdav directory
- * 
+ *
  * @param webdavDirectory The full URL to the WebDav directory on the Panorama server.
  * @return The modified URL pointing to the project's main view page.
  * @throws IllegalArgumentException if the input URL does not contain the required segments.
  */
 String getPanoramaProjectURLForWebDavDirectory(String webdavDirectory) {
     def uri = new URI(webdavDirectory)
-    
+
     def pathSegments = uri.path.split('/')
     pathSegments = pathSegments.findAll { it && it != '_webdav' }
-    
+
     int cutIndex = pathSegments.indexOf('@files')
     if (cutIndex != -1) {
         pathSegments = pathSegments.take(cutIndex)
@@ -30,7 +30,7 @@ String getPanoramaProjectURLForWebDavDirectory(String webdavDirectory) {
     def basePath = pathSegments.collect { URLEncoder.encode(it, "UTF-8") }.join('/')
     def encodedProjectView = URLEncoder.encode('project-begin.view', 'UTF-8')
     def newUrl = "${uri.scheme}://${uri.host}/${basePath}/${encodedProjectView}"
-    
+
     return newUrl
 }
 
@@ -67,11 +67,6 @@ process PANORAMA_GET_RAW_FILE_LIST {
 
     echo "Done!" # Needed for proper exit
     """
-
-    stub:
-    """
-    touch "panorama_files.txt"
-    """
 }
 
 process PANORAMA_GET_SKYLINE_TEMPLATE {
@@ -103,7 +98,8 @@ process PANORAMA_GET_SKYLINE_TEMPLATE {
 
     stub:
     """
-    touch "{$file(web_dav_dir_url).name}"
+    touch "${file(web_dav_dir_url).name}"
+    touch stub.stderr stub.stdout
     """
 }
 
@@ -136,7 +132,8 @@ process PANORAMA_GET_FASTA {
 
     stub:
     """
-    touch "{$file(web_dav_dir_url).name}"
+    touch "${file(web_dav_dir_url).name}"
+    touch stub.stderr stub.stdout
     """
 }
 
@@ -169,7 +166,8 @@ process PANORAMA_GET_SPECTRAL_LIBRARY {
 
     stub:
     """
-    touch "{$file(web_dav_dir_url).name}"
+    touch "${file(web_dav_dir_url).name}"
+    touch stub.stderr stub.stdout
     """
 }
 
@@ -202,7 +200,8 @@ process PANORAMA_GET_RAW_FILE {
 
     stub:
     """
-    touch "{$download_file_placeholder.baseName}"
+    touch "${download_file_placeholder.baseName}"
+    touch stub.stderr stub.stdout
     """
 }
 
@@ -232,11 +231,6 @@ process PANORAMA_GET_SKYR_FILE {
             > >(tee "panorama-get-${file_name}.stdout") 2> >(tee "panorama-get-${file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
         """
-
-    stub:
-    """
-    touch "{$file(web_dav_dir_url).name}"
-    """
 }
 
 process UPLOAD_FILE {
@@ -267,6 +261,11 @@ process UPLOAD_FILE {
             > >(tee "panorama-upload-${file_name}.stdout") 2> >(tee "panorama-upload-${file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
         """
+
+    stub:
+    '''
+    touch stub.stderr stub.stdout
+    '''
 }
 
 process IMPORT_SKYLINE {
@@ -296,4 +295,9 @@ process IMPORT_SKYLINE {
             > >(tee "panorama-import-skyline.stdout") 2> >(tee "panorama-import-skyline.stderr" >&2)
         echo "Done!" # Needed for proper exit
         """
+
+    stub:
+    '''
+    touch panorama-import-skyline.stdout panorama-import-skyline.stderr
+    '''
 }

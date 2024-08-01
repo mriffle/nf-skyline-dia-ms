@@ -41,6 +41,16 @@ process ENCYCLOPEDIA_SEARCH_FILE {
         ${encyclopedia_params} \\
         > >(tee "encyclopedia-${mzml_file.baseName}.stdout") 2> >(tee "encyclopedia-${mzml_file.baseName}.stderr" >&2)
     """
+
+    stub:
+    """
+    touch stub.stderr stub.stdout
+    touch "${mzml_file}.elib"
+    touch "${mzml_file.baseName}.dia"
+    touch "${mzml_file}.features.txt"
+    touch "${mzml_file}.encyclopedia.txt"
+    touch "${mzml_file}.encyclopedia.decoy.txt"
+    """
 }
 
 process ENCYCLOPEDIA_CREATE_ELIB {
@@ -83,6 +93,14 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         ${encyclopedia_params} \\
         > >(tee "${outputFilePrefix}.stdout") 2> >(tee "${outputFilePrefix}.stderr" >&2)
     """
+
+    stub:
+    """
+    touch stub.stderr stub.stdout
+    touch "${outputFilePrefix}-combined-results.elib"
+    touch "${outputFilePrefix}-combined-results.elib.peptides.txt"
+    touch "${outputFilePrefix}-combined-results.elib.proteins.txt"
+    """
 }
 
 process ENCYCLOPEDIA_BLIB_TO_DLIB {
@@ -111,13 +129,19 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
         -f "${fasta}" \\
         > >(tee "encyclopedia-convert-blib.stdout") 2> >(tee "encyclopedia-convert-blib.stderr" >&2)
     """
+
+    stub:
+    """
+    touch stub.stderr stub.stdout
+    touch "${blib.baseName}.dlib"
+    """
 }
 
 process ENCYCLOPEDIA_DLIB_TO_TSV {
     publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
-    container encyclopedia3_mriffle
+    container params.images.encyclopedia3_mriffle
 
     input:
         path dlib
@@ -136,5 +160,11 @@ process ENCYCLOPEDIA_DLIB_TO_TSV {
         -o "${dlib.baseName}.tsv" \\
         -i "${dlib}" \\
         > >(tee "encyclopedia-convert-dlib.stdout") 2> >(tee "encyclopedia-convert-dlib.stderr" >&2)
+    """
+
+    stub:
+    """
+    touch stub.stderr stub.stdout
+    touch "${dlib.baseName}.tsv"
     """
 }
