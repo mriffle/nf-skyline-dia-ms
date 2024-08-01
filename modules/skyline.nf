@@ -138,8 +138,8 @@ process ANNOTATION_TSV_TO_CSV {
         path replicate_metadata
 
     output:
-        path("sky_annotations.csv"), emit: annotation_csv
-        path("sky_annotation_definitions.bat"), emit: annotation_definitions
+        path("metadata.annotations.csv"), emit: annotation_csv
+        path("metadata.definitions.bat"), emit: annotation_definitions
 
     shell:
     """
@@ -148,7 +148,7 @@ process ANNOTATION_TSV_TO_CSV {
 
     stub:
     """
-    touch sky_annotation_definitions.bat  sky_annotations.csv
+    touch metadata.definitions.bat metadata.annotations.csv
     """
 }
 
