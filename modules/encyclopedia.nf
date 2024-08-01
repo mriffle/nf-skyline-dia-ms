@@ -117,7 +117,7 @@ process ENCYCLOPEDIA_DLIB_TO_TSV {
     publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
-    container encyclopedia3_mriffle
+    container params.images.encyclopedia3_mriffle
 
     input:
         path dlib
