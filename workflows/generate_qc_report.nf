@@ -1,8 +1,6 @@
 
 include { SKYLINE_RUN_REPORTS } from "../modules/skyline.nf"
 include { PARSE_REPORTS } from "../modules/qc_report.nf"
-include { NORMALIZE_DB } from "../modules/qc_report.nf"
-include { GENERATE_QC_QMD } from "../modules/qc_report.nf"
 include { RENDER_QC_REPORT } from "../modules/qc_report.nf"
 include { EXPORT_TABLES } from "../modules/qc_report.nf"
 
@@ -32,15 +30,8 @@ workflow generate_dia_qc_report {
                       precursor_report,
                       replicate_metadata)
 
-        if(params.qc_report.normalization_method != null) {
-            NORMALIZE_DB(PARSE_REPORTS.out.qc_report_db)
-            qc_report_db = NORMALIZE_DB.out.qc_report_db
-        } else {
-            qc_report_db = PARSE_REPORTS.out.qc_report_db
-        }
-
-        GENERATE_QC_QMD(qc_report_db)
-        qc_report_qmd = GENERATE_QC_QMD.out.qc_report_qmd
+        qc_report_db = PARSE_REPORTS.out.qc_report_db
+        qc_report_qmd = PARSE_REPORTS.out.qc_report_qmd
 
         report_formats = Channel.fromList(['html', 'pdf'])
         RENDER_QC_REPORT(qc_report_qmd.collect(), qc_report_db.collect(),
