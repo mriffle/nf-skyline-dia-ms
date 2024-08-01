@@ -1,0 +1,31 @@
+name: Nextflow Stub Run
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  stub-run:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config: [
+          'test-diann.config',
+          'test-encyclopedia-narrow-gpf.config',
+          'test-encyclopedia-wide-only.config'
+        ]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Run (${{ matrix.config }})
+      run: |
+        echo "Installing Nextflow:"
+        curl -s https://get.nextflow.io | bash
+        chmod +x nextflow
+        echo "Running Nextflow stub with config: ${{ matrix.config }}"
+        ./nextflow secrets set PANORAMA_API_KEY "PLACEHOLDER"
+        ./nextflow run . -stub-run -c test-resources/${{ matrix.config }}
