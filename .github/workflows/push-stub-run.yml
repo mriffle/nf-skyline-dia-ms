@@ -1,4 +1,4 @@
-name: Nextflow Stub Run
+name: Nextflow Stub Runs
 
 on:
   push:
