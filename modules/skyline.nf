@@ -33,6 +33,12 @@ process SKYLINE_ADD_LIB {
         --share-zip="results.sky.zip" \
         --share-type="complete"
     """
+
+    stub:
+    """
+    touch "results.sky.zip"
+    touch "skyline_add_library.log"
+    """
 }
 
 process SKYLINE_IMPORT_MZML {
@@ -63,6 +69,11 @@ process SKYLINE_IMPORT_MZML {
         --import-no-join \
         --log-file="${mzml_file.baseName}.log" \
         --import-file="/tmp/${mzml_file}" \
+    """
+
+    stub:
+    """
+    touch "${mzml_file.baseName}.log" "${mzml_file.baseName}.skyd"
     """
 }
 
@@ -106,6 +117,13 @@ process SKYLINE_MERGE_RESULTS {
         --share-zip="${params.skyline.document_name}.sky.zip" \
         --share-type="complete"
 
+    sky_zip_hash=\$( md5sum ${params.skyline.document_name}.sky.zip |awk '{print \$1}' )
+    """
+
+    stub:
+    """
+    touch "${params.skyline.document_name}.sky.zip"
+    touch "skyline-merge.log"
     sky_zip_hash=\$( md5sum ${params.skyline.document_name}.sky.zip |awk '{print \$1}' )
     """
 }
@@ -254,4 +272,19 @@ process SKYLINE_RUN_REPORTS {
         done
     done
     """
+
+    stub:
+    '''
+    touch stub.log
+
+    for xmlfile in ./*.skyr; do
+        awk -F'"' '/<view name=/ { print $2 }' "$xmlfile" | while read reportname; do
+            touch "${reportname}.report.tsv"
+        done
+    done
+
+    if [ $(ls *.report.tsv|wc -l) -eq 0 ] ; then
+        touch stub.report.tsv
+    fi
+    '''
 }

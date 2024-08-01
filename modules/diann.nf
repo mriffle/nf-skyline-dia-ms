@@ -38,7 +38,8 @@ process DIANN_SEARCH {
 
     stub:
         """
-        touch report.tsv.speclib report.tsv
+        touch report.tsv.speclib report.tsv stub.quant
+        touch stub.stderr stub.stdout
         """
 }
 
@@ -83,7 +84,8 @@ process DIANN_SEARCH_LIB_FREE {
 
     stub:
         """
-        touch report.tsv.speclib report.tsv
+        touch lib.predicted.speclib report.tsv.speclib report.tsv stub.quant
+        touch stub.stderr stub.stdout
         """
 }
 
