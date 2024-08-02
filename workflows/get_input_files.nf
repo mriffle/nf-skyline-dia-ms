@@ -6,6 +6,19 @@ include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
 include { PANORAMA_GET_FILE as PANORAMA_GET_METADATA } from "../modules/panorama"
 include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
+/**
+* Process a parameter variable which specified as either a single value or List.
+*
+* @param param_variable A parameter variable which can either be a single value or List.
+* @return param_variable A List with 1 or more values.
+*/
+def param_to_list(param_variable) {
+    if(param_variable instanceof List) {
+        return param_variable
+    }
+    return [param_variable]
+}
+
 workflow get_input_files {
 
    emit:
@@ -48,32 +61,24 @@ workflow get_input_files {
         }
 
         if(params.skyline.skyr_file != null) {
-            if(params.skyline.skyr_file.trim().startsWith("https://")) {
-                
-                // get file(s) from Panorama
-                skyr_location_ch = Channel.from(params.skyline.skyr_file)
-                                        .splitText()               // split multiline input
-                                        .map{ it.trim() }          // removing surrounding whitespace
-                                        .filter{ it.length() > 0 } // skip empty lines
 
-                // get raw files from panorama
-                PANORAMA_GET_SKYR_FILE(skyr_location_ch)
-                skyr_files = PANORAMA_GET_SKYR_FILE.out.panorama_file
+            // Split skyr files stored on Panorama and locally into separate channels.
+            skyr_paths = param_to_list(params.skyline.skyr_file)
+            panorama_skyr_files = skyr_paths.findAll{
+                it.startsWith("https://panoramaweb.org")
+            }
+            local_skyr_files = skyr_paths.findAll{
+                !it.startsWith("https://panoramaweb.org")
+            }
 
-            } else {
-                // files are local
-                skyr_files = Channel.from(params.skyline.skyr_file)
-                                        .splitText()               // split multiline input
-                                        .map{ it.trim() }          // removing surrounding whitespace
-                                        .filter{ it.length() > 0 } // skip empty lines
-                                        .map { path ->             // convert to files, check all exist
-                                            def fileObj = file(path)
-                                            if (!fileObj.exists()) {
-                                                error "File does not exist: $path"
-                                            }
-                                            return fileObj
-                                        }
+            // convert to files, check all exist
+            skyr_files = Channel.fromList(local_skyr_files).map {
+                path -> file(path, checkIfExists: true)
+            }
 
+            if(panorama_skyr_files.size() > 0) {
+                Channel.fromList(panorama_skyr_files) | PANORAMA_GET_SKYR_FILE
+                skyr_files = skyr_files.concat(PANORAMA_GET_SKYR_FILE.out.panorama_file)
             }
         } else {
             skyr_files = Channel.empty()
