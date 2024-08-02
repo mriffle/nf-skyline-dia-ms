@@ -4,8 +4,8 @@ nextflow.enable.dsl = 2
 
 // Sub workflows
 include { get_input_files } from "./workflows/get_input_files"
-include { encyclopeda_export_elib } from "./workflows/encyclopedia_elib"
-include { encyclopedia_quant } from "./workflows/encyclopedia_quant"
+include { encyclopedia_search as encyclopeda_export_elib } from "./workflows/encyclopedia_search"
+include { encyclopedia_search as encyclopedia_quant } from "./workflows/encyclopedia_search"
 include { diann_search } from "./workflows/diann_search"
 include { get_mzmls as get_narrow_mzmls } from "./workflows/get_mzmls"
 include { get_mzmls as get_wide_mzmls } from "./workflows/get_mzmls"
@@ -156,7 +156,10 @@ workflow {
             encyclopeda_export_elib(
                 narrow_mzml_ch,
                 fasta,
-                spectral_library_to_use
+                spectral_library_to_use,
+                'false',
+                'narrow',
+                params.encyclopedia.chromatogram.params
             )
 
             quant_library = encyclopeda_export_elib.out.elib
@@ -174,14 +177,18 @@ workflow {
         encyclopedia_quant(
             wide_mzml_ch,
             fasta,
-            quant_library
+            quant_library,
+            'true',
+            'wide',
+            params.encyclopedia.quant.params
+
         )
 
-        final_elib = encyclopedia_quant.out.final_elib
+        final_elib = encyclopedia_quant.out.elib
 
         all_elib_ch = all_elib_ch.concat(
             encyclopedia_quant.out.individual_elibs,
-            encyclopedia_quant.out.final_elib,
+            encyclopedia_quant.out.elib,
             encyclopedia_quant.out.peptide_quant,
             encyclopedia_quant.out.protein_quant
         )
