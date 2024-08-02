@@ -7,14 +7,20 @@ include { PANORAMA_GET_FILE as PANORAMA_GET_METADATA } from "../modules/panorama
 include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
 /**
-* Process a parameter variable which specified as either a single value or List.
+* Process a parameter variable which is specified as either a single value or List.
+* If param_variable has multiple lines, each line with text is returned as an
+* element in a List.
 *
 * @param param_variable A parameter variable which can either be a single value or List.
-* @return param_variable A List with 1 or more values.
+* @return param_variable as a List with 1 or more values.
 */
 def param_to_list(param_variable) {
     if(param_variable instanceof List) {
         return param_variable
+    }
+    if(param_variable instanceof String) {
+        // Split string by new line, remove whitespace, and skip empty lines
+        return param_variable.split('\n').collect{ it.trim() }.findAll{ it }
     }
     return [param_variable]
 }
