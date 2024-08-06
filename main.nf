@@ -4,11 +4,11 @@ nextflow.enable.dsl = 2
 
 // Sub workflows
 include { get_input_files } from "./workflows/get_input_files"
-include { encyclopeda_export_elib } from "./workflows/encyclopedia_elib"
-include { encyclopedia_quant } from "./workflows/encyclopedia_quant"
+include { encyclopedia_search as encyclopeda_export_elib } from "./workflows/encyclopedia_search"
+include { encyclopedia_search as encyclopedia_quant } from "./workflows/encyclopedia_search"
 include { diann_search } from "./workflows/diann_search"
-include { get_narrow_mzmls } from "./workflows/get_narrow_mzmls"
-include { get_wide_mzmls } from "./workflows/get_wide_mzmls"
+include { get_mzmls as get_narrow_mzmls } from "./workflows/get_mzmls"
+include { get_mzmls as get_wide_mzmls } from "./workflows/get_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
 include { skyline_annotate_doc } from "./workflows/skyline_annotate_document"
 include { skyline_reports } from "./workflows/skyline_run_reports"
@@ -78,13 +78,14 @@ workflow {
 
     // only perform msconvert and terminate
     if(params.msconvert_only) {
-        get_wide_mzmls()  // get wide windows mzmls
-        wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
+        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob)  // get wide windows mzmls
+        wide_mzml_ch = get_wide_mzmls.out.mzml_ch
 
         if(params.chromatogram_library_spectra_dir != null) {
-            get_narrow_mzmls()
+            get_narrow_mzmls(params.chromatogram_library_spectra_dir,
+                             params.chromatogram_library_spectra_glob)
 
-            narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
+            narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
             all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
         } else {
             all_mzml_ch = wide_mzml_ch
@@ -105,7 +106,7 @@ workflow {
     }
 
     get_input_files()   // get input files
-    get_wide_mzmls()  // get wide windows mzmls
+    get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob)  // get wide windows mzmls
 
     // set up some convenience variables
 
@@ -117,7 +118,7 @@ workflow {
 
     fasta = get_input_files.out.fasta
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
-    wide_mzml_ch = get_wide_mzmls.out.wide_mzml_ch
+    wide_mzml_ch = get_wide_mzmls.out.mzml_ch
     skyr_file_ch = get_input_files.out.skyr_files
 
     final_elib = null
@@ -144,8 +145,10 @@ workflow {
 
         // create elib if requested
         if(params.chromatogram_library_spectra_dir != null) {
-            get_narrow_mzmls()  // get narrow windows mzmls
-            narrow_mzml_ch = get_narrow_mzmls.out.narrow_mzml_ch
+            // get narrow windows mzmls
+            get_narrow_mzmls(params.chromatogram_library_spectra_dir,
+                             params.chromatogram_library_spectra_glob)
+            narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
 
             all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
 
@@ -153,7 +156,10 @@ workflow {
             encyclopeda_export_elib(
                 narrow_mzml_ch,
                 fasta,
-                spectral_library_to_use
+                spectral_library_to_use,
+                'false',
+                'narrow',
+                params.encyclopedia.chromatogram.params
             )
 
             quant_library = encyclopeda_export_elib.out.elib
@@ -171,14 +177,18 @@ workflow {
         encyclopedia_quant(
             wide_mzml_ch,
             fasta,
-            quant_library
+            quant_library,
+            'true',
+            'wide',
+            params.encyclopedia.quant.params
+
         )
 
-        final_elib = encyclopedia_quant.out.final_elib
+        final_elib = encyclopedia_quant.out.elib
 
         all_elib_ch = all_elib_ch.concat(
             encyclopedia_quant.out.individual_elibs,
-            encyclopedia_quant.out.final_elib,
+            encyclopedia_quant.out.elib,
             encyclopedia_quant.out.peptide_quant,
             encyclopedia_quant.out.protein_quant
         )

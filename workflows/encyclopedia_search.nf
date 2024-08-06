@@ -2,27 +2,30 @@
 include { ENCYCLOPEDIA_SEARCH_FILE } from "../modules/encyclopedia"
 include { ENCYCLOPEDIA_CREATE_ELIB } from "../modules/encyclopedia"
 
-workflow encyclopedia_quant {
+workflow encyclopedia_search {
 
     take:
         mzml_file_ch
         fasta
-        elib
+        lib
+        align
+        output_file_prefix
+        encyclopedia_params
 
     emit:
         individual_elibs
-        final_elib
+        elib
         peptide_quant
         protein_quant
-    
+
     main:
 
         // run encyclopedia for each mzML file
         ENCYCLOPEDIA_SEARCH_FILE(
-            mzml_file_ch, 
+            mzml_file_ch,
             fasta,
-            elib,
-            params.encyclopedia.quant.params
+            lib,
+            encyclopedia_params
         )
 
         individual_elibs = ENCYCLOPEDIA_SEARCH_FILE.out.elib
@@ -35,14 +38,13 @@ workflow encyclopedia_quant {
             ENCYCLOPEDIA_SEARCH_FILE.out.results_targets.collect(),
             ENCYCLOPEDIA_SEARCH_FILE.out.results_decoys.collect(),
             fasta,
-            elib,
-            'true',
-            'wide',
-            params.encyclopedia.quant.params
+            lib,
+            align,
+            output_file_prefix,
+            encyclopedia_params
         )
 
-        final_elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib
+        elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib
         peptide_quant = ENCYCLOPEDIA_CREATE_ELIB.out.peptide_quant
         protein_quant = ENCYCLOPEDIA_CREATE_ELIB.out.protein_quant
-
 }

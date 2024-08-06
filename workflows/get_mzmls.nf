@@ -3,27 +3,30 @@ include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
 include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
 include { MSCONVERT } from "../modules/msconvert"
 
-workflow get_wide_mzmls {
+workflow get_mzmls {
+    take:
+        spectra_dir
+        spectra_glob
 
-   emit:
-       wide_mzml_ch
+    emit:
+       mzml_ch
 
     main:
 
-        if(params.quant_spectra_dir.contains("https://")) {
+        if(spectra_dir.contains("https://")) {
 
-            spectra_dirs_ch = Channel.from(params.quant_spectra_dir)
+            spectra_dirs_ch = Channel.from(spectra_dir)
                                     .splitText()               // split multiline input
                                     .map{ it.trim() }          // removing surrounding whitespace
                                     .filter{ it.length() > 0 } // skip empty lines
 
             // get raw files from panorama
-            PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, params.quant_spectra_glob)
+            PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob)
 
             placeholder_ch = PANORAMA_GET_RAW_FILE_LIST.out.raw_file_placeholders.transpose()
             PANORAMA_GET_RAW_FILE(placeholder_ch)
             
-            wide_mzml_ch = MSCONVERT(
+            mzml_ch = MSCONVERT(
                 PANORAMA_GET_RAW_FILE.out.panorama_file,
                 params.msconvert.do_demultiplex,
                 params.msconvert.do_simasspectra
@@ -31,8 +34,8 @@ workflow get_wide_mzmls {
 
         } else {
 
-            file_glob = params.quant_spectra_glob
-            spectra_dir = file(params.quant_spectra_dir, checkIfExists: true)
+            file_glob = spectra_glob
+            spectra_dir = file(spectra_dir, checkIfExists: true)
             data_files = file("$spectra_dir/${file_glob}")
 
             if(data_files.size() < 1) {
@@ -51,9 +54,9 @@ workflow get_wide_mzmls {
             }
 
             if(mzml_files.size() > 0) {
-                    wide_mzml_ch = Channel.fromList(mzml_files)
+                    mzml_ch = Channel.fromList(mzml_files)
             } else {
-                wide_mzml_ch = MSCONVERT(
+                mzml_ch = MSCONVERT(
                     Channel.fromList(raw_files),
                     params.msconvert.do_demultiplex,
                     params.msconvert.do_simasspectra
