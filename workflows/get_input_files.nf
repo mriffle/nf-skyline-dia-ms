@@ -6,6 +6,8 @@ include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
 include { PANORAMA_GET_FILE as PANORAMA_GET_METADATA } from "../modules/panorama"
 include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
+PANORAMA_URL = 'https://panoramaweb.org'
+
 /**
 * Process a parameter variable which is specified as either a single value or List.
 * If param_variable has multiple lines, each line with text is returned as an
@@ -37,7 +39,7 @@ workflow get_input_files {
     main:
 
         // get files from Panorama as necessary
-        if(params.fasta.startsWith("https://")) {
+        if(params.fasta.startsWith(PANORAMA_URL)) {
             PANORAMA_GET_FASTA(params.fasta)
             fasta = PANORAMA_GET_FASTA.out.panorama_file
         } else {
@@ -45,7 +47,7 @@ workflow get_input_files {
         }
 
         if(params.spectral_library) {
-            if(params.spectral_library.startsWith("https://")) {
+            if(params.spectral_library.startsWith(PANORAMA_URL)) {
                 PANORAMA_GET_SPECTRAL_LIBRARY(params.spectral_library)
                 spectral_library = PANORAMA_GET_SPECTRAL_LIBRARY.out.panorama_file
             } else {
@@ -56,7 +58,7 @@ workflow get_input_files {
         }
 
         if(params.skyline.template_file != null) {
-            if(params.skyline.template_file.startsWith("https://")) {
+            if(params.skyline.template_file.startsWith(PANORAMA_URL)) {
                 PANORAMA_GET_SKYLINE_TEMPLATE(params.skyline.template_file)
                 skyline_template_zipfile = PANORAMA_GET_SKYLINE_TEMPLATE.out.panorama_file
             } else {
@@ -69,29 +71,22 @@ workflow get_input_files {
         if(params.skyline.skyr_file != null) {
 
             // Split skyr files stored on Panorama and locally into separate channels.
-            skyr_paths = param_to_list(params.skyline.skyr_file)
-            panorama_skyr_files = skyr_paths.findAll{
-                it.startsWith("https://panoramaweb.org")
-            }
-            local_skyr_files = skyr_paths.findAll{
-                !it.startsWith("https://panoramaweb.org")
-            }
+            Channel.fromList(param_to_list(params.skyline.skyr_file)).branch{
+                panorama_files: it.startsWith(PANORAMA_URL)
+                local_files: true
+                    return file(it, checkIfExists: true)
+                }.set{skyr_paths}
 
-            // convert to files, check all exist
-            skyr_files = Channel.fromList(local_skyr_files).map {
-                path -> file(path, checkIfExists: true)
-            }
+            skyr_files = skyr_paths.local_files
+            skyr_paths.panorama_files | PANORAMA_GET_SKYR_FILE
+            skyr_files = skyr_files.concat(PANORAMA_GET_SKYR_FILE.out.panorama_file)
 
-            if(panorama_skyr_files.size() > 0) {
-                Channel.fromList(panorama_skyr_files) | PANORAMA_GET_SKYR_FILE
-                skyr_files = skyr_files.concat(PANORAMA_GET_SKYR_FILE.out.panorama_file)
-            }
         } else {
             skyr_files = Channel.empty()
         }
 
         if(params.replicate_metadata != null) {
-            if(params.replicate_metadata.trim().startsWith("https://panoramaweb.org")) {
+            if(params.replicate_metadata.trim().startsWith(PANORAMA_URL)) {
                 PANORAMA_GET_METADATA(params.replicate_metadata)
                 replicate_metadata = PANORAMA_GET_METADATA.out.panorama_file
             } else {
