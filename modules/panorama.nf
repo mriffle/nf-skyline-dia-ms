@@ -69,75 +69,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
     """
 }
 
-process PANORAMA_GET_SKYLINE_TEMPLATE {
-    label 'process_low_constant'
-    label 'error_retry'
-    container params.images.panorama_client
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
-
-    input:
-        val web_dav_dir_url
-
-    output:
-        path("${file(web_dav_dir_url).name}"), emit: panorama_file
-        path("*.stdout"), emit: stdout
-        path("*.stderr"), emit: stderr
-
-    script:
-        file_name = file(web_dav_dir_url).name
-        """
-        echo "Downloading ${file_name} from Panorama..."
-            ${exec_java_command(task.memory)} \
-            -d \
-            -w "${web_dav_dir_url}" \
-            -k \$PANORAMA_API_KEY \
-            > >(tee "panorama-get-${file_name}.stdout") 2> >(tee "panorama-get-${file_name}.stderr" >&2)
-        echo "Done!" # Needed for proper exit
-        """
-
-    stub:
-    """
-    touch "${file(web_dav_dir_url).name}"
-    touch stub.stderr stub.stdout
-    """
-}
-
-process PANORAMA_GET_FASTA {
-    label 'process_low_constant'
-    label 'error_retry'
-    container params.images.panorama_client
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
-
-    input:
-        val web_dav_dir_url
-
-    output:
-        path("${file(web_dav_dir_url).name}"), emit: panorama_file
-        path("*.stdout"), emit: stdout
-        path("*.stderr"), emit: stderr
-
-    script:
-        file_name = file(web_dav_dir_url).name
-        """
-        echo "Downloading ${file_name} from Panorama..."
-            ${exec_java_command(task.memory)} \
-            -d \
-            -w "${web_dav_dir_url}" \
-            -k \$PANORAMA_API_KEY \
-            > >(tee "panorama-get-${file_name}.stdout") 2> >(tee "panorama-get-${file_name}.stderr" >&2)
-        echo "Done!" # Needed for proper exit
-        """
-
-    stub:
-    """
-    touch "${file(web_dav_dir_url).name}"
-    touch stub.stderr stub.stdout
-    """
-}
-
-process PANORAMA_GET_SPECTRAL_LIBRARY {
+process PANORAMA_GET_FILE {
     label 'process_low_constant'
     label 'error_retry'
     container params.images.panorama_client

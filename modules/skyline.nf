@@ -244,41 +244,38 @@ process SKYLINE_RUN_REPORTS {
 
     output:
         path("*.report.tsv"), emit: skyline_report_files
-        path("*.log"), emit: log
+        path("*.stdout"), emit: stdout
+        path("*.stderr"), emit: stderr
 
-    script:
-    """
-    unzip ${skyline_zipfile}
+    shell:
+    '''
+    unzip !{skyline_zipfile}
 
-    # add reports to skyline file
-    for skyrfile in *.skyr; do
-        wine SkylineCmd \
-            --in="${skyline_zipfile.baseName}" \
-            --log-file="skyline-import-\$skyrfile.log" \
-            --report-add="\$skyrfile" \
-            --save
-    done
+    # generate skyline batch file to export reports
+    echo "--in=\\"!{skyline_zipfile.baseName}\\"" > export_reports.bat
 
-    # run the reports
-    for xmlfile in ./*.skyr; do
-        awk -F'"' '/<view name=/ { print \$2 }' "\$xmlfile" | while read reportname; do
-            wine SkylineCmd \
-                --in="${skyline_zipfile.baseName}" \
-                --log-file="\$reportname.report-generation.log" \
-                --report-name="\$reportname" \
-                --report-file="./\$reportname.report.tsv" \
-                --report-format="TSV" \
-                --report-invariant
+    for skyrfile in ./*.skyr; do
+        # Add report to document
+        echo "--report-add=\\"${skyrfile}\\"" >> export_reports.bat
+
+        # Export report
+        awk -F'"' '/<view name=/ { print $2 }' "$skyrfile" | while read reportname; do
+            echo "--report-name=\\"${reportname}\\" \
+                  --report-file=\\"${reportname}.report.tsv\\" \
+                  --report-format=TSV --report-invariant" \
+                  >> export_reports.bat
         done
     done
-    """
+
+    # Run batch commands
+    wine SkylineCmd --batch-commands=export_reports.bat \
+        > >(tee 'export_reports.stdout') 2> >(tee 'export_reports.stderr' >&2)
+    '''
 
     stub:
     '''
-    touch stub.log
-
-    for xmlfile in ./*.skyr; do
-        awk -F'"' '/<view name=/ { print $2 }' "$xmlfile" | while read reportname; do
+    for skyrfile in ./*.skyr; do
+        awk -F'"' '/<view name=/ { print $2 }' "$skyrfile" | while read reportname; do
             touch "${reportname}.report.tsv"
         done
     done
@@ -286,5 +283,7 @@ process SKYLINE_RUN_REPORTS {
     if [ $(ls *.report.tsv|wc -l) -eq 0 ] ; then
         touch stub.report.tsv
     fi
+
+    touch stub.stdout stub.stderr
     '''
 }

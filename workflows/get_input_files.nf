@@ -1,10 +1,31 @@
 // modules
-include { PANORAMA_GET_FASTA } from "../modules/panorama"
-include { PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
-include { PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
+include { PANORAMA_GET_FILE as PANORAMA_GET_FASTA } from "../modules/panorama"
+include { PANORAMA_GET_FILE as PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
+include { PANORAMA_GET_FILE as PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
 include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
-include { PANORAMA_GET_FASTA as PANORAMA_GET_METADATA } from "../modules/panorama"
+include { PANORAMA_GET_FILE as PANORAMA_GET_METADATA } from "../modules/panorama"
 include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
+
+PANORAMA_URL = 'https://panoramaweb.org'
+
+/**
+* Process a parameter variable which is specified as either a single value or List.
+* If param_variable has multiple lines, each line with text is returned as an
+* element in a List.
+*
+* @param param_variable A parameter variable which can either be a single value or List.
+* @return param_variable as a List with 1 or more values.
+*/
+def param_to_list(param_variable) {
+    if(param_variable instanceof List) {
+        return param_variable
+    }
+    if(param_variable instanceof String) {
+        // Split string by new line, remove whitespace, and skip empty lines
+        return param_variable.split('\n').collect{ it.trim() }.findAll{ it }
+    }
+    return [param_variable]
+}
 
 workflow get_input_files {
 
@@ -18,7 +39,7 @@ workflow get_input_files {
     main:
 
         // get files from Panorama as necessary
-        if(params.fasta.startsWith("https://")) {
+        if(params.fasta.startsWith(PANORAMA_URL)) {
             PANORAMA_GET_FASTA(params.fasta)
             fasta = PANORAMA_GET_FASTA.out.panorama_file
         } else {
@@ -26,7 +47,7 @@ workflow get_input_files {
         }
 
         if(params.spectral_library) {
-            if(params.spectral_library.startsWith("https://")) {
+            if(params.spectral_library.startsWith(PANORAMA_URL)) {
                 PANORAMA_GET_SPECTRAL_LIBRARY(params.spectral_library)
                 spectral_library = PANORAMA_GET_SPECTRAL_LIBRARY.out.panorama_file
             } else {
@@ -37,7 +58,7 @@ workflow get_input_files {
         }
 
         if(params.skyline.template_file != null) {
-            if(params.skyline.template_file.startsWith("https://")) {
+            if(params.skyline.template_file.startsWith(PANORAMA_URL)) {
                 PANORAMA_GET_SKYLINE_TEMPLATE(params.skyline.template_file)
                 skyline_template_zipfile = PANORAMA_GET_SKYLINE_TEMPLATE.out.panorama_file
             } else {
@@ -48,39 +69,24 @@ workflow get_input_files {
         }
 
         if(params.skyline.skyr_file != null) {
-            if(params.skyline.skyr_file.trim().startsWith("https://")) {
-                
-                // get file(s) from Panorama
-                skyr_location_ch = Channel.from(params.skyline.skyr_file)
-                                        .splitText()               // split multiline input
-                                        .map{ it.trim() }          // removing surrounding whitespace
-                                        .filter{ it.length() > 0 } // skip empty lines
 
-                // get raw files from panorama
-                PANORAMA_GET_SKYR_FILE(skyr_location_ch)
-                skyr_files = PANORAMA_GET_SKYR_FILE.out.panorama_file
+            // Split skyr files stored on Panorama and locally into separate channels.
+            Channel.fromList(param_to_list(params.skyline.skyr_file)).branch{
+                panorama_files: it.startsWith(PANORAMA_URL)
+                local_files: true
+                    return file(it, checkIfExists: true)
+                }.set{skyr_paths}
 
-            } else {
-                // files are local
-                skyr_files = Channel.from(params.skyline.skyr_file)
-                                        .splitText()               // split multiline input
-                                        .map{ it.trim() }          // removing surrounding whitespace
-                                        .filter{ it.length() > 0 } // skip empty lines
-                                        .map { path ->             // convert to files, check all exist
-                                            def fileObj = file(path)
-                                            if (!fileObj.exists()) {
-                                                error "File does not exist: $path"
-                                            }
-                                            return fileObj
-                                        }
+            skyr_files = skyr_paths.local_files
+            skyr_paths.panorama_files | PANORAMA_GET_SKYR_FILE
+            skyr_files = skyr_files.concat(PANORAMA_GET_SKYR_FILE.out.panorama_file)
 
-            }
         } else {
             skyr_files = Channel.empty()
         }
 
         if(params.replicate_metadata != null) {
-            if(params.replicate_metadata.trim().startsWith("https://panoramaweb.org")) {
+            if(params.replicate_metadata.trim().startsWith(PANORAMA_URL)) {
                 PANORAMA_GET_METADATA(params.replicate_metadata)
                 replicate_metadata = PANORAMA_GET_METADATA.out.panorama_file
             } else {

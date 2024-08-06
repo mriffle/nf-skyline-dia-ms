@@ -20,7 +20,7 @@ workflow generate_dia_qc_report {
 
         // export skyline reports
         skyr_files = Channel.fromList([params.qc_report.replicate_report_template,
-                                       params.qc_report.precursor_report_template]).map{ file(it) }
+                                       params.qc_report.precursor_report_template]).map{ file(it, checkIfExists: true) }
         SKYLINE_RUN_REPORTS(sky_zip_file, skyr_files.collect())
         sky_reports = SKYLINE_RUN_REPORTS.out.skyline_report_files.flatten().map{ it -> tuple(it.name, it) }
         precursor_report = sky_reports.filter{ it[0] =~ /^precursor_quality\.report\.tsv$/ }.map{ it -> it[1] }
