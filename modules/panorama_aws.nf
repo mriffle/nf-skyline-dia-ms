@@ -41,8 +41,8 @@ String setupPanoramaAPIKeySecret() {
     REGION = aws.region
 
     return """
-        SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
-        PANORAMA_API_KEY=$(echo $SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\([^"]*\)".*/\1/p')
+        SECRET_JSON=\$(aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
+        PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\([^"]*\)".*/\1/p')
     """
 }
 
