@@ -138,8 +138,8 @@ process ANNOTATION_TSV_TO_CSV {
         path replicate_metadata
 
     output:
-        path("metadata.annotations.csv"), emit: annotation_csv
-        path("metadata.definitions.bat"), emit: annotation_definitions
+        path("${replicate_metadata.baseName}.annotations.csv"), emit: annotation_csv
+        path("${replicate_metadata.baseName}.definitions.bat"), emit: annotation_definitions
 
     shell:
     """
@@ -148,7 +148,7 @@ process ANNOTATION_TSV_TO_CSV {
 
     stub:
     """
-    touch metadata.definitions.bat metadata.annotations.csv
+    touch ${replicate_metadata.baseName}.definitions.bat ${replicate_metadata.baseName}.annotations.csv
     """
 }
 
