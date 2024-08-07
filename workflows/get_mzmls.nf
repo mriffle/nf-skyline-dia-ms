@@ -23,7 +23,7 @@ workflow get_mzmls {
                                     .filter{ it.length() > 0 } // skip empty lines
 
             // get raw files from panorama
-            if(task.executor == 'awsbatch') {
+            if(workflow.profile == 'aws') {
                 PANORAMA_GET_RAW_FILE_LIST_AWS(spectra_dirs_ch, spectra_glob, aws_setup_complete)
             } else {
                 PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob)
