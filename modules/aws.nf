@@ -15,17 +15,17 @@ process BUILD_AWS_SECRETS {
     script:
         """
         # Check if the secret already exists
-        SECRET_EXISTS=$(aws secretsmanager list-secrets --region ${REGION} --query "SecretList[?Name=='${SECRET_ID}'].Name" --output text)
+        SECRET_EXISTS=\$(aws secretsmanager list-secrets --region ${REGION} --query "SecretList[?Name=='${SECRET_ID}'].Name" --output text)
 
-        if [ "$SECRET_EXISTS" == "${SECRET_ID}" ]; then
+        if [ "\$SECRET_EXISTS" == "${SECRET_ID}" ]; then
             echo "Secret with name '${SECRET_ID}' already exists. Checking the value."
 
             # Retrieve the existing secret value
 
-            EXISTING_SECRET=$(aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
+            EXISTING_SECRET=\$(aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
             SECRET_STRING='{"${SECRET_NAME}":"\$PANORAMA_API_KEY"}'
 
-            if [ "$EXISTING_SECRET" == "$SECRET_STRING" ]; then
+            if [ "\$EXISTING_SECRET" == "\$SECRET_STRING" ]; then
                 echo "The existing secret value is the same. No update needed."
                 touch aws-setup-secrets.stderr
                 touch aws-setup-secrets.stdout
@@ -34,7 +34,7 @@ process BUILD_AWS_SECRETS {
 
                 aws secretsmanager update-secret \
                     --secret-id ${SECRET_ID} \
-                    --secret-string $SECRET_STRING \
+                    --secret-string \$SECRET_STRING \
                     --region ${REGION} \
                     > >(tee "aws-setup-secrets.stdout") 2> >(tee "aws-setup-secrets.stderr" >&2)
 
@@ -45,7 +45,7 @@ process BUILD_AWS_SECRETS {
 
             aws secretsmanager create-secret \
                 --name ${SECRET_ID} \
-                --secret-string $SECRET_STRING \
+                --secret-string \$SECRET_STRING \
                 --region ${REGION} \
                 > >(tee "aws-setup-secrets.stdout") 2> >(tee "aws-setup-secrets.stderr" >&2)
 
@@ -72,7 +72,7 @@ process DESTROY_AWS_SECRETS {
         """
         aws secretsmanager delete-secret \
         --secret-id ${SECRET_ID} \
-        --region ${aws.region} \
+        --region ${REGION} \
         --force-delete-without-recovery \
         > >(tee "aws-destroy-secrets.stdout") 2> >(tee "aws-destroy-secrets.stderr" >&2)
         """
