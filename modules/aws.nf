@@ -1,6 +1,6 @@
 SECRET_ID   = 'SKYLINE_DIA_MS_SECRETS'
 SECRET_NAME = 'PANORAMA_API_KEY'
-REGION = aws.region
+
 
 process BUILD_AWS_SECRETS {
     label 'process_low_constant'
@@ -13,6 +13,8 @@ process BUILD_AWS_SECRETS {
         path("aws-setup-secrets.stdout"), emit: stdout
 
     script:
+        REGION = aws.region
+
         """
         # Check if the secret already exists
         SECRET_EXISTS=\$(aws secretsmanager list-secrets --region ${REGION} --query "SecretList[?Name=='${SECRET_ID}'].Name" --output text)
@@ -69,6 +71,8 @@ process DESTROY_AWS_SECRETS {
         path("aws-destroy-secrets.stdout"), emit: stdout
 
     script:
+        REGION = aws.region
+
         """
         aws secretsmanager delete-secret \
         --secret-id ${SECRET_ID} \
