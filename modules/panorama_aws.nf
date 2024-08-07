@@ -38,8 +38,8 @@ String setupPanoramaAPIKeySecret() {
 
     SECRET_ID   = 'SKYLINE_DIA_MS_SECRETS'
     SECRET_NAME = 'PANORAMA_API_KEY'
-    REGION = aws.region
-
+    REGION = 'us-west-2'
+    
     return """
         SECRET_JSON=\$(aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
         PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\\([^"]*\\)".*/\\1/p')
