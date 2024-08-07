@@ -17,14 +17,14 @@ process BUILD_AWS_SECRETS {
         """
         # Check if the secret already exists
         SECRET_EXISTS=\$(aws secretsmanager list-secrets --region ${REGION} --query "SecretList[?Name=='${SECRET_ID}'].Name" --output text)
-
+        SECRET_STRING='{"${SECRET_NAME}":"\$PANORAMA_API_KEY"}'
+        
         if [ "\$SECRET_EXISTS" == "${SECRET_ID}" ]; then
             echo "Secret with name '${SECRET_ID}' already exists. Checking the value."
 
             # Retrieve the existing secret value
 
             EXISTING_SECRET=\$(aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
-            SECRET_STRING='{"${SECRET_NAME}":"\$PANORAMA_API_KEY"}'
 
             if [ "\$EXISTING_SECRET" == "\$SECRET_STRING" ]; then
                 echo "The existing secret value is the same. No update needed."
