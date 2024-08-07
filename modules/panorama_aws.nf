@@ -46,7 +46,7 @@ String setupPanoramaAPIKeySecret() {
     """
 }
 
-process PANORAMA_GET_RAW_FILE_LIST {
+process PANORAMA_GET_RAW_FILE_LIST_AWS {
     cache false
     label 'process_low_constant'
     label 'error_retry'
