@@ -21,6 +21,7 @@ include { SAVE_RUN_DETAILS } from "./modules/save_run_details"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
+include { BUILD_AWS_SECRETS } from "./modules/aws"
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
@@ -74,6 +75,10 @@ workflow {
 
     // save details about this run
     SAVE_RUN_DETAILS()
+    if(process.executor == 'awsbatch') {
+        BUILD_AWS_SECRETS()
+    }
+    
     run_details_file = SAVE_RUN_DETAILS.out.run_details
 
     // only perform msconvert and terminate
