@@ -77,18 +77,22 @@ workflow {
     SAVE_RUN_DETAILS()
     if(workflow.profile == 'aws') {
         BUILD_AWS_SECRETS()
+        aws_setup_complete = BUILD_AWS_SECRETS.out.stdout
+    } else {
+        aws_setup_complete = Channel.empty()
     }
 
     run_details_file = SAVE_RUN_DETAILS.out.run_details
 
     // only perform msconvert and terminate
     if(params.msconvert_only) {
-        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob)  // get wide windows mzmls
+        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_setup_complete)  // get wide windows mzmls
         wide_mzml_ch = get_wide_mzmls.out.mzml_ch
 
         if(params.chromatogram_library_spectra_dir != null) {
             get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                             params.chromatogram_library_spectra_glob)
+                             params.chromatogram_library_spectra_glob,
+                             aws_setup_complete)
 
             narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
             all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
@@ -111,7 +115,7 @@ workflow {
     }
 
     get_input_files()   // get input files
-    get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob)  // get wide windows mzmls
+    get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_setup_complete)  // get wide windows mzmls
 
     // set up some convenience variables
 
@@ -152,7 +156,8 @@ workflow {
         if(params.chromatogram_library_spectra_dir != null) {
             // get narrow windows mzmls
             get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                             params.chromatogram_library_spectra_glob)
+                             params.chromatogram_library_spectra_glob,
+                             aws_setup_complete)
             narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
 
             all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)

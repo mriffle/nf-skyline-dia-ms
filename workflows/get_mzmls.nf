@@ -1,12 +1,14 @@
 // modules
 include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
 include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
+include { PANORAMA_GET_RAW_FILE_LIST AS PANORAMA_GET_RAW_FILE_LIST_AWS} from "../modules/panorama_aws"
 include { MSCONVERT } from "../modules/msconvert"
 
 workflow get_mzmls {
     take:
         spectra_dir
         spectra_glob
+        aws_setup_complete
 
     emit:
        mzml_ch
@@ -21,7 +23,11 @@ workflow get_mzmls {
                                     .filter{ it.length() > 0 } // skip empty lines
 
             // get raw files from panorama
-            PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob)
+            if(task.executor == 'awsbatch') {
+                PANORAMA_GET_RAW_FILE_LIST_AWS(spectra_dirs_ch, spectra_glob, aws_setup_complete)
+            } else {
+                PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob)
+            }
 
             placeholder_ch = PANORAMA_GET_RAW_FILE_LIST.out.raw_file_placeholders.transpose()
             PANORAMA_GET_RAW_FILE(placeholder_ch)
