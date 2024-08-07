@@ -24,12 +24,12 @@ workflow get_mzmls {
 
             // get raw files from panorama
             if(workflow.profile == 'aws') {
-                PANORAMA_GET_RAW_FILE_LIST_AWS(spectra_dirs_ch, spectra_glob, aws_setup_complete)
+                panorama_raw_list_ch = PANORAMA_GET_RAW_FILE_LIST_AWS(spectra_dirs_ch, spectra_glob, aws_setup_complete)
             } else {
-                PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob)
+                panorama_raw_list_ch = PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob)
             }
 
-            placeholder_ch = PANORAMA_GET_RAW_FILE_LIST.out.raw_file_placeholders.transpose()
+            placeholder_ch = panorama_raw_list_ch.raw_file_placeholders.transpose()
             PANORAMA_GET_RAW_FILE(placeholder_ch)
             
             mzml_ch = MSCONVERT(
