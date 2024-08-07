@@ -75,10 +75,10 @@ workflow {
 
     // save details about this run
     SAVE_RUN_DETAILS()
-    if(process.executor == 'awsbatch') {
+    if(workflow.profile == 'aws') {
         BUILD_AWS_SECRETS()
     }
-    
+
     run_details_file = SAVE_RUN_DETAILS.out.run_details
 
     // only perform msconvert and terminate
