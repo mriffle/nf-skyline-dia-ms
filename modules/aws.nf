@@ -23,7 +23,7 @@ process GET_AWS_USER_ID {
 
     script:
     """
-    aws sts get-caller-identity | grep '"UserId"' | awk -F'"' '{print \$4}' | tr -d '\n'
+    aws sts get-caller-identity | grep '"Arn"' | sed 's/.*user\\///' | tr -d '",' | tr -d '\n'
     """
 
     stub:
