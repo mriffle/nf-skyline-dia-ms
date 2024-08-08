@@ -26,7 +26,8 @@ include { BUILD_AWS_SECRETS } from "./modules/aws"
 
 // useful functions and variables
 include { param_to_list } from "./workflows/get_input_files"
-include { PANORAMA_URL } from "./workflows/get_input_files"
+
+PANORAMA_URL = 'https://panoramaweb.org'
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
