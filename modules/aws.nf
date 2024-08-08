@@ -22,13 +22,13 @@ REGION = 'us-west-2'
 // define this as a separate process so it can be cached
 process CREATE_AWS_SECRET_ID {
     executor 'local'
-
+    
     output:
-        val aws_secret_id
+    val aws_secret_id
     
     exec:
-        aws_secret_id = generateRandomSecretId()
-        emit: aws_secret_id
+    aws_secret_id = generateRandomSecretId()
+    emit: aws_secret_id
 }
 
 process BUILD_AWS_SECRETS {
