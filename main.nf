@@ -21,6 +21,7 @@ include { SAVE_RUN_DETAILS } from "./modules/save_run_details"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
+include { GET_AWS_USER_ID } from "./modules/aws"
 include { BUILD_AWS_SECRETS } from "./modules/aws"
 
 // useful functions and variables
@@ -85,7 +86,8 @@ workflow {
 
     // if accessing panoramaweb and running on aws, set up an aws secret
     if(workflow.profile == 'aws' && is_panorama_used) {
-        BUILD_AWS_SECRETS()
+        GET_AWS_USER_ID()
+        BUILD_AWS_SECRETS(GET_AWS_USER_ID.out)
         aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
     } else {
         aws_secret_id = Channel.empty()

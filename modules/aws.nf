@@ -2,9 +2,9 @@
   * Generate a unique string for this user to store the
   * PanoramaWeb API key.
   */
-def generateAWSSecretId() {
+def generateAWSSecretId(aws_user_id) {
     StringBuilder sb = new StringBuilder("NF_")
-    sb.append(workflow.userName)
+    sb.append(aws_user_id)
     sb.append("_PANORAMA_KEY")
 
     return sb.toString()
@@ -13,6 +13,21 @@ def generateAWSSecretId() {
 SECRET_NAME = 'PANORAMA_API_KEY'
 REGION = 'us-west-2'
 
+process GET_AWS_USER_ID {
+    output:
+    stdout emit: aws_user_id
+
+    script:
+    """
+    aws sts get-caller-identity | grep '"UserId"' | awk -F'"' '{print \$4}'
+    """
+
+    stub:
+    """
+    echo "STUB_USER_ID"
+    """
+}
+
 process BUILD_AWS_SECRETS {
     label 'process_low_constant'
     secret 'PANORAMA_API_KEY'
@@ -20,13 +35,15 @@ process BUILD_AWS_SECRETS {
     publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
     cache false         // never cache to ensure keys get made/updated if necessary
 
+    input:
+        val aws_user_id
     output:
         path("aws-setup-secrets.stderr"), emit: stderr
         path("aws-setup-secrets.stdout"), emit: stdout
         val secret_id, emit: aws_secret_id
 
     script:
-        secret_id = generateAWSSecretId()
+        secret_id = generateAWSSecretId(aws_user_id)
 
         """
         # Check if the secret already exists
@@ -73,6 +90,7 @@ process BUILD_AWS_SECRETS {
         fi
         """
     stub:
+        secret_id = 'stub_secret_id'
         """
         touch aws-setup-secrets.stderr
         touch aws-setup-secrets.stdout
