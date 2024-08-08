@@ -43,7 +43,7 @@ process BUILD_AWS_SECRETS {
     output:
         path("aws-setup-secrets.stderr"), emit: stderr
         path("aws-setup-secrets.stdout"), emit: stdout
-        val aws_secret_id
+        val aws_secret_id, emit: aws_secret_id
 
     script:
         aws_secret_id = secret_id
