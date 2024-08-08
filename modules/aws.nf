@@ -21,6 +21,7 @@ process BUILD_AWS_SECRETS {
 
         echo "SECRET_EXISTS: \$SECRET_EXISTS"
         echo "SECRET_STRING: \$SECRET_STRING"
+        echo "PANORAMA_API_KEY: \$PANORAMA_API_KEY"
         
         if [ "\$SECRET_EXISTS" == "${SECRET_ID}" ]; then
             echo "Secret with name '${SECRET_ID}' already exists. Checking the value."
