@@ -22,7 +22,7 @@ workflow get_mzmls {
                                     .filter{ it.length() > 0 } // skip empty lines
 
             // get raw files from panorama
-            panorama_raw_list_ch = PANORAMA_GET_RAW_FILE_LIST_AWS(spectra_dirs_ch, spectra_glob, aws_secret_id)
+            panorama_raw_list_ch = PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob, aws_secret_id)
             placeholder_ch = panorama_raw_list_ch.raw_file_placeholders.transpose()
             PANORAMA_GET_RAW_FILE(placeholder_ch)
             
