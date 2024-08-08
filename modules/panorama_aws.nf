@@ -37,10 +37,10 @@ String getPanoramaProjectURLForWebDavDirectory(String webdavDirectory) {
 String setupPanoramaAPIKeySecret(secret_id) {
 
     SECRET_NAME = 'PANORAMA_API_KEY'
-    REGION = 'us-west-2'
+    REGION = params.aws.region
     
     return """
-        SECRET_JSON=\$(/usr/local/aws-cli/v2/current/bin/aws secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
+        SECRET_JSON=\$(${params.aws.batch.cliPath} secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
         PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\\([^"]*\\)".*/\\1/p')
     """
 }

@@ -11,7 +11,7 @@ def generateAWSSecretId(aws_user_id) {
 }
 
 SECRET_NAME = 'PANORAMA_API_KEY'
-REGION = 'us-west-2'
+REGION = params.aws.region
 
 process GET_AWS_USER_ID {
     label 'process_low_constant'
