@@ -24,6 +24,10 @@ include { BLIB_BUILD_LIBRARY } from "./modules/diann"
 include { CREATE_AWS_SECRET_ID } from "./modules/aws"
 include { BUILD_AWS_SECRETS } from "./modules/aws"
 
+// useful functions and variables
+include { param_to_list } from "./workflows/get_input_files"
+include { PANORAMA_URL } from "./workflows/get_input_files"
+
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
 // otherwise return the params value of the new variable
@@ -78,8 +82,8 @@ workflow {
     SAVE_RUN_DETAILS()
     run_details_file = SAVE_RUN_DETAILS.out.run_details
 
-    // if running on aws, set up an aws secret
-    if(workflow.profile == 'aws') {
+    // if accessing panoramaweb and running on aws, set up an aws secret
+    if(is_panorama_used && workflow.profile == 'aws') {
         CREATE_AWS_SECRET_ID()
         BUILD_AWS_SECRETS(CREATE_AWS_SECRET_ID.out)
         aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
@@ -370,6 +374,25 @@ def get_fasta() {
     return fasta
 }
 
+// return true if any entry in the list created from the param is a panoramaweb URL
+def any_entry_is_panorama(param) {
+    values = param_to_list(param)
+    return values.any { it.startsWith(PANORAMA_URL) }
+}
+
+// return true if panoramaweb will be accessed by this Nextflow run
+def is_panorama_used() {
+
+    return params.panorama.upload ||
+           (params.fasta && params.fasta.startsWith(PANORAMA_URL)) ||
+           (params.spectral_library && params.spectral_library.startsWith(PANORAMA_URL)) ||
+           (params.replicate_metadata && params.replicate_metadata.startsWith(PANORAMA_URL)) ||
+           (params.skyline.template_file && params.skyline.template_file.startsWith(PANORAMA_URL)) ||
+           (params.quant_spectra_dir && any_entry_is_panorama(params.quant_spectra_dir)) ||
+           (params.chromatogram_library_spectra_dir && any_entry_is_panorama(params.chromatogram_library_spectra_dir)) ||
+           (params.skyline_skyr_file && any_entry_is_panorama(params.skyline_skyr_file))
+           
+}
 
 //
 // Used for email notifications
