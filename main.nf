@@ -21,7 +21,6 @@ include { SAVE_RUN_DETAILS } from "./modules/save_run_details"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
-include { CREATE_AWS_SECRET_ID } from "./modules/aws"
 include { BUILD_AWS_SECRETS } from "./modules/aws"
 
 // useful functions and variables
