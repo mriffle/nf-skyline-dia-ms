@@ -28,6 +28,7 @@ process CREATE_AWS_SECRET_ID {
     
     exec:
         aws_secret_id = generateRandomSecretId()
+        emit: aws_secret_id
 }
 
 process BUILD_AWS_SECRETS {
