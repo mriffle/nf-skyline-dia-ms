@@ -86,8 +86,7 @@ workflow {
 
     // if accessing panoramaweb and running on aws, set up an aws secret
     if(workflow.profile == 'aws' && is_panorama_used) {
-        CREATE_AWS_SECRET_ID()
-        BUILD_AWS_SECRETS(CREATE_AWS_SECRET_ID.out)
+        BUILD_AWS_SECRETS()
         aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
     } else {
         aws_secret_id = Channel.empty()

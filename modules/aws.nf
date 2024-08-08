@@ -1,17 +1,11 @@
-import java.security.SecureRandom
-
-/*
- Generate a 50 character random string that begins with NF_ to use
- as the generated secret id for this nextflow run
-*/
-def generateRandomSecretId() {
-    String charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
-    SecureRandom random = new SecureRandom()
+/**
+  * Generate a unique string for this user to store the
+  * PanoramaWeb API key.
+  */
+def generateAWSSecretId() {
     StringBuilder sb = new StringBuilder("NF_")
-
-    (1..47).each {
-        sb.append(charset.charAt(random.nextInt(charset.length())))
-    }
+    sb.append(workflow.userName)
+    sb.append("_PANORAMA_KEY")
 
     return sb.toString()
 }
@@ -19,34 +13,20 @@ def generateRandomSecretId() {
 SECRET_NAME = 'PANORAMA_API_KEY'
 REGION = 'us-west-2'
 
-// define this as a separate process so it can be cached
-process CREATE_AWS_SECRET_ID {
-    executor 'local'
-    
-    output:
-    val aws_secret_id
-    
-    exec:
-    aws_secret_id = generateRandomSecretId()
-}
-
 process BUILD_AWS_SECRETS {
     label 'process_low_constant'
     secret 'PANORAMA_API_KEY'
     executor 'local'    // always run this locally
     publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
-    cache false
-
-    input:
-        val secret_id
+    cache false         // never cache to ensure keys get made/updated if necessary
 
     output:
         path("aws-setup-secrets.stderr"), emit: stderr
         path("aws-setup-secrets.stdout"), emit: stdout
-        val aws_secret_id, emit: aws_secret_id
+        val secret_id, emit: aws_secret_id
 
     script:
-        aws_secret_id = secret_id
+        secret_id = generateAWSSecretId()
 
         """
         # Check if the secret already exists
