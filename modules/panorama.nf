@@ -98,7 +98,6 @@ process PANORAMA_GET_FILE {
 
     input:
         val web_dav_dir_url
-        val aws_secret_id
 
     output:
         path("${file(web_dav_dir_url).name}"), emit: panorama_file
@@ -133,6 +132,7 @@ process PANORAMA_GET_RAW_FILE {
 
     input:
         tuple val(web_dav_dir_url), path(download_file_placeholder)
+        val aws_secret_id
 
     output:
         path("${download_file_placeholder.baseName}"), emit: panorama_file
