@@ -34,14 +34,13 @@ String getPanoramaProjectURLForWebDavDirectory(String webdavDirectory) {
     return newUrl
 }
 
-String setupPanoramaAPIKeySecret() {
+String setupPanoramaAPIKeySecret(secret_id) {
 
-    SECRET_ID   = 'NF_SKYLINE_DIA_MS_SECRETS'
     SECRET_NAME = 'PANORAMA_API_KEY'
     REGION = 'us-west-2'
     
     return """
-        SECRET_JSON=\$(/usr/local/aws-cli/v2/current/bin/aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
+        SECRET_JSON=\$(/usr/local/aws-cli/v2/current/bin/aws secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
         PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\\([^"]*\\)".*/\\1/p')
     """
 }
@@ -56,7 +55,7 @@ process PANORAMA_GET_RAW_FILE_LIST_AWS {
     input:
         each web_dav_url
         val file_glob
-        path secret_setup_done
+        val secret_id
 
     output:
         tuple val(web_dav_url), path("*.download"), emit: raw_file_placeholders
@@ -68,10 +67,7 @@ process PANORAMA_GET_RAW_FILE_LIST_AWS {
     String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
 
     """
-    ${setupPanoramaAPIKeySecret()}
-
-    echo "Value of SECRET_JSON: \$SECRET_JSON"
-    echo "Value of PANORAMA_API_KEY: \$PANORAMA_API_KEY"
+    ${setupPanoramaAPIKeySecret(secret_id)}
 
     echo "Running file list from Panorama..."
         ${exec_java_command(task.memory)} \

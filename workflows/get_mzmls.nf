@@ -8,7 +8,7 @@ workflow get_mzmls {
     take:
         spectra_dir
         spectra_glob
-        aws_setup_complete
+        aws_secret_id
 
     emit:
        mzml_ch
@@ -24,7 +24,7 @@ workflow get_mzmls {
 
             // get raw files from panorama
             if(workflow.profile == 'aws') {
-                panorama_raw_list_ch = PANORAMA_GET_RAW_FILE_LIST_AWS(spectra_dirs_ch, spectra_glob, aws_setup_complete)
+                panorama_raw_list_ch = PANORAMA_GET_RAW_FILE_LIST_AWS(spectra_dirs_ch, spectra_glob, aws_secret_id)
             } else {
                 panorama_raw_list_ch = PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob)
             }

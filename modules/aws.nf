@@ -1,4 +1,20 @@
-SECRET_ID   = 'NF_SKYLINE_DIA_MS_SECRETS'
+
+/*
+ Generate a 50 character random string that begins with NF_ to use
+ as the generated secret id for this nextflow run
+*/
+def generateRandomSecretId() {
+    String charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
+    SecureRandom random = new SecureRandom()
+    StringBuilder sb = new StringBuilder("NF_")
+
+    (1..47).each {
+        sb.append(charset.charAt(random.nextInt(charset.length())))
+    }
+
+    return sb.toString()
+}
+
 SECRET_NAME = 'PANORAMA_API_KEY'
 REGION = 'us-west-2'
 
@@ -7,6 +23,7 @@ process BUILD_AWS_SECRETS {
     secret 'PANORAMA_API_KEY'
     executor 'local'    // always run this locally
     publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
+    cache false
 
     output:
         path("aws-setup-secrets.stderr"), emit: stderr
@@ -14,21 +31,23 @@ process BUILD_AWS_SECRETS {
 
     script:
 
+        secret_id = generateRandomSecretId()
+
         """
         # Check if the secret already exists
-        SECRET_EXISTS=\$(aws secretsmanager list-secrets --region ${REGION} --query "SecretList[?Name=='${SECRET_ID}'].Name" --output text)
+        SECRET_EXISTS=\$(aws secretsmanager list-secrets --region ${REGION} --query "SecretList[?Name=='${secret_id}'].Name" --output text)
         SECRET_STRING='{"${SECRET_NAME}":"$PANORAMA_API_KEY"}'
 
         echo "SECRET_EXISTS: \$SECRET_EXISTS"
         echo "SECRET_STRING: \$SECRET_STRING"
         echo "PANORAMA_API_KEY: \$PANORAMA_API_KEY"
         
-        if [ "\$SECRET_EXISTS" == "${SECRET_ID}" ]; then
-            echo "Secret with name '${SECRET_ID}' already exists. Checking the value."
+        if [ "\$SECRET_EXISTS" == "${secret_id}" ]; then
+            echo "Secret with name '${secret_id}' already exists. Checking the value."
 
             # Retrieve the existing secret value
 
-            EXISTING_SECRET=\$(aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
+            EXISTING_SECRET=\$(aws secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
             echo "EXISTING_SECRET: \$EXISTING_SECRET"
             
             if [ "\$EXISTING_SECRET" == "\$SECRET_STRING" ]; then
@@ -39,23 +58,23 @@ process BUILD_AWS_SECRETS {
                 echo "The existing secret value is different. Updating the secret."
 
                 aws secretsmanager update-secret \
-                    --secret-id ${SECRET_ID} \
+                    --secret-id ${secret_id} \
                     --secret-string \$SECRET_STRING \
                     --region ${REGION} \
                     > >(tee "aws-setup-secrets.stdout") 2> >(tee "aws-setup-secrets.stderr" >&2)
 
-                echo "Secret '${SECRET_ID}' updated successfully."
+                echo "Secret '${secret_id}' updated successfully."
             fi
         else
-            echo "Secret with name '${SECRET_ID}' does not exist. Creating the secret."
+            echo "Secret with name '${secret_id}' does not exist. Creating the secret."
 
             aws secretsmanager create-secret \
-                --name ${SECRET_ID} \
+                --name ${secret_id} \
                 --secret-string \$SECRET_STRING \
                 --region ${REGION} \
                 > >(tee "aws-setup-secrets.stdout") 2> >(tee "aws-setup-secrets.stderr" >&2)
 
-            echo "Secret '${SECRET_ID}' created successfully."
+            echo "Secret '${secret_id}' created successfully."
         fi
         """
     stub:
@@ -69,6 +88,10 @@ process DESTROY_AWS_SECRETS {
     label 'process_low_constant'
     executor 'local'    // always run this locally
     publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
+    cache false
+
+    input:
+        val secret_id
 
     output:
         path("aws-destroy-secrets.stderr"), emit: stderr
@@ -78,7 +101,7 @@ process DESTROY_AWS_SECRETS {
 
         """
         aws secretsmanager delete-secret \
-        --secret-id ${SECRET_ID} \
+        --secret-id ${secret_id} \
         --region ${REGION} \
         --force-delete-without-recovery \
         > >(tee "aws-destroy-secrets.stdout") 2> >(tee "aws-destroy-secrets.stderr" >&2)
