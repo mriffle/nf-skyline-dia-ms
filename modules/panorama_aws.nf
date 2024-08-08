@@ -70,6 +70,8 @@ process PANORAMA_GET_RAW_FILE_LIST_AWS {
     """
     ${setupPanoramaAPIKeySecret()}
 
+    echo "Value of PANORAMA_API_KEY: \$PANORAMA_API_KEY"
+
     echo "Running file list from Panorama..."
         ${exec_java_command(task.memory)} \
         -l \
