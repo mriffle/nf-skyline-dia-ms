@@ -9,6 +9,18 @@ String escapeRegex(String str) {
     return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { match, group -> '\\' + group }
 }
 
+String setupPanoramaAPIKeySecret(secret_id) {
+
+    SECRET_NAME = 'PANORAMA_API_KEY'
+    REGION = params.aws.region
+    
+    return """
+        echo "Getting Panorama API key from AWS secrets manager..."
+        SECRET_JSON=\$(${params.aws.batch.cliPath} secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
+        PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\\([^"]*\\)".*/\\1/p')
+    """
+}
+
 /**
  * Get the Panorama project webdav URL for the given Panorama webdav directory
  *
@@ -44,6 +56,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
     input:
         each web_dav_url
         val file_glob
+        val aws_secret_id
 
     output:
         tuple val(web_dav_url), path("*.download"), emit: raw_file_placeholders
@@ -54,7 +67,14 @@ process PANORAMA_GET_RAW_FILE_LIST {
     // convert glob to regex that we can use to grep lines from a file of filenames
     String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
 
+    aws_setup_commands = ''
+    if(task.executor == 'awsbatch') {
+        aws_setup_commands = setupPanoramaAPIKeySecret(aws_secret_id)
+    }
+
     """
+    ${aws_setup_commands}
+
     echo "Running file list from Panorama..."
         ${exec_java_command(task.memory)} \
         -l \
