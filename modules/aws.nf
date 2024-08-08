@@ -16,6 +16,7 @@ REGION = 'us-west-2'
 process GET_AWS_USER_ID {
     label 'process_low_constant'
     executor 'local'    // always run this locally
+    cache false         // never cache 
 
     output:
     stdout emit: aws_user_id
@@ -36,7 +37,7 @@ process BUILD_AWS_SECRETS {
     secret 'PANORAMA_API_KEY'
     executor 'local'    // always run this locally
     publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
-    cache false         // never cache to ensure keys get made/updated if necessary
+    cache false         // never cache 
 
     input:
         val aws_user_id
