@@ -27,6 +27,7 @@ include { BUILD_AWS_SECRETS } from "./modules/aws"
 // useful functions and variables
 include { param_to_list } from "./workflows/get_input_files"
 
+// String to test for Panoramaness
 PANORAMA_URL = 'https://panoramaweb.org'
 
 // Check if old Skyline parameter variables are defined.
@@ -84,7 +85,7 @@ workflow {
     run_details_file = SAVE_RUN_DETAILS.out.run_details
 
     // if accessing panoramaweb and running on aws, set up an aws secret
-    if(is_panorama_used && workflow.profile == 'aws') {
+    if(workflow.profile == 'aws' && is_panorama_used) {
         CREATE_AWS_SECRET_ID()
         BUILD_AWS_SECRETS(CREATE_AWS_SECRET_ID.out)
         aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
