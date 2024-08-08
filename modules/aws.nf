@@ -1,3 +1,4 @@
+import java.security.SecureRandom
 
 /*
  Generate a 50 character random string that begins with NF_ to use
