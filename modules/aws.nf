@@ -29,7 +29,8 @@ process BUILD_AWS_SECRETS {
             # Retrieve the existing secret value
 
             EXISTING_SECRET=\$(aws secretsmanager get-secret-value --secret-id ${SECRET_ID} --region ${REGION} --query 'SecretString' --output text)
-
+            echo "EXISTING_SECRET: \$EXISTING_SECRET"
+            
             if [ "\$EXISTING_SECRET" == "\$SECRET_STRING" ]; then
                 echo "The existing secret value is the same. No update needed."
                 touch aws-setup-secrets.stderr
