@@ -92,7 +92,7 @@ process PANORAMA_GET_FILE {
 
     input:
         val web_dav_dir_url
-        path secret_setup_done
+        val secret_id
 
 
     output:
@@ -103,7 +103,7 @@ process PANORAMA_GET_FILE {
     script:
         file_name = file(web_dav_dir_url).name
         """
-        ${setupPanoramaAPIKeySecret()}
+        ${setupPanoramaAPIKeySecret(secret_id)}
 
         echo "Downloading ${file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
@@ -130,7 +130,7 @@ process PANORAMA_GET_RAW_FILE {
 
     input:
         tuple val(web_dav_dir_url), path(download_file_placeholder)
-        path secret_setup_done
+        val secret_id
 
     output:
         path("${download_file_placeholder.baseName}"), emit: panorama_file
@@ -140,7 +140,7 @@ process PANORAMA_GET_RAW_FILE {
     script:
         raw_file_name = download_file_placeholder.baseName
         """
-        ${setupPanoramaAPIKeySecret()}
+        ${setupPanoramaAPIKeySecret(secret_id)}
 
         echo "Downloading ${raw_file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
@@ -167,7 +167,7 @@ process PANORAMA_GET_SKYR_FILE {
 
     input:
         val web_dav_dir_url
-        path secret_setup_done
+        val secret_id
 
     output:
         path("${file(web_dav_dir_url).name}"), emit: panorama_file
@@ -177,7 +177,7 @@ process PANORAMA_GET_SKYR_FILE {
     script:
         file_name = file(web_dav_dir_url).name
         """
-        ${setupPanoramaAPIKeySecret()}
+        ${setupPanoramaAPIKeySecret(secret_id)}
 
         echo "Downloading ${file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
@@ -199,7 +199,7 @@ process UPLOAD_FILE {
 
     input:
         tuple path(file_to_upload), val(web_dav_dir_url)
-        path secret_setup_done
+        val secret_id
 
     output:
         path("*.stdout"), emit: stdout
@@ -208,7 +208,7 @@ process UPLOAD_FILE {
     script:
         file_name = file(file_to_upload).name
         """
-        ${setupPanoramaAPIKeySecret()}
+        ${setupPanoramaAPIKeySecret(secret_id)}
 
         echo "Uploading ${file_to_upload} to Panorama..."
             ${exec_java_command(task.memory)} \
@@ -237,7 +237,7 @@ process IMPORT_SKYLINE {
         val uploads_finished            // not used, used as a state check to ensure this runs after all uploads are done
         val skyline_filename            // the filename of the skyline document
         val skyline_web_dav_dir_url     // the panorama webdav URL for the directory containing the skyline document
-        path secret_setup_done
+        val secret_id
 
     output:
         path("panorama-import-skyline.stdout"), emit: stdout
@@ -245,7 +245,7 @@ process IMPORT_SKYLINE {
 
     script:
         """
-        ${setupPanoramaAPIKeySecret()}
+        ${setupPanoramaAPIKeySecret(secret_id)}
 
         echo "Importing ${skyline_filename} into Panorama..."
             ${exec_java_command(task.memory)} \
