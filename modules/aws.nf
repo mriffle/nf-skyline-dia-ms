@@ -14,6 +14,9 @@ SECRET_NAME = 'PANORAMA_API_KEY'
 REGION = 'us-west-2'
 
 process GET_AWS_USER_ID {
+    label 'process_low_constant'
+    executor 'local'    // always run this locally
+
     output:
     stdout emit: aws_user_id
 
