@@ -21,6 +21,7 @@ include { SAVE_RUN_DETAILS } from "./modules/save_run_details"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
+include { CREATE_AWS_SECRET_ID } from "./modules/aws"
 include { BUILD_AWS_SECRETS } from "./modules/aws"
 
 // Check if old Skyline parameter variables are defined.
@@ -75,14 +76,16 @@ workflow {
 
     // save details about this run
     SAVE_RUN_DETAILS()
+    run_details_file = SAVE_RUN_DETAILS.out.run_details
+
+    // if running on aws, set up an aws secret
     if(workflow.profile == 'aws') {
-        BUILD_AWS_SECRETS()
-        aws_secret_id = BUILD_AWS_SECRETS.out.secret_id
+        CREATE_AWS_SECRET_ID()
+        BUILD_AWS_SECRETS(CREATE_AWS_SECRET_ID.out.aws_secret_id)
+        aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
     } else {
         aws_secret_id = Channel.empty()
     }
-
-    run_details_file = SAVE_RUN_DETAILS.out.run_details
 
     // only perform msconvert and terminate
     if(params.msconvert_only) {

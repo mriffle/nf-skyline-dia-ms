@@ -18,6 +18,17 @@ def generateRandomSecretId() {
 SECRET_NAME = 'PANORAMA_API_KEY'
 REGION = 'us-west-2'
 
+// define this as a separate process so it can be cached
+process CREATE_AWS_SECRET_ID {
+    executor 'local'
+
+    output:
+        val aws_secret_id
+    
+    exec:
+        aws_secret_id = generateRandomSecretId()
+}
+
 process BUILD_AWS_SECRETS {
     label 'process_low_constant'
     secret 'PANORAMA_API_KEY'
@@ -25,13 +36,16 @@ process BUILD_AWS_SECRETS {
     publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
     cache false
 
+    input:
+        val secret_id
+
     output:
         path("aws-setup-secrets.stderr"), emit: stderr
         path("aws-setup-secrets.stdout"), emit: stdout
+        val aws_secret_id
 
     script:
-
-        secret_id = generateRandomSecretId()
+        aws_secret_id = secret_id
 
         """
         # Check if the secret already exists
