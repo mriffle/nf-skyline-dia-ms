@@ -98,6 +98,7 @@ process PANORAMA_GET_FILE {
 
     input:
         val web_dav_dir_url
+        val aws_secret_id
 
     output:
         path("${file(web_dav_dir_url).name}"), emit: panorama_file
@@ -140,7 +141,15 @@ process PANORAMA_GET_RAW_FILE {
 
     script:
         raw_file_name = download_file_placeholder.baseName
+
+        aws_setup_commands = ''
+        if(task.executor == 'awsbatch') {
+            aws_setup_commands = setupPanoramaAPIKeySecret(aws_secret_id)
+        }
+
         """
+        ${aws_setup_commands}
+
         echo "Downloading ${raw_file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \

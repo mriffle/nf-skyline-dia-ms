@@ -24,7 +24,7 @@ workflow get_mzmls {
             // get raw files from panorama
             panorama_raw_list_ch = PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob, aws_secret_id)
             placeholder_ch = panorama_raw_list_ch.raw_file_placeholders.transpose()
-            PANORAMA_GET_RAW_FILE(placeholder_ch)
+            PANORAMA_GET_RAW_FILE(placeholder_ch, aws_secret_id)
             
             mzml_ch = MSCONVERT(
                 PANORAMA_GET_RAW_FILE.out.panorama_file,
