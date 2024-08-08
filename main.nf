@@ -81,7 +81,7 @@ workflow {
     // if running on aws, set up an aws secret
     if(workflow.profile == 'aws') {
         CREATE_AWS_SECRET_ID()
-        BUILD_AWS_SECRETS(CREATE_AWS_SECRET_ID.out.aws_secret_id)
+        BUILD_AWS_SECRETS(CREATE_AWS_SECRET_ID.out)
         aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
     } else {
         aws_secret_id = Channel.empty()
