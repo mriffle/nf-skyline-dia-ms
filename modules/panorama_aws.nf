@@ -36,7 +36,7 @@ String getPanoramaProjectURLForWebDavDirectory(String webdavDirectory) {
 
 String setupPanoramaAPIKeySecret() {
 
-    SECRET_ID   = 'SKYLINE_DIA_MS_SECRETS'
+    SECRET_ID   = 'NF_SKYLINE_DIA_MS_SECRETS'
     SECRET_NAME = 'PANORAMA_API_KEY'
     REGION = 'us-west-2'
     
