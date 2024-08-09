@@ -363,21 +363,6 @@ workflow {
 
 }
 
-/*
- * get FASTA file from either disk or Panorama
- */
-def get_fasta() {
-    // get files from Panorama as necessary
-    if(params.fasta.startsWith("https://")) {
-        PANORAMA_GET_FASTA(params.fasta)
-        fasta = PANORAMA_GET_FASTA.out.panorama_file
-    } else {
-        fasta = file(params.fasta, checkIfExists: true)
-    }
-
-    return fasta
-}
-
 // return true if any entry in the list created from the param is a panoramaweb URL
 def any_entry_is_panorama(param) {
     values = param_to_list(param)
