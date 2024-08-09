@@ -52,7 +52,7 @@ process BUILD_AWS_SECRETS {
         """
         # Check if the secret already exists
         SECRET_EXISTS=\$(aws secretsmanager list-secrets --region ${REGION} --query "SecretList[?Name=='${secret_id}'].Name" --output text)
-        SECRET_STRING='{"${SECRET_NAME}":"$PANORAMA_API_KEY"}'
+        SECRET_STRING='{"${SECRET_NAME}":"\\$PANORAMA_API_KEY"}'
 
         echo "\$SECRET_STRING"
         
