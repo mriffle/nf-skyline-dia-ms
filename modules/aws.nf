@@ -96,31 +96,31 @@ process BUILD_AWS_SECRETS {
         """
 }
 
-process DESTROY_AWS_SECRETS {
-    label 'process_low_constant'
-    executor 'local'    // always run this locally
-    publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
-    cache false
+// process DESTROY_AWS_SECRETS {
+//     label 'process_low_constant'
+//     executor 'local'    // always run this locally
+//     publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
+//     cache false
 
-    input:
-        val secret_id
+//     input:
+//         val secret_id
 
-    output:
-        path("aws-destroy-secrets.stderr"), emit: stderr
-        path("aws-destroy-secrets.stdout"), emit: stdout
+//     output:
+//         path("aws-destroy-secrets.stderr"), emit: stderr
+//         path("aws-destroy-secrets.stdout"), emit: stdout
 
-    script:
+//     script:
 
-        """
-        aws secretsmanager delete-secret \
-        --secret-id ${secret_id} \
-        --region ${REGION} \
-        --force-delete-without-recovery \
-        > >(tee "aws-destroy-secrets.stdout") 2> >(tee "aws-destroy-secrets.stderr" >&2)
-        """
-    stub:
-        """
-        touch aws-destroy-secrets.stderr
-        touch aws-destroy-secrets.stdout
-        """
-}
+//         """
+//         aws secretsmanager delete-secret \
+//         --secret-id ${secret_id} \
+//         --region ${REGION} \
+//         --force-delete-without-recovery \
+//         > >(tee "aws-destroy-secrets.stdout") 2> >(tee "aws-destroy-secrets.stderr" >&2)
+//         """
+//     stub:
+//         """
+//         touch aws-destroy-secrets.stderr
+//         touch aws-destroy-secrets.stdout
+//         """
+// }
