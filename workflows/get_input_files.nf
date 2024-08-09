@@ -29,13 +29,15 @@ def param_to_list(param_variable) {
 
 workflow get_input_files {
 
+   take:
+        aws_secret_id
+
    emit:
        fasta
        spectral_library
        skyline_template_zipfile
        skyr_files
        replicate_metadata
-       aws_secret_id
 
     main:
 

@@ -124,7 +124,7 @@ workflow {
         return
     }
 
-    get_input_files()   // get input files
+    get_input_files(aws_secret_id)   // get input files
     get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)  // get wide windows mzmls
 
     // set up some convenience variables
