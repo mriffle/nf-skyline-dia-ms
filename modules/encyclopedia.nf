@@ -76,6 +76,7 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         path("${outputFilePrefix}-combined-results.elib"), emit: elib
         path("${outputFilePrefix}-combined-results.elib.peptides.txt"), emit: peptide_quant, optional: true
         path("${outputFilePrefix}-combined-results.elib.proteins.txt"), emit: protein_quant, optional: true
+        path("encyclopedia_version.txt"), emit: version
 
     script:
     """
@@ -92,6 +93,10 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         -percolatorVersion /usr/local/bin/percolator \\
         ${encyclopedia_params} \\
         > >(tee "${outputFilePrefix}.stdout") 2> >(tee "${outputFilePrefix}.stderr" >&2)
+
+    # get EncyclopeDIA version info
+    ${exec_java_command(task.memory)} --version > version.txt || echo "encyclopedia_version_exit=\$?"
+    echo "encyclopedia_version=\$(cat version.txt| awk '{print \$4}')" > encyclopedia_version.txt
     """
 
     stub:
@@ -100,6 +105,10 @@ process ENCYCLOPEDIA_CREATE_ELIB {
     touch "${outputFilePrefix}-combined-results.elib"
     touch "${outputFilePrefix}-combined-results.elib.peptides.txt"
     touch "${outputFilePrefix}-combined-results.elib.proteins.txt"
+
+    # get EncyclopeDIA version info
+    ${exec_java_command(task.memory)} --version > version.txt || echo "encyclopedia_version_exit=\$?"
+    echo "encyclopedia_version=\$(cat version.txt| awk '{print \$4}')" > encyclopedia_version.txt
     """
 }
 

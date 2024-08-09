@@ -17,6 +17,7 @@ workflow encyclopedia_search {
         elib
         peptide_quant
         protein_quant
+        encyclopedia_version
 
     main:
 
@@ -47,4 +48,5 @@ workflow encyclopedia_search {
         elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib
         peptide_quant = ENCYCLOPEDIA_CREATE_ELIB.out.peptide_quant
         protein_quant = ENCYCLOPEDIA_CREATE_ELIB.out.protein_quant
+        encyclopedia_version = ENCYCLOPEDIA_CREATE_ELIB.out.version
 }

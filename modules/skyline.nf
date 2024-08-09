@@ -18,27 +18,70 @@ process SKYLINE_ADD_LIB {
     output:
         path("results.sky.zip"), emit: skyline_zipfile
         path("skyline_add_library.log"), emit: log
+        path("pwiz_versions.txt"), emit: version
 
-    script:
-    """
-    unzip ${skyline_template_zipfile}
+    shell:
+    '''
+    unzip !{skyline_template_zipfile}
 
     wine SkylineCmd \
-        --in="${skyline_template_zipfile.baseName}" \
+        --in="!{skyline_template_zipfile.baseName}" \
         --log-file=skyline_add_library.log \
-        --import-fasta="${fasta}" \
-        --add-library-path="${elib}" \
+        --import-fasta="!{fasta}" \
+        --add-library-path="!{elib}" \
         --out="results.sky" \
         --save \
         --share-zip="results.sky.zip" \
         --share-type="complete"
-    """
+
+    # parse Skyline version info
+    wine SkylineCmd --version > version.txt
+    vars=($(cat version.txt | \
+            tr -cd '\\11\\12\\15\\40-\\176' | \
+            egrep -o 'Skyline.*' | \
+            sed -E "s/(Skyline[-a-z]*) \\((.*)\\) ([.0-9]+) \\(([A-Za-z0-9]{7})\\)/\\1 \\3 \\4/"))
+    skyline_build="${vars[0]}"
+    skyline_version="${vars[1]}"
+    skyline_commit="${vars[2]}"
+
+    # parse msconvert info
+    msconvert_version=$(cat version.txt | \
+                        tr -cd '\\11\\12\\15\\40-\\176' | \
+                        egrep -o 'Proteo[a-zA-Z0-9\\. ]+' | \
+                        egrep -o [0-9].*)
+
+    echo "skyline_build=${skyline_build}" > pwiz_versions.txt
+    echo "skyline_version=${skyline_version}" >> pwiz_versions.txt
+    echo "skyline_commit=${skyline_commit}" >> pwiz_versions.txt
+    echo "msconvert_version=${msconvert_version}" >> pwiz_versions.txt
+    '''
 
     stub:
-    """
+    '''
     touch "results.sky.zip"
     touch "skyline_add_library.log"
-    """
+
+    # parse Skyline version info
+    wine SkylineCmd --version > version.txt
+    vars=(\$(cat version.txt | \
+            tr -cd '\\11\\12\\15\\40-\\176' | \
+            egrep -o 'Skyline.*' | \
+            sed -E "s/(Skyline[-a-z]*) \\((.*)\\) ([.0-9]+) \\(([A-Za-z0-9]{7})\\)/\\1 \\3 \\4/"))
+    skyline_build="\${vars[0]}"
+    skyline_version="\${vars[1]}"
+    skyline_commit="\${vars[2]}"
+
+    # parse msconvert info
+    msconvert_version=\$(cat version.txt | \
+                        tr -cd '\\11\\12\\15\\40-\\176' | \
+                        egrep -o 'Proteo[a-zA-Z0-9\\. ]+' | \
+                        egrep -o [0-9].*)
+
+    echo "skyline_build=\${skyline_build}" > pwiz_versions.txt
+    echo "skyline_version=\${skyline_version}" >> pwiz_versions.txt
+    echo "skyline_commit=\${skyline_commit}" >> pwiz_versions.txt
+    echo "msconvert_version=\${msconvert_version}" >> pwiz_versions.txt
+    '''
 }
 
 process SKYLINE_IMPORT_MZML {

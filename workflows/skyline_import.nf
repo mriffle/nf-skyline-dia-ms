@@ -13,6 +13,7 @@ workflow skyline_import {
 
     emit:
         skyline_results
+        proteowizard_version
 
     main:
 
@@ -32,4 +33,5 @@ workflow skyline_import {
         )
 
         skyline_results = SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile
+        proteowizard_version = SKYLINE_ADD_LIB.out.version
 }
