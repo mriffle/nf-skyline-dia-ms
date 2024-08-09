@@ -21,6 +21,7 @@ workflow panorama_upload_results {
         nextflow_config_file
         skyr_file_ch
         skyline_report_ch
+        aws_secret_id
     
     emit:
         uploads_finished
@@ -45,7 +46,7 @@ workflow panorama_upload_results {
             .concat(skyline_report_ch.map { path -> tuple(path, upload_webdav_url + "/results/skyline_reports") })
             .set { all_file_upload_ch }
 
-        UPLOAD_FILE(all_file_upload_ch)
+        UPLOAD_FILE(all_file_upload_ch, aws_secret_id)
 
         // will be used for state dependency -- pass this channel into any process that requires
         // all file uploads to be complete
@@ -60,7 +61,8 @@ workflow panorama_upload_results {
             IMPORT_SKYLINE(
                 uploads_finished,
                 params.skyline_document_name,
-                upload_webdav_url + "/results/skyline"
+                upload_webdav_url + "/results/skyline",
+                aws_secret_id
             )
         }
 }
@@ -72,6 +74,7 @@ workflow panorama_upload_mzmls {
         mzml_file_ch
         nextflow_run_details
         nextflow_config_file
+        aws_secret_id
     
     main:
 
@@ -86,7 +89,7 @@ workflow panorama_upload_mzmls {
             .concat(Channel.fromPath(nextflow_config_file).map { path -> tuple(path, upload_webdav_url) })
             .set { all_file_upload_ch }
 
-        UPLOAD_FILE(all_file_upload_ch)
+        UPLOAD_FILE(all_file_upload_ch, aws_secret_id)
 }
 
 def getUploadDirectory() {

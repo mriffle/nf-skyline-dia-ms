@@ -116,7 +116,8 @@ workflow {
                 params.panorama.upload_url,
                 all_mzml_ch,
                 run_details_file,
-                config_file
+                config_file,
+                aws_secret_id
             )
         }
 
@@ -355,7 +356,8 @@ workflow {
             run_details_file,
             config_file,
             skyr_file_ch,
-            skyline_reports_ch
+            skyline_reports_ch,
+            aws_secret_id
         )
     }
 

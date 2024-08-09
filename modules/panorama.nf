@@ -9,16 +9,20 @@ String escapeRegex(String str) {
     return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { match, group -> '\\' + group }
 }
 
-String setupPanoramaAPIKeySecret(secret_id) {
+String setupPanoramaAPIKeySecret(secret_id, executor_type) {
 
-    SECRET_NAME = 'PANORAMA_API_KEY'
-    REGION = params.aws.region
-    
-    return """
-        echo "Getting Panorama API key from AWS secrets manager..."
-        SECRET_JSON=\$(${params.aws.batch.cliPath} secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
-        PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\\([^"]*\\)".*/\\1/p')
-    """
+    if(executor_type != 'awsbatch') {
+        return ''
+    } else {
+        SECRET_NAME = 'PANORAMA_API_KEY'
+        REGION = params.aws.region
+        
+        return """
+            echo "Getting Panorama API key from AWS secrets manager..."
+            SECRET_JSON=\$(${params.aws.batch.cliPath} secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
+            PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\\([^"]*\\)".*/\\1/p')
+        """
+    }
 }
 
 /**
@@ -68,13 +72,8 @@ process PANORAMA_GET_RAW_FILE_LIST {
     // convert glob to regex that we can use to grep lines from a file of filenames
     String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
 
-    aws_setup_commands = ''
-    if(task.executor == 'awsbatch') {
-        aws_setup_commands = setupPanoramaAPIKeySecret(aws_secret_id)
-    }
-
     """
-    ${aws_setup_commands}
+    ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
 
     echo "Running file list from Panorama..."
         ${exec_java_command(task.memory)} \
@@ -100,6 +99,7 @@ process PANORAMA_GET_FILE {
 
     input:
         val web_dav_dir_url
+        val aws_secret_id
 
     output:
         path("${file(web_dav_dir_url).name}"), emit: panorama_file
@@ -109,6 +109,8 @@ process PANORAMA_GET_FILE {
     script:
         file_name = file(web_dav_dir_url).name
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Downloading ${file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \
@@ -145,13 +147,8 @@ process PANORAMA_GET_RAW_FILE {
     script:
         raw_file_name = download_file_placeholder.baseName
 
-        aws_setup_commands = ''
-        if(task.executor == 'awsbatch') {
-            aws_setup_commands = setupPanoramaAPIKeySecret(aws_secret_id)
-        }
-
         """
-        ${aws_setup_commands}
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
 
         echo "Downloading ${raw_file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
@@ -179,6 +176,7 @@ process PANORAMA_GET_SKYR_FILE {
 
     input:
         val web_dav_dir_url
+        val aws_secret_id
 
     output:
         path("${file(web_dav_dir_url).name}"), emit: panorama_file
@@ -188,6 +186,8 @@ process PANORAMA_GET_SKYR_FILE {
     script:
         file_name = file(web_dav_dir_url).name
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Downloading ${file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \
@@ -209,6 +209,7 @@ process UPLOAD_FILE {
 
     input:
         tuple path(file_to_upload), val(web_dav_dir_url)
+        val aws_secret_id
 
     output:
         path("*.stdout"), emit: stdout
@@ -217,6 +218,8 @@ process UPLOAD_FILE {
     script:
         file_name = file(file_to_upload).name
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Uploading ${file_to_upload} to Panorama..."
             ${exec_java_command(task.memory)} \
             -u \
@@ -245,6 +248,7 @@ process IMPORT_SKYLINE {
         val uploads_finished            // not used, used as a state check to ensure this runs after all uploads are done
         val skyline_filename            // the filename of the skyline document
         val skyline_web_dav_dir_url     // the panorama webdav URL for the directory containing the skyline document
+        val aws_secret_id
 
     output:
         path("panorama-import-skyline.stdout"), emit: stdout
@@ -252,6 +256,8 @@ process IMPORT_SKYLINE {
 
     script:
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Importing ${skyline_filename} into Panorama..."
             ${exec_java_command(task.memory)} \
             -i \
