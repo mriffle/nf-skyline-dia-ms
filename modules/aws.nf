@@ -52,7 +52,7 @@ process BUILD_AWS_SECRETS {
         """
         # Check if the secret already exists
         SECRET_EXISTS=\$(aws secretsmanager list-secrets --region ${REGION} --query "SecretList[?Name=='${secret_id}'].Name" --output text)
-        SECRET_STRING='{"${SECRET_NAME}":"$PANORAMA_API_KEY"}'
+        SECRET_STRING='{"${SECRET_NAME}":"\$PANORAMA_API_KEY"}'
         
         if [ "\$SECRET_EXISTS" == "${secret_id}" ]; then
             echo "Secret with name '${secret_id}' already exists. Checking the value."
