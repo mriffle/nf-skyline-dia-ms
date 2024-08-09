@@ -17,7 +17,9 @@ String setupPanoramaAPIKeySecret(secret_id) {
     return """
         echo "Getting Panorama API key from AWS secrets manager..."
         SECRET_JSON=\$(${params.aws.batch.cliPath} secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
+        echo \$SECRET_JSON
         PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\\([^"]*\\)".*/\\1/p')
+        echo \$PANORAMA_API_KEY
     """
 }
 
