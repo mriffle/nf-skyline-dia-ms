@@ -60,7 +60,7 @@ workflow panorama_upload_results {
         if(params.panorama.import_skyline) {
             IMPORT_SKYLINE(
                 uploads_finished,
-                params.skyline_document_name,
+                params.skyline.document_name,
                 upload_webdav_url + "/results/skyline",
                 aws_secret_id
             )
