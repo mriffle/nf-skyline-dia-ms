@@ -55,6 +55,7 @@ process BUILD_AWS_SECRETS {
         SECRET_STRING='{"${SECRET_NAME}":"\$PANORAMA_API_KEY"}'
 
         echo \$PANORAMA_API_KEY
+        echo "\$PANORAMA_API_KEY"
         echo "\$SECRET_STRING"
         
         if [ "\$SECRET_EXISTS" == "${secret_id}" ]; then
