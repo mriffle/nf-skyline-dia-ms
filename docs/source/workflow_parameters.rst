@@ -76,7 +76,7 @@ The ``params`` Section
      - Which files in this directory to use. Default: ``*.raw``
    * -
      - ``search_engine``
-     - Must be set to either ``'encyclopedia'`` or ``'diann'``. If set to ``'dian'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
+     - Must be set to either ``'encyclopedia'`` or ``'diann'``. If set to ``'diann'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
    * -
      - ``skyline.skip``
      - If set to ``true``, will skip the creation of a Skyline document. Default: ``false``.
