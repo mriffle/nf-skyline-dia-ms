@@ -52,6 +52,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
     label 'error_retry'
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy'
+    secret 'PANORAMA_API_KEY'
 
     input:
         each web_dav_url
