@@ -96,6 +96,7 @@ process PANORAMA_GET_FILE {
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    secret 'PANORAMA_API_KEY'
 
     input:
         val web_dav_dir_url
@@ -130,6 +131,7 @@ process PANORAMA_GET_RAW_FILE {
     maxForks 4
     container params.images.panorama_client
     storeDir "${params.panorama_cache_directory}"
+    secret 'PANORAMA_API_KEY'
 
     input:
         tuple val(web_dav_dir_url), path(download_file_placeholder)
@@ -173,6 +175,7 @@ process PANORAMA_GET_SKYR_FILE {
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    secret 'PANORAMA_API_KEY'
 
     input:
         val web_dav_dir_url
@@ -202,6 +205,7 @@ process UPLOAD_FILE {
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    secret 'PANORAMA_API_KEY'
 
     input:
         tuple path(file_to_upload), val(web_dav_dir_url)
@@ -235,6 +239,7 @@ process IMPORT_SKYLINE {
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    secret 'PANORAMA_API_KEY'
 
     input:
         val uploads_finished            // not used, used as a state check to ensure this runs after all uploads are done
