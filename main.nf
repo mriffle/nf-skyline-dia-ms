@@ -15,9 +15,9 @@ include { skyline_reports } from "./workflows/skyline_run_reports"
 include { generate_dia_qc_report } from "./workflows/generate_qc_report"
 include { panorama_upload_results } from "./workflows/panorama_upload"
 include { panorama_upload_mzmls } from "./workflows/panorama_upload"
+include { save_run_details } from "./workflows/save_run_details"
 
 // modules
-include { SAVE_RUN_DETAILS } from "./modules/save_run_details"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
@@ -86,9 +86,6 @@ workflow {
         }
     }
 
-    // save details about this run
-    SAVE_RUN_DETAILS()
-    run_details_file = SAVE_RUN_DETAILS.out.run_details
 
     // if accessing panoramaweb and running on aws, set up an aws secret
     if(workflow.profile == 'aws' && is_panorama_used) {
@@ -126,6 +123,13 @@ workflow {
                 aws_secret_id
             )
         }
+
+
+        // save details about this run
+        input_files = all_mzml_ch.map{ it -> ['Spectra File', it.baseName] }
+        version_files = Channel.empty()
+        save_run_details(input_files.collect(), version_files.collect())
+        run_details_file = save_run_details.out.run_details
 
         return
     }
@@ -358,6 +362,17 @@ workflow {
         proteowizard_version = Channel.empty()
         dia_qc_version = Channel.empty()
     }
+
+    version_files = encyclopedia_version.concat(diann_version,
+                                                proteowizard_version,
+                                                dia_qc_version).splitText()
+
+    input_files = fasta.map{ it -> ['Fasta file', it.name] }.concat(
+        spectral_library.map{ it -> ['Spectra library', it.baseName] },
+        all_mzml_ch.map{ it -> ['Spectra file', it.baseName] })
+
+    save_run_details(input_files.collect(), version_files.collect())
+    run_details_file = save_run_details.out.run_details
 
     // upload results to Panorama
     if(params.panorama.upload) {
