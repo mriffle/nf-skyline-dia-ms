@@ -35,14 +35,6 @@ Install Nextflow
 ================
 Follow the instructions at: https://www.nextflow.io/docs/latest/getstarted.html.
 
-Set up placeholder credentials
-==============================
-The workflow currently needs a placeholder value for the secret key for PanoramaWeb to run. Enter the following on the command line where nextflow is being run:
-
-.. code::
-
-    nextflow secrets set PANORAMA_API_KEY "PLACEHOLDER"
-
 Optional: Set up AWS CLI on local system
 ========================================
 This step needs to be performed if AWS Batch or S3 are going to be used.
