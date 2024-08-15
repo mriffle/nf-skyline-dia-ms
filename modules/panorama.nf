@@ -223,7 +223,7 @@ process UPLOAD_FILE {
         echo "Uploading ${file_to_upload} to Panorama..."
             ${exec_java_command(task.memory)} \
             -u \
-            -f "${file_to_upload}" \
+            -f "${file_name}" \
             -w "${web_dav_dir_url}" \
             -k \$PANORAMA_API_KEY \
             -c \
