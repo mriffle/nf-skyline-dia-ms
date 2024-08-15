@@ -9,6 +9,22 @@ String escapeRegex(String str) {
     return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { match, group -> '\\' + group }
 }
 
+String setupPanoramaAPIKeySecret(secret_id, executor_type) {
+
+    if(executor_type != 'awsbatch') {
+        return ''
+    } else {
+        SECRET_NAME = 'PANORAMA_API_KEY'
+        REGION = params.aws.region
+        
+        return """
+            echo "Getting Panorama API key from AWS secrets manager..."
+            SECRET_JSON=\$(${params.aws.batch.cliPath} secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
+            PANORAMA_API_KEY=\$(echo \$SECRET_JSON | sed -n 's/.*"${SECRET_NAME}":"\\([^"]*\\)".*/\\1/p')
+        """
+    }
+}
+
 /**
  * Get the Panorama project webdav URL for the given Panorama webdav directory
  *
@@ -40,10 +56,12 @@ process PANORAMA_GET_RAW_FILE_LIST {
     label 'error_retry'
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy'
+    secret 'PANORAMA_API_KEY'
 
     input:
         each web_dav_url
         val file_glob
+        val aws_secret_id
 
     output:
         tuple val(web_dav_url), path("*.download"), emit: raw_file_placeholders
@@ -55,6 +73,8 @@ process PANORAMA_GET_RAW_FILE_LIST {
     String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
 
     """
+    ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
     echo "Running file list from Panorama..."
         ${exec_java_command(task.memory)} \
         -l \
@@ -75,9 +95,11 @@ process PANORAMA_GET_FILE {
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    secret 'PANORAMA_API_KEY'
 
     input:
         val web_dav_dir_url
+        val aws_secret_id
 
     output:
         path("${file(web_dav_dir_url).name}"), emit: panorama_file
@@ -87,6 +109,8 @@ process PANORAMA_GET_FILE {
     script:
         file_name = file(web_dav_dir_url).name
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Downloading ${file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \
@@ -109,9 +133,11 @@ process PANORAMA_GET_RAW_FILE {
     maxForks 4
     container params.images.panorama_client
     storeDir "${params.panorama_cache_directory}"
+    secret 'PANORAMA_API_KEY'
 
     input:
         tuple val(web_dav_dir_url), path(download_file_placeholder)
+        val aws_secret_id
 
     output:
         path("${download_file_placeholder.baseName}"), emit: panorama_file
@@ -120,7 +146,10 @@ process PANORAMA_GET_RAW_FILE {
 
     script:
         raw_file_name = download_file_placeholder.baseName
+
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Downloading ${raw_file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \
@@ -143,9 +172,11 @@ process PANORAMA_GET_SKYR_FILE {
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    secret 'PANORAMA_API_KEY'
 
     input:
         val web_dav_dir_url
+        val aws_secret_id
 
     output:
         path("${file(web_dav_dir_url).name}"), emit: panorama_file
@@ -155,6 +186,8 @@ process PANORAMA_GET_SKYR_FILE {
     script:
         file_name = file(web_dav_dir_url).name
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Downloading ${file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \
@@ -172,9 +205,11 @@ process UPLOAD_FILE {
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    secret 'PANORAMA_API_KEY'
 
     input:
         tuple path(file_to_upload), val(web_dav_dir_url)
+        val aws_secret_id
 
     output:
         path("*.stdout"), emit: stdout
@@ -183,6 +218,8 @@ process UPLOAD_FILE {
     script:
         file_name = file(file_to_upload).name
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Uploading ${file_to_upload} to Panorama..."
             ${exec_java_command(task.memory)} \
             -u \
@@ -205,11 +242,13 @@ process IMPORT_SKYLINE {
     container params.images.panorama_client
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
     publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    secret 'PANORAMA_API_KEY'
 
     input:
         val uploads_finished            // not used, used as a state check to ensure this runs after all uploads are done
         val skyline_filename            // the filename of the skyline document
         val skyline_web_dav_dir_url     // the panorama webdav URL for the directory containing the skyline document
+        val aws_secret_id
 
     output:
         path("panorama-import-skyline.stdout"), emit: stdout
@@ -217,6 +256,8 @@ process IMPORT_SKYLINE {
 
     script:
         """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
         echo "Importing ${skyline_filename} into Panorama..."
             ${exec_java_command(task.memory)} \
             -i \

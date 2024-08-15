@@ -111,7 +111,7 @@ process SKYLINE_MERGE_RESULTS {
         --in="${skyline_zipfile.baseName}" \
         --log-file="skyline-merge.log" \
         ${import_files_params} \
-        ${params.skyline.protein_parisimony ? protein_parsimony_args : ''} \
+        ${params.skyline.protein_parsimony ? protein_parsimony_args : ''} \
         --out="${params.skyline.document_name}.sky" \
         --save \
         --share-zip="${params.skyline.document_name}.sky.zip" \

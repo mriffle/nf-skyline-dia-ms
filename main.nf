@@ -21,6 +21,14 @@ include { SAVE_RUN_DETAILS } from "./modules/save_run_details"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
+include { GET_AWS_USER_ID } from "./modules/aws"
+include { BUILD_AWS_SECRETS } from "./modules/aws"
+
+// useful functions and variables
+include { param_to_list } from "./workflows/get_input_files"
+
+// String to test for Panoramaness
+PANORAMA_URL = 'https://panoramaweb.org'
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
@@ -76,14 +84,24 @@ workflow {
     SAVE_RUN_DETAILS()
     run_details_file = SAVE_RUN_DETAILS.out.run_details
 
+    // if accessing panoramaweb and running on aws, set up an aws secret
+    if(workflow.profile == 'aws' && is_panorama_used) {
+        GET_AWS_USER_ID()
+        BUILD_AWS_SECRETS(GET_AWS_USER_ID.out)
+        aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
+    } else {
+        aws_secret_id = Channel.from('none')
+    }
+
     // only perform msconvert and terminate
     if(params.msconvert_only) {
-        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob)  // get wide windows mzmls
+        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)  // get wide windows mzmls
         wide_mzml_ch = get_wide_mzmls.out.mzml_ch
 
         if(params.chromatogram_library_spectra_dir != null) {
             get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                             params.chromatogram_library_spectra_glob)
+                             params.chromatogram_library_spectra_glob,
+                             aws_secret_id)
 
             narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
             all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
@@ -98,15 +116,16 @@ workflow {
                 params.panorama.upload_url,
                 all_mzml_ch,
                 run_details_file,
-                config_file
+                config_file,
+                aws_secret_id
             )
         }
 
         return
     }
 
-    get_input_files()   // get input files
-    get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob)  // get wide windows mzmls
+    get_input_files(aws_secret_id)   // get input files
+    get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)  // get wide windows mzmls
 
     // set up some convenience variables
 
@@ -147,7 +166,8 @@ workflow {
         if(params.chromatogram_library_spectra_dir != null) {
             // get narrow windows mzmls
             get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                             params.chromatogram_library_spectra_glob)
+                             params.chromatogram_library_spectra_glob,
+                             aws_secret_id)
             narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
 
             all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
@@ -336,27 +356,32 @@ workflow {
             run_details_file,
             config_file,
             skyr_file_ch,
-            skyline_reports_ch
+            skyline_reports_ch,
+            aws_secret_id
         )
     }
 
 }
 
-/*
- * get FASTA file from either disk or Panorama
- */
-def get_fasta() {
-    // get files from Panorama as necessary
-    if(params.fasta.startsWith("https://")) {
-        PANORAMA_GET_FASTA(params.fasta)
-        fasta = PANORAMA_GET_FASTA.out.panorama_file
-    } else {
-        fasta = file(params.fasta, checkIfExists: true)
-    }
-
-    return fasta
+// return true if any entry in the list created from the param is a panoramaweb URL
+def any_entry_is_panorama(param) {
+    values = param_to_list(param)
+    return values.any { it.startsWith(PANORAMA_URL) }
 }
 
+// return true if panoramaweb will be accessed by this Nextflow run
+def is_panorama_used() {
+
+    return params.panorama.upload ||
+           (params.fasta && params.fasta.startsWith(PANORAMA_URL)) ||
+           (params.spectral_library && params.spectral_library.startsWith(PANORAMA_URL)) ||
+           (params.replicate_metadata && params.replicate_metadata.startsWith(PANORAMA_URL)) ||
+           (params.skyline.template_file && params.skyline.template_file.startsWith(PANORAMA_URL)) ||
+           (params.quant_spectra_dir && any_entry_is_panorama(params.quant_spectra_dir)) ||
+           (params.chromatogram_library_spectra_dir && any_entry_is_panorama(params.chromatogram_library_spectra_dir)) ||
+           (params.skyline_skyr_file && any_entry_is_panorama(params.skyline_skyr_file))
+           
+}
 
 //
 // Used for email notifications
