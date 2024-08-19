@@ -18,7 +18,7 @@ process WRITE_VERSION_INFO {
         workflow_values=( '!{workflow_values.join("' '")}' )
 
         for i in ${!workflow_var_names[@]} ; do
-            if [ i -eq 0 ] ; then
+            if [ $i -eq 0 ] ; then
                 echo "${workflow_var_names[$i]}: ${workflow_values[$i]}" > '!{version_file_name}'
             else
                 echo "${workflow_var_names[$i]}: ${workflow_values[$i]}" >> '!{version_file_name}'
@@ -50,9 +50,9 @@ workflow save_run_details {
 
         workflow_vars = Channel.fromList([["Nextflow run at", workflow.start],
                                           ["Nextflow version", nextflow.version],
-                                          ["Workflow git address", workflow.repository],
-                                          ["Workflow git revision (branch)", workflow.revision],
-                                          ["Workflow git commit hash", workflow.commitId],
+                                          ["Workflow git address", "${workflow.repository}"],
+                                          ["Workflow git revision (branch)", "${workflow.revision}"],
+                                          ["Workflow git commit hash", "${workflow.commitId}"],
                                           ["Run session ID", workflow.sessionId],
                                           ["Command line", workflow.commandLine]])
 
