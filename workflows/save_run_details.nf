@@ -46,7 +46,6 @@ workflow save_run_details {
             }
         }
 
-        version_vars.view()
 
         workflow_vars = Channel.fromList([["Nextflow run at", workflow.start],
                                           ["Nextflow version", nextflow.version],
@@ -56,7 +55,10 @@ workflow save_run_details {
                                           ["Run session ID", workflow.sessionId],
                                           ["Command line", workflow.commandLine]])
 
-        all_vars = workflow_vars.concat(version_vars)
+        all_vars = workflow_vars.concat(
+            input_files.flatten().collate(2),
+            version_vars.flatten().collate(2)
+        )
 
         var_names = all_vars.map{ it -> it[0] }
         var_values = all_vars.map{ it -> it[1] }
