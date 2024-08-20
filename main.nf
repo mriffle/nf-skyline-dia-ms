@@ -90,7 +90,7 @@ workflow {
         BUILD_AWS_SECRETS(GET_AWS_USER_ID.out)
         aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
     } else {
-        aws_secret_id = Channel.from('none')
+        aws_secret_id = Channel.of('none')
     }
 
     // only perform msconvert and terminate
