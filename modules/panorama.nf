@@ -64,7 +64,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
         val aws_secret_id
 
     output:
-        tuple val(web_dav_url), path("*.download"), emit: raw_file_placeholders
+        path('download_files.txt'), emit: raw_files
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
@@ -81,11 +81,11 @@ process PANORAMA_GET_RAW_FILE_LIST {
         -e raw \
         -w "${web_dav_url}" \
         -k \$PANORAMA_API_KEY \
-        -o panorama_files.txt \
+        -o all_files.txt \
         > >(tee "panorama-get-files.stdout") 2> >(tee "panorama-get-files.stderr" >&2) && \
-        grep -P '${regex}' panorama_files.txt | xargs -I % sh -c 'touch %.download'
 
-    echo "Done!" # Needed for proper exit
+    # Filter raw files by file_glob and prepend web_dav_url to file names
+    grep -P '${regex}' all_files.txt | xargs printf '${web_dav_url.replaceAll("%", "%%")}/%s\n' > download_files.txt
     """
 }
 
@@ -98,23 +98,23 @@ process PANORAMA_GET_FILE {
     secret 'PANORAMA_API_KEY'
 
     input:
-        val web_dav_dir_url
+        val web_dav_url
         val aws_secret_id
 
     output:
-        path("${file(web_dav_dir_url).name}"), emit: panorama_file
+        path("${file(web_dav_url).name}"), emit: panorama_file
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
     script:
-        file_name = file(web_dav_dir_url).name
+        file_name = file(web_dav_url).name
         """
         ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
 
         echo "Downloading ${file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \
-            -w "${web_dav_dir_url}" \
+            -w "${web_dav_url}" \
             -k \$PANORAMA_API_KEY \
             > >(tee "panorama-get-${file_name}.stdout") 2> >(tee "panorama-get-${file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
@@ -122,7 +122,7 @@ process PANORAMA_GET_FILE {
 
     stub:
     """
-    touch "${file(web_dav_dir_url).name}"
+    touch "${file(web_dav_url).name}"
     touch stub.stderr stub.stdout
     """
 }
@@ -136,24 +136,23 @@ process PANORAMA_GET_RAW_FILE {
     secret 'PANORAMA_API_KEY'
 
     input:
-        tuple val(web_dav_dir_url), path(download_file_placeholder)
+        val web_dav_url
         val aws_secret_id
 
     output:
-        path("${download_file_placeholder.baseName}"), emit: panorama_file
+        path("${file(web_dav_url).name}"), emit: panorama_file
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
     script:
-        raw_file_name = download_file_placeholder.baseName
-
+        raw_file_name = file(web_dav_url).name
         """
         ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
 
         echo "Downloading ${raw_file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \
-            -w "${web_dav_dir_url}${raw_file_name}" \
+            -w "${web_dav_url}" \
             -k \$PANORAMA_API_KEY \
             > >(tee "panorama-get-${raw_file_name}.stdout") 2> >(tee "panorama-get-${raw_file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
@@ -161,7 +160,7 @@ process PANORAMA_GET_RAW_FILE {
 
     stub:
     """
-    touch "${download_file_placeholder.baseName}"
+    touch "${file(web_dav_url).name}"
     touch stub.stderr stub.stdout
     """
 }
@@ -175,23 +174,23 @@ process PANORAMA_GET_SKYR_FILE {
     secret 'PANORAMA_API_KEY'
 
     input:
-        val web_dav_dir_url
+        val web_dav_url
         val aws_secret_id
 
     output:
-        path("${file(web_dav_dir_url).name}"), emit: panorama_file
+        path("${file(web_dav_url).name}"), emit: panorama_file
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
     script:
-        file_name = file(web_dav_dir_url).name
+        file_name = file(web_dav_url).name
         """
         ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
 
         echo "Downloading ${file_name} from Panorama..."
             ${exec_java_command(task.memory)} \
             -d \
-            -w "${web_dav_dir_url}" \
+            -w "${web_dav_url}" \
             -k \$PANORAMA_API_KEY \
             > >(tee "panorama-get-${file_name}.stdout") 2> >(tee "panorama-get-${file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
