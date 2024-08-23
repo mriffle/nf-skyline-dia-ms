@@ -38,15 +38,17 @@ workflow save_run_details {
 
     main:
 
-        // split program version variable names and value
+        // Read version txt files and create a channel of variable name, value pairs
         version_vars = version_files.map{
             program -> program.collect{ it ->
-                elems = it.split('=') 
-                [elems[0].strip(), elems[1].strip()]
+                elems = it.split('=').collect{ str ->
+                    str.strip().replaceAll(/^['"]|['"]$/, '')
+                }
+                [elems[0], elems[1]]
             }
         }
 
-
+        // Create channel of workflow run metadata
         workflow_vars = Channel.fromList([["Nextflow run at", workflow.start],
                                           ["Nextflow version", nextflow.version],
                                           ["Workflow git address", "${workflow.repository}"],
@@ -55,9 +57,13 @@ workflow save_run_details {
                                           ["Run session ID", workflow.sessionId],
                                           ["Command line", workflow.commandLine]])
 
+        // Create channel of docker image names and paths
+        docker_images = Channel.fromList(params.images.collect{k, v -> ["${k} docker image", v]})
+
         all_vars = workflow_vars.concat(
             input_files.flatten().collate(2),
-            version_vars.flatten().collate(2)
+            version_vars.flatten().collate(2),
+            docker_images
         )
 
         var_names = all_vars.map{ it -> it[0] }

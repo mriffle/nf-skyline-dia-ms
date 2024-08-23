@@ -192,7 +192,6 @@ workflow {
                 'narrow',
                 params.encyclopedia.chromatogram.params
             )
-            encyclopedia_version = encyclopeda_export_elib.out.encyclopedia_version
 
             quant_library = encyclopeda_export_elib.out.elib
 
@@ -216,8 +215,9 @@ workflow {
 
         )
 
-        final_elib = encyclopedia_quant.out.elib
+        encyclopedia_version = encyclopedia_quant.out.encyclopedia_version
 
+        final_elib = encyclopedia_quant.out.elib
         all_elib_ch = all_elib_ch.concat(
             encyclopedia_quant.out.individual_elibs,
             encyclopedia_quant.out.elib,
@@ -412,7 +412,7 @@ def is_panorama_used() {
            (params.quant_spectra_dir && any_entry_is_panorama(params.quant_spectra_dir)) ||
            (params.chromatogram_library_spectra_dir && any_entry_is_panorama(params.chromatogram_library_spectra_dir)) ||
            (params.skyline_skyr_file && any_entry_is_panorama(params.skyline_skyr_file))
-           
+
 }
 
 //
