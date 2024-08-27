@@ -17,6 +17,7 @@ workflow diann_search {
         stdout
         stderr
         predicted_speclib
+        diann_version
 
     main:
 
@@ -28,6 +29,7 @@ workflow diann_search {
                 spectral_library,
                 params.diann.params
             )
+            diann_version = DIANN_SEARCH.out.version
 
             predicted_speclib = Channel.empty()
         } else {
@@ -37,6 +39,7 @@ workflow diann_search {
                 params.diann.params
             )
 
+            diann_version = DIANN_SEARCH_LIB_FREE.out.version
             predicted_speclib = diann_results.predicted_speclib
         }
 

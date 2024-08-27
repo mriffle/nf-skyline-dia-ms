@@ -15,6 +15,7 @@ process DIANN_SEARCH {
         path("report.tsv.speclib"), emit: speclib
         path("report.tsv"), emit: precursor_tsv
         path("*.quant"), emit: quant_files
+        path("diann_version.txt"), emit: version
 
     script:
 
@@ -34,12 +35,15 @@ process DIANN_SEARCH {
             ${diann_params} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
         mv -v lib.tsv.speclib report.tsv.speclib
+
+        head -n 1 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
         """
 
     stub:
         """
         touch report.tsv.speclib report.tsv stub.quant
         touch stub.stderr stub.stdout
+        diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
         """
 }
 
@@ -60,6 +64,7 @@ process DIANN_SEARCH_LIB_FREE {
         path("report.tsv"), emit: precursor_tsv
         path("*.quant"), emit: quant_files
         path("lib.predicted.speclib"), emit: predicted_speclib
+        path("diann_version.txt"), emit: version
 
     script:
 
@@ -80,12 +85,15 @@ process DIANN_SEARCH_LIB_FREE {
             ${diann_params} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
         mv -v lib.tsv.speclib report.tsv.speclib
+
+        head -n 1 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
         """
 
     stub:
         """
         touch lib.predicted.speclib report.tsv.speclib report.tsv stub.quant
         touch stub.stderr stub.stdout
+        diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
         """
 }
 

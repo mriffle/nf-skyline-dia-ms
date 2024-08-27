@@ -28,9 +28,7 @@ process MAKE_EMPTY_FILE {
 }
 
 process PARSE_REPORTS {
-    publishDir "${params.result_dir}/qc_report", pattern: '*.db3', failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/qc_report", failOnError: true, mode: 'copy'
     label 'process_high_memory'
     container params.images.qc_pipeline
 
@@ -44,6 +42,7 @@ process PARSE_REPORTS {
         path('*.qmd'), emit: qc_report_qmd
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
+        path('dia_qc_version.txt'), emit: version
 
     script:
     def metadata_arg = replicate_metadata.name == 'EMPTY' ? '' : "-m $replicate_metadata"
@@ -59,6 +58,10 @@ process PARSE_REPORTS {
             ${format_flags(params.qc_report.color_vars, '--addColorVar')} \
             qc_report_data.db3 \
             > >(tee "make_qmd.stdout") 2> >(tee "make_qmd.stderr")
+
+        # get dia_qc version and git info
+        dia_qc --version|awk '{print \$3}'|xargs -0 printf 'dia_qc_version=%s' > dia_qc_version.txt
+        echo "dia_qc_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" >> dia_qc_version.txt
         """
 
     else
@@ -75,11 +78,19 @@ process PARSE_REPORTS {
             ${format_flags(params.qc_report.color_vars, '--addColorVar')} \
             qc_report_data.db3 \
             > >(tee "make_qmd.stdout") 2> >(tee "make_qmd.stderr")
+
+        # get dia_qc version and git info
+        dia_qc --version|awk '{print \$3}'|xargs -0 printf 'dia_qc_version=%s' > dia_qc_version.txt
+        echo "dia_qc_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" >> dia_qc_version.txt
         """
 
     stub:
     """
     touch stub.stdout stub.stderr stub.db3 stub.qmd
+
+    # get dia_qc version and git info
+    dia_qc --version|awk '{print \$3}'|xargs -0 printf 'dia_qc_version=%s' > dia_qc_version.txt
+    echo "dia_qc_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" >> dia_qc_version.txt
     """
 }
 

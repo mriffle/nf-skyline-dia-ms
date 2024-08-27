@@ -15,6 +15,7 @@ workflow generate_dia_qc_report {
         qc_report_qmd
         qc_report_db
         qc_tables
+        dia_qc_version
 
     main:
 
@@ -44,5 +45,7 @@ workflow generate_dia_qc_report {
         } else {
             qc_tables = Channel.empty()
         }
+
+        dia_qc_version = PARSE_REPORTS.out.version
 }
 
