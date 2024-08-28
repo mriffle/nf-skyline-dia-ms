@@ -96,22 +96,23 @@ workflow {
         aws_secret_id = Channel.of('none').collect()    // ensure this is a value channel
     }
 
+    // get mzML files
+    get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)
+    wide_mzml_ch = get_wide_mzmls.out.mzml_ch
+    narrow_mzml_ch = null
+    if(params.chromatogram_library_spectra_dir != null) {
+        get_narrow_mzmls(params.chromatogram_library_spectra_dir,
+                         params.chromatogram_library_spectra_glob,
+                         aws_secret_id)
+
+        narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
+        all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
+    } else {
+        all_mzml_ch = wide_mzml_ch
+    }
+
     // only perform msconvert and terminate
     if(params.msconvert_only) {
-        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)  // get wide windows mzmls
-        wide_mzml_ch = get_wide_mzmls.out.mzml_ch
-
-        if(params.chromatogram_library_spectra_dir != null) {
-            get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                             params.chromatogram_library_spectra_glob,
-                             aws_secret_id)
-
-            narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
-            all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
-        } else {
-            all_mzml_ch = wide_mzml_ch
-        }
-
         // save details about this run
         input_files = all_mzml_ch.map{ it -> ['Spectra File', it.baseName] }
         version_files = Channel.empty()
@@ -120,7 +121,6 @@ workflow {
 
         // if requested, upload mzMLs to panorama
         if(params.panorama.upload) {
-
             panorama_upload_mzmls(
                 params.panorama.upload_url,
                 all_mzml_ch,
@@ -134,9 +134,6 @@ workflow {
     }
 
     get_input_files(aws_secret_id)   // get input files
-    get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)  // get wide windows mzmls
-
-    // set up some convenience variables
 
     if(params.spectral_library) {
         spectral_library = get_input_files.out.spectral_library
@@ -144,9 +141,9 @@ workflow {
         spectral_library = Channel.empty()
     }
 
+    // set up some convenience variables
     fasta = get_input_files.out.fasta
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
-    wide_mzml_ch = get_wide_mzmls.out.mzml_ch
     skyr_file_ch = get_input_files.out.skyr_files
 
     final_elib = null
@@ -174,13 +171,6 @@ workflow {
 
         // create elib if requested
         if(params.chromatogram_library_spectra_dir != null) {
-            // get narrow windows mzmls
-            get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                             params.chromatogram_library_spectra_glob,
-                             aws_secret_id)
-            narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
-
-            all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
 
             // create chromatogram library
             encyclopeda_export_elib(
