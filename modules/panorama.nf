@@ -231,9 +231,9 @@ process UPLOAD_FILE {
         """
 
     stub:
-    '''
-    touch stub.stderr stub.stdout
-    '''
+    """
+    touch "panorama-upload-${file(file_to_upload).name}.stdout" "panorama-upload-${file(file_to_upload).name}.stderr"
+    """
 }
 
 process IMPORT_SKYLINE {
