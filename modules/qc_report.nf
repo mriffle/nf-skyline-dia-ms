@@ -47,42 +47,26 @@ process PARSE_REPORTS {
     script:
     def metadata_arg = replicate_metadata.name == 'EMPTY' ? '' : "-m $replicate_metadata"
 
-    if(params.qc_report.normalization_method == null)
-        """
-        dia_qc parse --ofname qc_report_data.db3 ${metadata_arg} \
-            --groupBy ${params.skyline.group_by_gene ? 'gene' : 'protein'} \
-            '${replicate_report}' '${precursor_report}' \
-            > >(tee "parse_data.stdout") 2> >(tee "parse_data.stderr")
+    """
+    dia_qc parse --ofname qc_report_data.db3 ${metadata_arg} \
+        --groupBy ${params.skyline.group_by_gene ? 'gene' : 'protein'} \
+        '${replicate_report}' '${precursor_report}' \
+        > >(tee "parse_data.stdout") 2> >(tee "parse_data.stderr")
 
-        dia_qc qc_qmd ${format_flags(params.qc_report.standard_proteins, '--addStdProtein')} \
-            ${format_flags(params.qc_report.color_vars, '--addColorVar')} \
-            qc_report_data.db3 \
-            > >(tee "make_qmd.stdout") 2> >(tee "make_qmd.stderr")
-
-        # get dia_qc version and git info
-        dia_qc --version|awk '{print \$3}'|xargs -0 printf 'dia_qc_version=%s' > dia_qc_version.txt
-        echo "dia_qc_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" >> dia_qc_version.txt
-        """
-
-    else
-        """
-        dia_qc parse --ofname qc_report_data.db3 ${metadata_arg} \
-            --groupBy ${params.skyline.group_by_gene ? 'gene' : 'protein'} \
-            '${replicate_report}' '${precursor_report}' \
-            > >(tee "parse_data.stdout") 2> >(tee "parse_data.stderr")
-
+    if ${params.qc_report.normalization_method == null ? 'false' : 'true'} ; then
         dia_qc normalize -m=${params.qc_report.normalization_method} qc_report_data.db3 \
             > >(tee "normalize_db.stdout") 2> >(tee "normalize_db.stderr" >&2)
+    fi
 
-        dia_qc qc_qmd ${format_flags(params.qc_report.standard_proteins, '--addStdProtein')} \
-            ${format_flags(params.qc_report.color_vars, '--addColorVar')} \
-            qc_report_data.db3 \
-            > >(tee "make_qmd.stdout") 2> >(tee "make_qmd.stderr")
+    dia_qc qc_qmd ${format_flags(params.qc_report.standard_proteins, '--addStdProtein')} \
+        ${format_flags(params.qc_report.color_vars, '--addColorVar')} \
+        qc_report_data.db3 \
+        > >(tee "make_qmd.stdout") 2> >(tee "make_qmd.stderr")
 
-        # get dia_qc version and git info
-        dia_qc --version|awk '{print \$3}'|xargs -0 printf 'dia_qc_version=%s' > dia_qc_version.txt
-        echo "dia_qc_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" >> dia_qc_version.txt
-        """
+    # get dia_qc version and git info
+    dia_qc --version|awk '{print \$3}'|xargs -0 printf 'dia_qc_version=%s' > dia_qc_version.txt
+    echo "dia_qc_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" >> dia_qc_version.txt
+    """
 
     stub:
     """
