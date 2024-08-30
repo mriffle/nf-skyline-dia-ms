@@ -24,6 +24,7 @@ include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
 include { GET_AWS_USER_ID } from "./modules/aws"
 include { BUILD_AWS_SECRETS } from "./modules/aws"
+include { EXPORT_GENE_REPORTS } from "./modules/qc_report"
 
 // useful functions and variables
 include { param_to_list } from "./workflows/get_input_files"
@@ -101,6 +102,7 @@ workflow {
     if(params.pdc.study_id) {
         get_pdc_files()
         wide_mzml_ch = get_pdc_files.out.wide_mzml_ch
+        pdc_study_name = get_pdc_files.out.study_name
     } else{
         get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)
         wide_mzml_ch = get_wide_mzmls.out.mzml_ch
@@ -339,6 +341,16 @@ workflow {
         if(!params.qc_report.skip) {
             generate_dia_qc_report(final_skyline_file, replicate_metadata)
             dia_qc_version = generate_dia_qc_report.out.dia_qc_version
+
+            // Export PDC gene tables
+            if(params.pdc.gene_level_data != null) {
+                EXPORT_GENE_REPORTS(generate_dia_qc_report.out.qc_report_db,
+                                    params.pdc.gene_level_data,
+                                    pdc_study_name)
+                EXPORT_GENE_REPORTS.out.gene_reports | flatten | set{ gene_reports }
+            } else {
+                gene_reports = Channel.empty()
+            }
         } else {
             dia_qc_version = Channel.empty()
         }
@@ -363,6 +375,7 @@ workflow {
         qc_report_files = Channel.empty()
         proteowizard_version = Channel.empty()
         dia_qc_version = Channel.empty()
+        gene_reports = Channel.empty()
     }
 
     version_files = encyclopedia_version.concat(diann_version,
