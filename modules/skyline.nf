@@ -236,7 +236,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 
 process SKYLINE_ANNOTATE_DOCUMENT {
     publishDir "${params.result_dir}/skyline/annotate", failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    label 'process_memory_high_constant'
     container params.images.proteowizard
 
     input:
