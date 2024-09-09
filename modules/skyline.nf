@@ -17,7 +17,8 @@ process SKYLINE_ADD_LIB {
 
     output:
         path("results.sky.zip"), emit: skyline_zipfile
-        path("skyline_add_library.log"), emit: log
+        path("skyline_add_library.stdout"), emit: stdout
+        path("skyline_add_library.stderr"), emit: stderr
         path("pwiz_versions.txt"), emit: version
 
     shell:
@@ -26,13 +27,13 @@ process SKYLINE_ADD_LIB {
 
     wine SkylineCmd \
         --in="!{skyline_template_zipfile.baseName}" --memstamp \
-        --log-file=skyline_add_library.log \
         --import-fasta="!{fasta}" \
         --add-library-path="!{elib}" \
         --out="results.sky" \
         --save \
         --share-zip="results.sky.zip" \
-        --share-type="complete"
+        --share-type="complete" \
+        > >(tee 'skyline_add_library.stdout') 2> >(tee 'skyline_add_library.stderr' >&2)
 
     # parse Skyline version info
     wine SkylineCmd --version > version.txt
@@ -59,7 +60,7 @@ process SKYLINE_ADD_LIB {
     stub:
     '''
     touch "results.sky.zip"
-    touch "skyline_add_library.log"
+    touch "skyline_add_library.stderr" "skyline_add_library.stdout"
 
     # parse Skyline version info
     wine SkylineCmd --version > version.txt
@@ -99,7 +100,8 @@ process SKYLINE_IMPORT_MZML {
 
     output:
         path("*.skyd"), emit: skyd_file
-        path("${mzml_file.baseName}.log"), emit: log_file
+        path("${mzml_file.baseName}.stdout"), emit: stdout
+        path("${mzml_file.baseName}.stderr"), emit: stderr
 
     script:
     """
@@ -110,13 +112,13 @@ process SKYLINE_IMPORT_MZML {
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" --memstamp \
         --import-no-join \
-        --log-file="${mzml_file.baseName}.log" \
         --import-file="/tmp/${mzml_file}" \
+        > >(tee '${mzml_file.baseName}.stdout') 2> >(tee '${mzml_file.baseName}.stderr' >&2)
     """
 
     stub:
     """
-    touch "${mzml_file.baseName}.log" "${mzml_file.baseName}.skyd"
+    touch "${mzml_file.baseName}.stdout" "${mzml_file.baseName}.stderr" "${mzml_file.baseName}.skyd"
     """
 }
 
@@ -135,14 +137,15 @@ process SKYLINE_MERGE_RESULTS {
 
     output:
         path("${params.skyline.document_name}.sky.zip"), emit: final_skyline_zipfile
-        path("skyline-merge.log"), emit: log
+        path("skyline-merge.stdout"), emit: stdout
+        path("skyline-merge.stderr"), emit: stderr
         env(sky_zip_hash), emit: file_hash
 
     script:
     import_files_params = "--import-file=${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join(' --import-file=')}"
     protein_parsimony_args = "--import-fasta=${fasta} --associate-proteins-shared-peptides=DuplicatedBetweenProteins --associate-proteins-min-peptides=1 --associate-proteins-remove-subsets --associate-proteins-minimal-protein-list"
     if(params.skyline.group_by_gene) {
-        protein_parsimony_args += '  --associate-proteins-gene-level-parsimony'
+        protein_parsimony_args += ' --associate-proteins-gene-level-parsimony'
     }
 
     """
@@ -152,13 +155,13 @@ process SKYLINE_MERGE_RESULTS {
 
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" --memstamp \
-        --log-file="skyline-merge.log" \
         ${import_files_params} \
         ${params.skyline.protein_parsimony ? protein_parsimony_args : ''} \
         --out="${params.skyline.document_name}.sky" \
         --save \
         --share-zip="${params.skyline.document_name}.sky.zip" \
-        --share-type="complete"
+        --share-type="complete" \
+        > >(tee 'skyline-merge.stdout') 2> >(tee 'skyline-merge.stderr' >&2)
 
     sky_zip_hash=\$( md5sum ${params.skyline.document_name}.sky.zip |awk '{print \$1}' )
     """
@@ -166,7 +169,7 @@ process SKYLINE_MERGE_RESULTS {
     stub:
     """
     touch "${params.skyline.document_name}.sky.zip"
-    touch "skyline-merge.log"
+    touch "skyline-merge.stderr" "skyline-merge.stdout"
     sky_zip_hash=\$( md5sum ${params.skyline.document_name}.sky.zip |awk '{print \$1}' )
     """
 }
