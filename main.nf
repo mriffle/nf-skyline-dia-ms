@@ -112,6 +112,12 @@ workflow {
             all_mzml_ch = wide_mzml_ch
         }
 
+        // save details about this run
+        input_files = all_mzml_ch.map{ it -> ['Spectra File', it.baseName] }
+        version_files = Channel.empty()
+        save_run_details(input_files.collect(), version_files.collect())
+        run_details_file = save_run_details.out.run_details
+
         // if requested, upload mzMLs to panorama
         if(params.panorama.upload) {
 
@@ -123,13 +129,6 @@ workflow {
                 aws_secret_id
             )
         }
-
-
-        // save details about this run
-        input_files = all_mzml_ch.map{ it -> ['Spectra File', it.baseName] }
-        version_files = Channel.empty()
-        save_run_details(input_files.collect(), version_files.collect())
-        run_details_file = save_run_details.out.run_details
 
         return
     }
