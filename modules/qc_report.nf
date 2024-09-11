@@ -151,3 +151,31 @@ process RENDER_QC_REPORT {
     """
 }
 
+process EXPORT_GENE_REPORTS {
+    publishDir "${params.result_dir}/gene_reports", failOnError: true, mode: 'copy'
+    label 'process_high_memory'
+    container params.images.qc_pipeline
+
+    input:
+        path batch_db
+        path gene_level_data
+        val file_prefix
+
+    output:
+        path("*.tsv"), emit: gene_reports
+        path("*.stdout"), emit: stdout
+        path("*.stderr"), emit: stderr
+
+    script:
+        """
+        dia_qc export_gene_matrix --prefix=${file_prefix} --useAliquotId \
+            '${gene_level_data}' '${batch_db}'  \
+            > >(tee "export_reports.stdout") 2> >(tee "export_reports.stderr" >&2)
+        """
+
+    stub:
+        """
+        touch stub.tsv
+        touch stub.stdout stub.stderr
+        """
+}

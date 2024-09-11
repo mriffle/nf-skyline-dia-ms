@@ -16,6 +16,7 @@ include { generate_dia_qc_report } from "./workflows/generate_qc_report"
 include { panorama_upload_results } from "./workflows/panorama_upload"
 include { panorama_upload_mzmls } from "./workflows/panorama_upload"
 include { save_run_details } from "./workflows/save_run_details"
+include { get_pdc_files } from "./workflows/get_pdc_files"
 
 // modules
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
@@ -23,6 +24,7 @@ include { ENCYCLOPEDIA_DLIB_TO_TSV } from "./modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "./modules/diann"
 include { GET_AWS_USER_ID } from "./modules/aws"
 include { BUILD_AWS_SECRETS } from "./modules/aws"
+include { EXPORT_GENE_REPORTS } from "./modules/qc_report"
 
 // useful functions and variables
 include { param_to_list } from "./workflows/get_input_files"
@@ -96,21 +98,34 @@ workflow {
         aws_secret_id = Channel.of('none').collect()    // ensure this is a value channel
     }
 
+    // get mzML files
+    if(params.pdc.study_id) {
+        get_pdc_files()
+        wide_mzml_ch = get_pdc_files.out.wide_mzml_ch
+        pdc_study_name = get_pdc_files.out.study_name
+    } else{
+        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)
+        wide_mzml_ch = get_wide_mzmls.out.mzml_ch
+    }
+    narrow_mzml_ch = null
+    if(params.chromatogram_library_spectra_dir != null) {
+        get_narrow_mzmls(params.chromatogram_library_spectra_dir,
+                         params.chromatogram_library_spectra_glob,
+                         aws_secret_id)
+
+        narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
+        all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
+    } else {
+        all_mzml_ch = wide_mzml_ch
+    }
+
     // only perform msconvert and terminate
     if(params.msconvert_only) {
-        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)  // get wide windows mzmls
-        wide_mzml_ch = get_wide_mzmls.out.mzml_ch
-
-        if(params.chromatogram_library_spectra_dir != null) {
-            get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                             params.chromatogram_library_spectra_glob,
-                             aws_secret_id)
-
-            narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
-            all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
-        } else {
-            all_mzml_ch = wide_mzml_ch
-        }
+        // save details about this run
+        input_files = all_mzml_ch.map{ it -> ['Spectra File', it.baseName] }
+        version_files = Channel.empty()
+        save_run_details(input_files.collect(), version_files.collect())
+        run_details_file = save_run_details.out.run_details
 
         // save details about this run
         input_files = all_mzml_ch.map{ it -> ['Spectra File', it.baseName] }
@@ -120,7 +135,6 @@ workflow {
 
         // if requested, upload mzMLs to panorama
         if(params.panorama.upload) {
-
             panorama_upload_mzmls(
                 params.panorama.upload_url,
                 all_mzml_ch,
@@ -134,19 +148,23 @@ workflow {
     }
 
     get_input_files(aws_secret_id)   // get input files
-    get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)  // get wide windows mzmls
 
     // set up some convenience variables
-
     if(params.spectral_library) {
         spectral_library = get_input_files.out.spectral_library
     } else {
         spectral_library = Channel.empty()
     }
-
+    if(params.pdc.study_id) {
+        if(params.replicate_metadata) {
+            log.warn "params.replicate_metadata will be overritten by PDC metadata"
+        }
+        replicate_metadata = get_pdc_files.out.annotations_csv
+    } else {
+        replicate_metadata = get_input_files.out.replicate_metadata
+    }
     fasta = get_input_files.out.fasta
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
-    wide_mzml_ch = get_wide_mzmls.out.mzml_ch
     skyr_file_ch = get_input_files.out.skyr_files
 
     final_elib = null
@@ -174,13 +192,6 @@ workflow {
 
         // create elib if requested
         if(params.chromatogram_library_spectra_dir != null) {
-            // get narrow windows mzmls
-            get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                             params.chromatogram_library_spectra_glob,
-                             aws_secret_id)
-            narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
-
-            all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
 
             // create chromatogram library
             encyclopeda_export_elib(
@@ -326,7 +337,7 @@ workflow {
         // annotate skyline document if replicate_metadata was specified
         if(params.replicate_metadata != null) {
             skyline_annotate_doc(skyline_import.out.skyline_results,
-                                 get_input_files.out.replicate_metadata)
+                                 replicate_metadata)
             final_skyline_file = skyline_annotate_doc.out.skyline_results
         } else {
             final_skyline_file = skyline_import.out.skyline_results
@@ -334,8 +345,18 @@ workflow {
 
         // generate QC report
         if(!params.qc_report.skip) {
-            generate_dia_qc_report(final_skyline_file, get_input_files.out.replicate_metadata)
+            generate_dia_qc_report(final_skyline_file, replicate_metadata)
             dia_qc_version = generate_dia_qc_report.out.dia_qc_version
+
+            // Export PDC gene tables
+            if(params.pdc.gene_level_data != null) {
+                EXPORT_GENE_REPORTS(generate_dia_qc_report.out.qc_report_db,
+                                    params.pdc.gene_level_data,
+                                    pdc_study_name)
+                EXPORT_GENE_REPORTS.out.gene_reports | flatten | set{ gene_reports }
+            } else {
+                gene_reports = Channel.empty()
+            }
         } else {
             dia_qc_version = Channel.empty()
         }
@@ -360,6 +381,7 @@ workflow {
         qc_report_files = Channel.empty()
         proteowizard_version = Channel.empty()
         dia_qc_version = Channel.empty()
+        gene_reports = Channel.empty()
     }
 
     version_files = encyclopedia_version.concat(diann_version,

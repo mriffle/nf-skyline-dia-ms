@@ -78,6 +78,18 @@ The ``params`` Section
      - ``search_engine``
      - Must be set to either ``'encyclopedia'`` or ``'diann'``. If set to ``'diann'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
    * -
+     - ``pdc.study_id``
+     - When this option is set, raw files and metadata will be downloaded from the PDC. Default: ``null``.
+   * -
+     - ``pdc.gene_level_data``
+     - A ``tsv`` file mapping gene names to NCIB gene IDs and gene metadata. Required for PDC gene reports. Default: ``null``.
+   * -
+     - ``pdc.n_raw_files``
+     - If this option is set, only ``n`` raw files are downloaded. This is useful for testing but otherwise should be ``null``.
+   * -
+     - ``pdc.client_args``
+     - Additional command line arguments passed to ``PDC_client``. Default is ``null``.
+   * -
      - ``skyline.skip``
      - If set to ``true``, will skip the creation of a Skyline document. Default: ``false``.
    * -
