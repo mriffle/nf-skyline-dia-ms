@@ -335,7 +335,7 @@ workflow {
         }
 
         // annotate skyline document if replicate_metadata was specified
-        if(params.replicate_metadata != null) {
+        if(params.replicate_metadata != null || params.pdc.study_id != null) {
             skyline_annotate_doc(skyline_import.out.skyline_results,
                                  replicate_metadata)
             final_skyline_file = skyline_annotate_doc.out.skyline_results
