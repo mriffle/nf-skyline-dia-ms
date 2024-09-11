@@ -86,7 +86,7 @@ process SKYLINE_ADD_LIB {
 }
 
 process SKYLINE_IMPORT_MZML {
-    publishDir "${params.result_dir}/skyline/import-spectra", pattern: '*.log', failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/skyline/import-spectra", pattern: '*.std[oe][ur][tr]', failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
     label 'process_short'
