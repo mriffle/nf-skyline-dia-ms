@@ -16,6 +16,7 @@ process DIANN_SEARCH {
         path("report.tsv"), emit: precursor_tsv
         path("*.quant"), emit: quant_files
         path("diann_version.txt"), emit: version
+        path("output_file_stats.txt"), emit: output_file_stats
 
     script:
 
@@ -37,6 +38,10 @@ process DIANN_SEARCH {
         mv -v lib.tsv.speclib report.tsv.speclib
 
         head -n 1 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+
+        md5sum '${ms_files.join('\' \'')}' report.tsv.speclib report.tsv *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report.tsv.speclib report.tsv *.quant | sort > sizes.txt
+        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 
     stub:
@@ -44,6 +49,10 @@ process DIANN_SEARCH {
         touch report.tsv.speclib report.tsv stub.quant
         touch stub.stderr stub.stdout
         diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+
+        md5sum '${ms_files.join('\' \'')}' report.tsv.speclib report.tsv *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report.tsv.speclib report.tsv *.quant | sort > sizes.txt
+        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 }
 
@@ -65,6 +74,7 @@ process DIANN_SEARCH_LIB_FREE {
         path("*.quant"), emit: quant_files
         path("lib.predicted.speclib"), emit: predicted_speclib
         path("diann_version.txt"), emit: version
+        path("output_file_stats.txt"), emit: output_file_stats
 
     script:
 
@@ -87,6 +97,10 @@ process DIANN_SEARCH_LIB_FREE {
         mv -v lib.tsv.speclib report.tsv.speclib
 
         head -n 1 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+
+        md5sum '${ms_files.join('\' \'')}' report.tsv.speclib report.tsv *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report.tsv.speclib report.tsv *.quant | sort > sizes.txt
+        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 
     stub:
@@ -94,6 +108,10 @@ process DIANN_SEARCH_LIB_FREE {
         touch lib.predicted.speclib report.tsv.speclib report.tsv stub.quant
         touch stub.stderr stub.stdout
         diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+
+        md5sum '${ms_files.join('\' \'')}' report.tsv.speclib report.tsv *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report.tsv.speclib report.tsv *.quant | sort > sizes.txt
+        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 }
 

@@ -4,7 +4,7 @@ include { DIANN_SEARCH } from "../modules/diann"
 include { DIANN_SEARCH_LIB_FREE } from "../modules/diann"
 
 workflow diann_search {
-    
+
     take:
         ms_file_ch
         fasta
@@ -18,6 +18,7 @@ workflow diann_search {
         stderr
         predicted_speclib
         diann_version
+        output_file_stats
 
     main:
 
@@ -30,6 +31,7 @@ workflow diann_search {
                 params.diann.params
             )
             diann_version = DIANN_SEARCH.out.version
+            output_file_stats = DIANN_SEARCH.out.output_file_stats
 
             predicted_speclib = Channel.empty()
         } else {
@@ -41,6 +43,7 @@ workflow diann_search {
 
             diann_version = DIANN_SEARCH_LIB_FREE.out.version
             predicted_speclib = diann_results.predicted_speclib
+            output_file_stats = DIANN_SEARCH_LIB_FREE.out.output_file_stats
         }
 
         quant_files       = diann_results.quant_files
