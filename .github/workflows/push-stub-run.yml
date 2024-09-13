@@ -14,7 +14,10 @@ jobs:
         config: [
           'test-diann.config',
           'test-encyclopedia-narrow-gpf.config',
-          'test-encyclopedia-wide-only.config'
+          'test-encyclopedia-wide-only.config',
+          'test-diann-pdc.config',
+          'test-msconvert-only-pdc.config',
+          'test-msconvert-only-local.config'
         ]
     
     steps:

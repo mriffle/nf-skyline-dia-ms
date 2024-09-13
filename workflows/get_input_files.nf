@@ -96,6 +96,8 @@ workflow get_input_files {
             } else {
                 replicate_metadata = params.replicate_metadata
             }
+        } else if(params.pdc.study_id != null) {
+            replicate_metadata = null
         } else {
             METADATA_PLACEHOLDER('EMPTY')
             replicate_metadata = METADATA_PLACEHOLDER.out

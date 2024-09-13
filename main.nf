@@ -121,11 +121,6 @@ workflow {
 
     // only perform msconvert and terminate
     if(params.msconvert_only) {
-        // save details about this run
-        input_files = all_mzml_ch.map{ it -> ['Spectra File', it.baseName] }
-        version_files = Channel.empty()
-        save_run_details(input_files.collect(), version_files.collect())
-        run_details_file = save_run_details.out.run_details
 
         // save details about this run
         input_files = all_mzml_ch.map{ it -> ['Spectra File', it.baseName] }
@@ -335,7 +330,7 @@ workflow {
         }
 
         // annotate skyline document if replicate_metadata was specified
-        if(params.replicate_metadata != null) {
+        if(params.replicate_metadata != null || params.pdc.study_id != null) {
             skyline_annotate_doc(skyline_import.out.skyline_results,
                                  replicate_metadata)
             final_skyline_file = skyline_annotate_doc.out.skyline_results
