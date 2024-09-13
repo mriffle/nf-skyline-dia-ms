@@ -4,12 +4,12 @@ def exec_java_command(mem) {
 }
 
 process ENCYCLOPEDIA_SEARCH_FILE {
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stderr", failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stdout", failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.elib", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.features.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.decoy.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.stderr", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.stdout", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.elib", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.features.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.encyclopedia.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.encyclopedia.decoy.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     label 'process_high_constant'
     container params.images.encyclopedia
 
@@ -53,7 +53,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
 }
 
 process ENCYCLOPEDIA_CREATE_ELIB {
-    publishDir "${params.result_dir}/encyclopedia/create-elib", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.create_elib, failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
     container params.images.encyclopedia
 
@@ -112,7 +112,7 @@ process ENCYCLOPEDIA_CREATE_ELIB {
 }
 
 process ENCYCLOPEDIA_BLIB_TO_DLIB {
-    publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.convert_blib, failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
     container params.images.encyclopedia
@@ -146,7 +146,7 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
 }
 
 process ENCYCLOPEDIA_DLIB_TO_TSV {
-    publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.convert_blib, failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
     container params.images.encyclopedia3_mriffle

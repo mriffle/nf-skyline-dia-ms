@@ -55,7 +55,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
     label 'process_low_constant'
     label 'error_retry'
     container params.images.panorama_client
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy'
     secret 'PANORAMA_API_KEY'
 
     input:
@@ -93,8 +93,8 @@ process PANORAMA_GET_FILE {
     label 'process_low_constant'
     label 'error_retry'
     container params.images.panorama_client
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy', pattern: "*.stdout"
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy', pattern: "*.stderr"
     secret 'PANORAMA_API_KEY'
 
     input:
@@ -169,8 +169,8 @@ process PANORAMA_GET_SKYR_FILE {
     label 'process_low_constant'
     label 'error_retry'
     container params.images.panorama_client
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy', pattern: "*.stdout"
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy', pattern: "*.stderr"
     secret 'PANORAMA_API_KEY'
 
     input:
@@ -202,8 +202,8 @@ process UPLOAD_FILE {
     label 'error_retry'
     maxForks 2
     container params.images.panorama_client
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy', pattern: "*.stdout"
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy', pattern: "*.stderr"
     secret 'PANORAMA_API_KEY'
 
     input:
@@ -239,8 +239,8 @@ process UPLOAD_FILE {
 process IMPORT_SKYLINE {
     label 'process_low_constant'
     container params.images.panorama_client
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stdout"
-    publishDir "${params.result_dir}/panorama", failOnError: true, mode: 'copy', pattern: "*.stderr"
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy', pattern: "*.stdout"
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy', pattern: "*.stderr"
     secret 'PANORAMA_API_KEY'
 
     input:

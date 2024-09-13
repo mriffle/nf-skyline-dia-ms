@@ -1,5 +1,5 @@
 process DIANN_SEARCH {
-    publishDir "${params.result_dir}/diann", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high_constant'
     container params.images.diann
     
@@ -57,7 +57,7 @@ process DIANN_SEARCH {
 }
 
 process DIANN_SEARCH_LIB_FREE {
-    publishDir "${params.result_dir}/diann", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high_constant'
     container params.images.diann
     
@@ -117,7 +117,7 @@ process DIANN_SEARCH_LIB_FREE {
 
 
 process BLIB_BUILD_LIBRARY {
-    publishDir "${params.result_dir}/diann", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_medium'
     container params.images.bibliospec
 
