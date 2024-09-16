@@ -86,7 +86,7 @@ process SKYLINE_ADD_LIB {
 }
 
 process SKYLINE_IMPORT_MZML {
-    publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/skyline/import-spectra", pattern: '*.std[oe][ur][tr]', failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
     label 'process_short'
@@ -123,7 +123,7 @@ process SKYLINE_IMPORT_MZML {
 }
 
 process SKYLINE_MERGE_RESULTS {
-    publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/skyline/import-spectra", enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
     container params.images.proteowizard
@@ -175,7 +175,7 @@ process SKYLINE_MERGE_RESULTS {
 }
 
 process ANNOTATION_TSV_TO_CSV {
-    publishDir "${params.result_dir}/skyline/annotate", failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
     label 'process_low'
     label 'error_retry'
     container params.images.qc_pipeline
@@ -199,6 +199,7 @@ process ANNOTATION_TSV_TO_CSV {
 }
 
 process SKYLINE_MINIMIZE_DOCUMENT {
+    publishDir "${params.result_dir}/skyline/minimize", failOnError: true, mode: 'copy'
     label 'error_retry'
     label 'process_high'
     container params.images.proteowizard
@@ -238,7 +239,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 }
 
 process SKYLINE_ANNOTATE_DOCUMENT {
-    publishDir "${params.result_dir}/skyline/annotate", failOnError: true, mode: 'copy'
+    publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
     container params.images.proteowizard
 

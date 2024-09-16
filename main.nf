@@ -10,7 +10,6 @@ include { diann_search } from "./workflows/diann_search"
 include { get_mzmls as get_narrow_mzmls } from "./workflows/get_mzmls"
 include { get_mzmls as get_wide_mzmls } from "./workflows/get_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
-include { skyline_annotate_doc } from "./workflows/skyline_annotate_document"
 include { skyline_reports } from "./workflows/skyline_run_reports"
 include { generate_dia_qc_report } from "./workflows/generate_qc_report"
 include { panorama_upload_results } from "./workflows/panorama_upload"
@@ -87,7 +86,6 @@ workflow {
             error "Import of Skyline document in Panorama requested, but \'skyline.skip\' is set to true."
         }
     }
-
 
     // if accessing panoramaweb and running on aws, set up an aws secret
     if(workflow.profile == 'aws' && is_panorama_used) {
@@ -324,19 +322,13 @@ workflow {
                 skyline_template_zipfile,
                 fasta,
                 final_elib,
-                wide_mzml_ch
+                wide_mzml_ch,
+                replicate_metadata
             )
             proteowizard_version = skyline_import.out.proteowizard_version
         }
 
-        // annotate skyline document if replicate_metadata was specified
-        if(params.replicate_metadata != null || params.pdc.study_id != null) {
-            skyline_annotate_doc(skyline_import.out.skyline_results,
-                                 replicate_metadata)
-            final_skyline_file = skyline_annotate_doc.out.skyline_results
-        } else {
-            final_skyline_file = skyline_import.out.skyline_results
-        }
+        final_skyline_file = skyline_import.out.skyline_results
 
         // generate QC report
         if(!params.qc_report.skip) {
