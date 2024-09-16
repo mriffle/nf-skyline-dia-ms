@@ -46,7 +46,7 @@ workflow get_input_files {
             PANORAMA_GET_FASTA(params.fasta, aws_secret_id)
             fasta = PANORAMA_GET_FASTA.out.panorama_file
         } else {
-            fasta = file(params.fasta, checkIfExists: true)
+            fasta = Channel.value(file(params.fasta, checkIfExists: true))
         }
 
         if(params.spectral_library) {
@@ -54,7 +54,7 @@ workflow get_input_files {
                 PANORAMA_GET_SPECTRAL_LIBRARY(params.spectral_library, aws_secret_id)
                 spectral_library = PANORAMA_GET_SPECTRAL_LIBRARY.out.panorama_file
             } else {
-                spectral_library = file(params.spectral_library, checkIfExists: true)
+                spectral_library = Channel.value(file(params.spectral_library, checkIfExists: true))
             }
         } else {
             spectral_library = null
