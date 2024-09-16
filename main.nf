@@ -198,7 +198,7 @@ workflow {
             )
 
             quant_library = encyclopeda_export_elib.out.elib
-            spec_lib_hashes = encyclopeda_export_elib.out.output_file_hashes
+            spec_lib_hashes = encyclopeda_export_elib.out.output_file_stats
 
             all_elib_ch = encyclopeda_export_elib.out.elib.concat(
                 encyclopeda_export_elib.out.individual_elibs
@@ -222,7 +222,7 @@ workflow {
         )
 
         encyclopedia_version = encyclopedia_quant.out.encyclopedia_version
-        search_file_hashes = encyclopedia_quant.out.output_file_hashes.concat(spec_lib_hashes)
+        search_file_stats = encyclopedia_quant.out.output_file_stats.concat(spec_lib_hashes)
 
         final_elib = encyclopedia_quant.out.elib
         all_elib_ch = all_elib_ch.concat(
@@ -288,7 +288,7 @@ workflow {
         )
 
         diann_version = diann_search.out.diann_version
-        search_file_hashes = diann_search.out.output_file_hashes
+        search_file_stats = diann_search.out.output_file_stats
 
         // create compatible spectral library for Skyline, if needed
         if(!params.skyline.skip) {
@@ -334,11 +334,17 @@ workflow {
         }
 
         final_skyline_file = skyline_import.out.skyline_results
+        final_skyline_hash = skyline_import.out.skyline_results_hash
 
         // generate QC report
         if(!params.qc_report.skip) {
             generate_dia_qc_report(final_skyline_file, replicate_metadata)
             dia_qc_version = generate_dia_qc_report.out.dia_qc_version
+            qc_report_files = generate_dia_qc_report.out.qc_reports.concat(
+                generate_dia_qc_report.out.qc_report_qmd,
+                generate_dia_qc_report.out.qc_report_db,
+                generate_dia_qc_report.out.qc_tables
+            )
 
             // Export PDC gene tables
             if(params.pdc.gene_level_data != null) {
@@ -351,6 +357,8 @@ workflow {
             }
         } else {
             dia_qc_version = Channel.empty()
+            qc_report_files = Channel.empty()
+            gene_reports = Channel.empty()
         }
 
         // run reports if requested
@@ -389,7 +397,7 @@ workflow {
     run_details_file = save_run_details.out.run_details
 
     combine_file_hashes(fasta, spectral_library,
-                        search_file_hashes,
+                        search_file_stats,
                         final_skyline_file,
                         final_skyline_hash,
                         skyline_reports_ch,
