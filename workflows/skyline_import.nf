@@ -17,6 +17,9 @@ workflow skyline_import {
 
     emit:
         skyline_results
+        skyline_results_hash
+        skyline_minimized_results
+        skyline_minimized_results_hash
         proteowizard_version
 
     main:
@@ -43,16 +46,20 @@ workflow skyline_import {
                                       ANNOTATION_TSV_TO_CSV.out.annotation_csv,
                                       ANNOTATION_TSV_TO_CSV.out.annotation_definitions)
 
-            sky_minimize_input = SKYLINE_ANNOTATE_DOCUMENT.out.final_skyline_zipfile
+            skyline_results = SKYLINE_ANNOTATE_DOCUMENT.out.final_skyline_zipfile
+            skyline_results_hash = SKYLINE_ANNOTATE_DOCUMENT.out.file_hash
         } else {
-            sky_minimize_input = SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile
+            skyline_results = SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile
+            skyline_results_hash = SKYLINE_MERGE_RESULTS.out.file_hash
         }
 
         if(params.skyline.minimize) {
-            SKYLINE_MINIMIZE_DOCUMENT(sky_minimize_input)
-            skyline_results = SKYLINE_MINIMIZE_DOCUMENT.out.final_skyline_zipfile
+            SKYLINE_MINIMIZE_DOCUMENT(skyline_results)
+            skyline_minimized_results = SKYLINE_MINIMIZE_DOCUMENT.out.final_skyline_zipfile
+            skyline_minimized_results_hash = SKYLINE_MINIMIZE_DOCUMENT.out.file_hash
         } else {
-            skyline_results = sky_minimize_input
+            skyline_minimized_results = Channel.empty()
+            skyline_minimized_results_hash = Channel.empty()
         }
 
         proteowizard_version = SKYLINE_ADD_LIB.out.version
