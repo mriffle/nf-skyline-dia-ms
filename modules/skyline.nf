@@ -112,7 +112,7 @@ process SKYLINE_IMPORT_MZML {
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" --memstamp \
         --import-no-join \
-        --import-file="/tmp/${mzml_file}" \
+        --import-file="/tmp/${mzml_file.name}" \
         > >(tee '${mzml_file.baseName}.stdout') 2> >(tee '${mzml_file.baseName}.stderr' >&2)
     """
 
@@ -142,7 +142,8 @@ process SKYLINE_MERGE_RESULTS {
         path('output_file_hashes.txt'), emit: output_file_hashes
 
     script:
-    import_files_params = "--import-file=${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join(' --import-file=')}"
+
+    import_files_params = "--import-file=\"${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join('\" --import-file=\"')}\""
     protein_parsimony_args = "--import-fasta=${fasta} --associate-proteins-shared-peptides=DuplicatedBetweenProteins --associate-proteins-min-peptides=1 --associate-proteins-remove-subsets --associate-proteins-minimal-protein-list"
     if(params.skyline.group_by_gene) {
         protein_parsimony_args += ' --associate-proteins-gene-level-parsimony'

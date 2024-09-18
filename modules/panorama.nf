@@ -84,7 +84,7 @@ process PANORAMA_GET_MS_FILE_LIST {
         > >(tee "panorama-get-files.stdout") 2> >(tee "panorama-get-files.stderr" >&2) && \
 
     # Filter raw files by file_glob and prepend web_dav_url to file names
-    grep -P '${regex}' all_files.txt | xargs printf '${web_dav_url.replaceAll("%", "%%")}/%s\n' > download_files.txt
+    grep -P '${regex}' all_files.txt | xargs -d'\\n' printf '${web_dav_url.replaceAll("%", "%%")}/%s\\n' > download_files.txt
     """
 }
 

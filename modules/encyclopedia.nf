@@ -49,11 +49,11 @@ process ENCYCLOPEDIA_SEARCH_FILE {
     stub:
     """
     touch stub.stderr stub.stdout
-    touch "${mzml_file}.elib"
+    touch ${mzml_file}.elib
     touch "${mzml_file.baseName}.dia"
-    touch "${mzml_file}.features.txt"
-    touch "${mzml_file}.encyclopedia.txt"
-    touch "${mzml_file}.encyclopedia.decoy.txt"
+    touch ${mzml_file}.features.txt
+    touch ${mzml_file}.encyclopedia.txt
+    touch ${mzml_file}.encyclopedia.decoy.txt
 
     md5sum *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
     stat -L --printf='%n\t%s\n' *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sort > sizes.txt
