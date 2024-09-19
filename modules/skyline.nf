@@ -4,7 +4,7 @@ def sky_basename(path) {
 }
 
 process SKYLINE_ADD_LIB {
-    publishDir "${params.result_dir}/skyline/add-lib", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.skyline.add_lib, failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_short'
     label 'error_retry'
@@ -86,7 +86,7 @@ process SKYLINE_ADD_LIB {
 }
 
 process SKYLINE_IMPORT_MZML {
-    publishDir "${params.result_dir}/skyline/import-spectra", pattern: '*.std[oe][ur][tr]', failOnError: true, mode: 'copy'
+    publishDir params.output_directories.skyline.import_spectra, pattern: '*.std[oe][ur][tr]', failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
     label 'process_short'
@@ -123,7 +123,7 @@ process SKYLINE_IMPORT_MZML {
 }
 
 process SKYLINE_MERGE_RESULTS {
-    publishDir "${params.result_dir}/skyline/import-spectra", enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
+    publishDir params.output_directories.skyline.import_spectra, enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
     container params.images.proteowizard
@@ -139,7 +139,7 @@ process SKYLINE_MERGE_RESULTS {
         path("${params.skyline.document_name}.sky.zip"), emit: final_skyline_zipfile
         path("skyline-merge.stdout"), emit: stdout
         path("skyline-merge.stderr"), emit: stderr
-        env(sky_zip_hash), emit: file_hash
+        path('output_file_hashes.txt'), emit: output_file_hashes
 
     script:
     import_files_params = "--import-file=${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join(' --import-file=')}"
@@ -163,19 +163,19 @@ process SKYLINE_MERGE_RESULTS {
         --share-type="complete" \
         > >(tee 'skyline-merge.stdout') 2> >(tee 'skyline-merge.stderr' >&2)
 
-    sky_zip_hash=\$( md5sum ${params.skyline.document_name}.sky.zip |awk '{print \$1}' )
+    md5sum ${params.skyline.document_name}.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 
     stub:
     """
     touch "${params.skyline.document_name}.sky.zip"
     touch "skyline-merge.stderr" "skyline-merge.stdout"
-    sky_zip_hash=\$( md5sum ${params.skyline.document_name}.sky.zip |awk '{print \$1}' )
+    md5sum ${params.skyline.document_name}.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 
 process ANNOTATION_TSV_TO_CSV {
-    publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.skyline.import_spectra, failOnError: true, mode: 'copy'
     label 'process_low'
     label 'error_retry'
     container params.images.qc_pipeline
@@ -199,7 +199,7 @@ process ANNOTATION_TSV_TO_CSV {
 }
 
 process SKYLINE_MINIMIZE_DOCUMENT {
-    publishDir "${params.result_dir}/skyline/minimize", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.skyline.minimize, failOnError: true, mode: 'copy'
     label 'error_retry'
     label 'process_high'
     container params.images.proteowizard
@@ -211,7 +211,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
         path("${sky_basename(skyline_zipfile)}_minimized.sky.zip"), emit: final_skyline_zipfile
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
-        env(sky_zip_hash), emit: file_hash
+        path('output_file_hashes.txt'), emit: output_file_hashes
 
     script:
         """
@@ -227,19 +227,19 @@ process SKYLINE_MINIMIZE_DOCUMENT {
             --share-type="minimal" \
         > >(tee 'minimize_skyline.stdout') 2> >(tee 'minimize_skyline.stderr' >&2)
 
-        sky_zip_hash=\$( md5sum ${sky_basename(skyline_zipfile)}_minimized.sky.zip |awk '{print \$1}' )
+        md5sum ${sky_basename(skyline_zipfile)}_minimized.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
         """
 
     stub:
     """
     touch ${sky_basename(skyline_zipfile)}_minimized.sky.zip
     touch stub.stdout stub.stderr
-    sky_zip_hash=\$( md5sum ${sky_basename(skyline_zipfile)}_minimized.sky.zip |awk '{print \$1}' )
+    md5sum ${sky_basename(skyline_zipfile)}_minimized.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 
 process SKYLINE_ANNOTATE_DOCUMENT {
-    publishDir "${params.result_dir}/skyline/import-spectra", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.skyline.import_spectra, failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
     container params.images.proteowizard
 
@@ -252,7 +252,7 @@ process SKYLINE_ANNOTATE_DOCUMENT {
         path("${sky_basename(skyline_zipfile)}_annotated.sky.zip"), emit: final_skyline_zipfile
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
-        env(sky_zip_hash), emit: file_hash
+        path('output_file_hashes.txt'), emit: output_file_hashes
 
     shell:
     """
@@ -268,19 +268,19 @@ process SKYLINE_ANNOTATE_DOCUMENT {
     wine SkylineCmd --batch-commands=add_annotations.bat \
         > >(tee 'annotate_doc.stdout') 2> >(tee 'annotate_doc.stderr' >&2)
 
-    sky_zip_hash=\$( md5sum ${sky_basename(skyline_zipfile)}_annotated.sky.zip |awk '{print \$1}' )
+    md5sum ${sky_basename(skyline_zipfile)}_annotated.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 
     stub:
     """
     touch "${sky_basename(skyline_zipfile)}_annotated.sky.zip"
     touch stub.stdout stub.stderr
-    sky_zip_hash=\$( md5sum ${sky_basename(skyline_zipfile)}_annotated.sky.zip |awk '{print \$1}' )
+    md5sum ${sky_basename(skyline_zipfile)}_annotated.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 
 process SKYLINE_RUN_REPORTS {
-    publishDir "${params.result_dir}/skyline/reports", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.skyline.reports, failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
     container params.images.proteowizard

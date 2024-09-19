@@ -4,13 +4,12 @@ def exec_java_command(mem) {
 }
 
 process ENCYCLOPEDIA_SEARCH_FILE {
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stderr", failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.stdout", failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.elib", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.dia", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.features.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
-    publishDir "${params.result_dir}/encyclopedia/search-file", pattern: "*.encyclopedia.decoy.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.stderr", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.stdout", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.elib", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.features.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.encyclopedia.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
+    publishDir params.output_directories.encyclopedia.search_file, pattern: "*.encyclopedia.decoy.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     label 'process_high_constant'
     container params.images.encyclopedia
 
@@ -28,6 +27,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
         path("${mzml_file}.features.txt"), emit: features
         path("${mzml_file}.encyclopedia.txt"), emit: results_targets
         path("${mzml_file}.encyclopedia.decoy.txt"), emit: results_decoys
+        path("output_file_stats.txt"), emit: output_file_stats
 
 
     script:
@@ -40,6 +40,10 @@ process ENCYCLOPEDIA_SEARCH_FILE {
         -percolatorVersion /usr/local/bin/percolator \\
         ${encyclopedia_params} \\
         > >(tee "encyclopedia-${mzml_file.baseName}.stdout") 2> >(tee "encyclopedia-${mzml_file.baseName}.stderr" >&2)
+
+    md5sum *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+    stat -L --printf='%n\t%s\n' *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sort > sizes.txt
+    join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
     """
 
     stub:
@@ -50,11 +54,15 @@ process ENCYCLOPEDIA_SEARCH_FILE {
     touch "${mzml_file}.features.txt"
     touch "${mzml_file}.encyclopedia.txt"
     touch "${mzml_file}.encyclopedia.decoy.txt"
+
+    md5sum *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+    stat -L --printf='%n\t%s\n' *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sort > sizes.txt
+    join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
     """
 }
 
 process ENCYCLOPEDIA_CREATE_ELIB {
-    publishDir "${params.result_dir}/encyclopedia/create-elib", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.create_elib, failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
     container params.images.encyclopedia
 
@@ -113,7 +121,7 @@ process ENCYCLOPEDIA_CREATE_ELIB {
 }
 
 process ENCYCLOPEDIA_BLIB_TO_DLIB {
-    publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.convert_blib, failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
     container params.images.encyclopedia
@@ -147,7 +155,7 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
 }
 
 process ENCYCLOPEDIA_DLIB_TO_TSV {
-    publishDir "${params.result_dir}/encyclopedia/convert-blib", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.encyclopedia.convert_blib, failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
     container params.images.encyclopedia3_mriffle

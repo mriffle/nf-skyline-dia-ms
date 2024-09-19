@@ -36,7 +36,7 @@ process BUILD_AWS_SECRETS {
     label 'process_low_constant'
     secret 'PANORAMA_API_KEY'
     executor 'local'    // always run this locally
-    publishDir "${params.result_dir}/aws", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.aws, failOnError: true, mode: 'copy'
     cache false         // never cache 
 
     input:

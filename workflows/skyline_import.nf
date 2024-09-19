@@ -47,16 +47,16 @@ workflow skyline_import {
                                       ANNOTATION_TSV_TO_CSV.out.annotation_definitions)
 
             skyline_results = SKYLINE_ANNOTATE_DOCUMENT.out.final_skyline_zipfile
-            skyline_results_hash = SKYLINE_ANNOTATE_DOCUMENT.out.file_hash
+            skyline_results_hash = SKYLINE_ANNOTATE_DOCUMENT.out.output_file_hashes
         } else {
             skyline_results = SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile
-            skyline_results_hash = SKYLINE_MERGE_RESULTS.out.file_hash
+            skyline_results_hash = SKYLINE_MERGE_RESULTS.out.output_file_hashes
         }
 
         if(params.skyline.minimize) {
             SKYLINE_MINIMIZE_DOCUMENT(skyline_results)
             skyline_minimized_results = SKYLINE_MINIMIZE_DOCUMENT.out.final_skyline_zipfile
-            skyline_minimized_results_hash = SKYLINE_MINIMIZE_DOCUMENT.out.file_hash
+            skyline_minimized_results_hash = SKYLINE_MINIMIZE_DOCUMENT.out.output_file_hashes
         } else {
             skyline_minimized_results = Channel.empty()
             skyline_minimized_results_hash = Channel.empty()

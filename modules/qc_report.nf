@@ -28,7 +28,7 @@ process MAKE_EMPTY_FILE {
 }
 
 process PARSE_REPORTS {
-    publishDir "${params.result_dir}/qc_report", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
     label 'process_high_memory'
     container params.images.qc_pipeline
 
@@ -79,9 +79,9 @@ process PARSE_REPORTS {
 }
 
 process EXPORT_TABLES {
-    publishDir "${params.result_dir}/qc_report/tables", pattern: '*.tsv', failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
+    publishDir params.output_directories.qc_report_tables, pattern: '*.tsv', failOnError: true, mode: 'copy'
+    publishDir params.output_directories.qc_report, pattern: '*.stdout', failOnError: true, mode: 'copy'
+    publishDir params.output_directories.qc_report, pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
     container params.images.qc_pipeline
 
@@ -106,9 +106,9 @@ process EXPORT_TABLES {
 }
 
 process RENDER_QC_REPORT {
-    publishDir "${params.result_dir}/qc_report", pattern: 'qc_report.*', failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/qc_report", pattern: '*.stdout', failOnError: true, mode: 'copy'
-    publishDir "${params.result_dir}/qc_report", pattern: '*.stderr', failOnError: true, mode: 'copy'
+    publishDir params.output_directories.qc_report, pattern: 'qc_report.*', failOnError: true, mode: 'copy'
+    publishDir params.output_directories.qc_report, pattern: '*.stdout', failOnError: true, mode: 'copy'
+    publishDir params.output_directories.qc_report, pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
     container params.images.qc_pipeline
 
@@ -136,7 +136,7 @@ process RENDER_QC_REPORT {
 }
 
 process EXPORT_GENE_REPORTS {
-    publishDir "${params.result_dir}/gene_reports", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.gene_reports, failOnError: true, mode: 'copy'
     label 'process_high_memory'
     container params.images.qc_pipeline
 

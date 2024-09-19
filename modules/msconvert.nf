@@ -1,6 +1,6 @@
 process MSCONVERT {
     storeDir "${params.mzml_cache_directory}/${workflow.commitId}/${params.msconvert.do_demultiplex}/${params.msconvert.do_simasspectra}"
-    publishDir "${params.result_dir}/msconvert", pattern: "*.mzML", failOnError: true, mode: 'copy', enabled: params.msconvert_only && !params.panorama.upload
+    publishDir params.output_directories.msconvert, pattern: "*.mzML", failOnError: true, mode: 'copy', enabled: params.msconvert_only && !params.panorama.upload
     label 'process_medium'
     label 'process_high_memory'
     label 'error_retry'
