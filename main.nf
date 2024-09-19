@@ -29,9 +29,6 @@ include { EXPORT_GENE_REPORTS } from "./modules/qc_report"
 // useful functions and variables
 include { param_to_list } from "./workflows/get_input_files"
 
-// String to test for Panoramaness
-PANORAMA_URL = 'https://panoramaweb.org'
-
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
 // otherwise return the params value of the new variable
@@ -429,17 +426,17 @@ workflow {
 // return true if any entry in the list created from the param is a panoramaweb URL
 def any_entry_is_panorama(param) {
     values = param_to_list(param)
-    return values.any { it.startsWith(PANORAMA_URL) }
+    return values.any { it.startsWith(params.panorama.domain) }
 }
 
 // return true if panoramaweb will be accessed by this Nextflow run
 def is_panorama_used() {
 
     return params.panorama.upload ||
-           (params.fasta && params.fasta.startsWith(PANORAMA_URL)) ||
-           (params.spectral_library && params.spectral_library.startsWith(PANORAMA_URL)) ||
-           (params.replicate_metadata && params.replicate_metadata.startsWith(PANORAMA_URL)) ||
-           (params.skyline.template_file && params.skyline.template_file.startsWith(PANORAMA_URL)) ||
+           (params.fasta && params.fasta.startsWith(params.panorama.domain)) ||
+           (params.spectral_library && params.spectral_library.startsWith(params.panorama.domain)) ||
+           (params.replicate_metadata && params.replicate_metadata.startsWith(params.panorama.domain)) ||
+           (params.skyline.template_file && params.skyline.template_file.startsWith(params.panorama.domain)) ||
            (params.quant_spectra_dir && any_entry_is_panorama(params.quant_spectra_dir)) ||
            (params.chromatogram_library_spectra_dir && any_entry_is_panorama(params.chromatogram_library_spectra_dir)) ||
            (params.skyline_skyr_file && any_entry_is_panorama(params.skyline_skyr_file))
