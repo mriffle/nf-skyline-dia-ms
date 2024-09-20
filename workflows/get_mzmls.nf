@@ -1,6 +1,6 @@
 // modules
-include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
-include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
+include { PANORAMA_GET_MS_FILE } from "../modules/panorama"
+include { PANORAMA_GET_MS_FILE_LIST } from "../modules/panorama"
 include { MSCONVERT } from "../modules/msconvert"
 
 // useful functions and variables
@@ -36,8 +36,8 @@ workflow get_mzmls {
             }.flatten()
 
         // List files matching spectra_glob in panorama directories
-        PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch.panorama_dirs, spectra_glob, aws_secret_id)
-        PANORAMA_GET_RAW_FILE_LIST.out.raw_files
+        PANORAMA_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_dirs, spectra_glob, aws_secret_id)
+        PANORAMA_GET_MS_FILE_LIST.out.ms_files
             .map{it -> it.readLines().collect{ line -> line.strip() }}
             .flatten()
             .set{panorama_url_ch}
@@ -68,9 +68,9 @@ workflow get_mzmls {
         }
 
         // Download files from panorama if applicable
-        PANORAMA_GET_RAW_FILE(panorama_url_ch, aws_secret_id)
+        PANORAMA_GET_MS_FILE(panorama_url_ch, aws_secret_id)
 
-        PANORAMA_GET_RAW_FILE.out.panorama_file
+        PANORAMA_GET_MS_FILE.out.panorama_file
             .concat(local_file_ch)
             .branch{
                 mzml: it.name.endsWith('.mzML')
