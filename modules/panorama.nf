@@ -16,7 +16,7 @@ String setupPanoramaAPIKeySecret(secret_id, executor_type) {
     } else {
         SECRET_NAME = 'PANORAMA_API_KEY'
         REGION = params.aws.region
-        
+
         return """
             echo "Getting Panorama API key from AWS secrets manager..."
             SECRET_JSON=\$(${params.aws.batch.cliPath} secretsmanager get-secret-value --secret-id ${secret_id} --region ${REGION} --query 'SecretString' --output text)
@@ -50,7 +50,7 @@ String getPanoramaProjectURLForWebDavDirectory(String webdavDirectory) {
     return newUrl
 }
 
-process PANORAMA_GET_RAW_FILE_LIST {
+process PANORAMA_GET_MS_FILE_LIST {
     cache false
     label 'process_low_constant'
     label 'error_retry'
@@ -64,7 +64,7 @@ process PANORAMA_GET_RAW_FILE_LIST {
         val aws_secret_id
 
     output:
-        path('download_files.txt'), emit: raw_files
+        path('download_files.txt'), emit: ms_files
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
@@ -78,7 +78,6 @@ process PANORAMA_GET_RAW_FILE_LIST {
     echo "Running file list from Panorama..."
         ${exec_java_command(task.memory)} \
         -l \
-        -e raw \
         -w "${web_dav_url}" \
         -k \$PANORAMA_API_KEY \
         -o all_files.txt \
@@ -127,7 +126,7 @@ process PANORAMA_GET_FILE {
     """
 }
 
-process PANORAMA_GET_RAW_FILE {
+process PANORAMA_GET_MS_FILE {
     label 'process_low_constant'
     label 'error_retry'
     maxForks 4
@@ -232,7 +231,8 @@ process UPLOAD_FILE {
 
     stub:
     """
-    touch "panorama-upload-${file(file_to_upload).name}.stdout" "panorama-upload-${file(file_to_upload).name}.stderr"
+    touch "panorama-upload-${file(file_to_upload).name}.stdout" \
+          "panorama-upload-${file(file_to_upload).name}.stderr"
     """
 }
 

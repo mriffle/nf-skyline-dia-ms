@@ -1,7 +1,11 @@
 // modules
-include { PANORAMA_GET_RAW_FILE } from "../modules/panorama"
-include { PANORAMA_GET_RAW_FILE_LIST } from "../modules/panorama"
+include { PANORAMA_GET_MS_FILE } from "../modules/panorama"
+include { PANORAMA_GET_MS_FILE_LIST } from "../modules/panorama"
 include { MSCONVERT } from "../modules/msconvert"
+
+// useful functions and variables
+include { param_to_list } from "./get_input_files"
+include { escapeRegex } from "../modules/panorama"
 
 workflow get_mzmls {
     take:
@@ -14,56 +18,71 @@ workflow get_mzmls {
 
     main:
 
-        if(spectra_dir.contains("https://")) {
-
-            spectra_dirs_ch = Channel.from(spectra_dir)
-                                    .splitText()               // split multiline input
-                                    .map{ it.trim() }          // removing surrounding whitespace
-                                    .filter{ it.length() > 0 } // skip empty lines
-
-            // get raw files from panorama
-            PANORAMA_GET_RAW_FILE_LIST(spectra_dirs_ch, spectra_glob, aws_secret_id)
-            raw_url_ch = PANORAMA_GET_RAW_FILE_LIST.out.raw_files
-                .splitText()
-                .map{ it -> it.strip() }
-
-            PANORAMA_GET_RAW_FILE(raw_url_ch, aws_secret_id)
-            
-            mzml_ch = MSCONVERT(
-                PANORAMA_GET_RAW_FILE.out.panorama_file,
-                params.msconvert.do_demultiplex,
-                params.msconvert.do_simasspectra
-            )
-
-        } else {
-
-            file_glob = spectra_glob
-            spectra_dir = file(spectra_dir, checkIfExists: true)
-            data_files = file("$spectra_dir/${file_glob}")
-
-            if(data_files.size() < 1) {
-                error "No files found for: $spectra_dir/${file_glob}"
+        // Parse spectra_dir parameter and split local and panorama directories
+        spectra_dirs = param_to_list(spectra_dir)
+        spectra_dirs_ch = Channel.fromList(spectra_dirs)
+            .branch{
+                panorama_dirs: it.startsWith(params.panorama.domain)
+                local_dirs: true
             }
 
-            mzml_files = data_files.findAll { it.name.endsWith('.mzML') }
-            raw_files = data_files.findAll { it.name.endsWith('.raw') }
+        // Find files in local directories matching spectra_glob
+        String spectra_regex = '^' + escapeRegex(spectra_glob).replaceAll('\\*', '.*') + '$'
+        local_file_ch = spectra_dirs_ch.local_dirs
+            .map{ it ->
+                file(it, checkIfExists: true)
+                    .listFiles()
+                    .findAll{ it ==~ spectra_regex }
+            }.flatten()
 
-            if(mzml_files.size() < 1 && raw_files.size() < 1) {
-                error "No raw or mzML files found in: $spectra_dir"
+        // List files matching spectra_glob in panorama directories
+        PANORAMA_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_dirs, spectra_glob, aws_secret_id)
+        PANORAMA_GET_MS_FILE_LIST.out.ms_files
+            .map{it -> it.readLines().collect{ line -> line.strip() }}
+            .flatten()
+            .set{panorama_url_ch}
+
+        // make sure that all files have the same extension
+        all_paths_ch = panorama_url_ch.concat(
+            local_file_ch.map{
+                it -> it.name
+            }
+        )
+        all_paths_ch.collect().subscribe{ fileList ->
+            extensions = fileList.collect { it.substring(it.lastIndexOf('.') + 1) }.unique()
+
+            // Check that we have exactly 1 MS file extension
+            directories = spectra_dir.collect{ it -> "${it}${it[-1] == '/' ? '' : '/' }${spectra_glob}" }.join('\n')
+            if (extensions.size() == 0) {
+                error "No files matches fore:\n" + directories +
+                      "\nPlease choose a file glob that will match raw or mzML files."
+            }
+            if (extensions.size() > 1) {
+                error "Matched more than 1 file type for:\n" + directories +
+                      "\nPlease choose a file glob that will only match one type of file"
             }
 
-            if(mzml_files.size() > 0 && raw_files.size() > 0) {
-                error "Matched raw files and mzML files for: $spectra_dir/${file_glob}. Please choose a file matching string that will only match one or the other."
-            }
-
-            if(mzml_files.size() > 0) {
-                    mzml_ch = Channel.fromList(mzml_files)
-            } else {
-                mzml_ch = MSCONVERT(
-                    Channel.fromList(raw_files),
-                    params.msconvert.do_demultiplex,
-                    params.msconvert.do_simasspectra
-                )
+            if(!extensions in ['raw', 'mzML']) {
+                error "No MS data files found for:\n" + directories
             }
         }
+
+        // Download files from panorama if applicable
+        PANORAMA_GET_MS_FILE(panorama_url_ch, aws_secret_id)
+
+        PANORAMA_GET_MS_FILE.out.panorama_file
+            .concat(local_file_ch)
+            .branch{
+                mzml: it.name.endsWith('.mzML')
+                raw: it.name.endsWith('.raw')
+                other: true
+                    error "Unknown file type:" + it.name
+            }.set{ms_file_ch}
+
+        // Convert raw files if applicable
+        MSCONVERT(ms_file_ch.raw,
+                  params.msconvert.do_demultiplex,
+                  params.msconvert.do_simasspectra)
+
+        mzml_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
 }

@@ -6,8 +6,6 @@ include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
 include { PANORAMA_GET_FILE as PANORAMA_GET_METADATA } from "../modules/panorama"
 include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
-PANORAMA_URL = 'https://panoramaweb.org'
-
 /**
 * Process a parameter variable which is specified as either a single value or List.
 * If param_variable has multiple lines, each line with text is returned as an
@@ -42,7 +40,7 @@ workflow get_input_files {
     main:
 
         // get files from Panorama as necessary
-        if(params.fasta.startsWith(PANORAMA_URL)) {
+        if(params.fasta.startsWith(params.panorama.domain)) {
             PANORAMA_GET_FASTA(params.fasta, aws_secret_id)
             fasta = PANORAMA_GET_FASTA.out.panorama_file
         } else {
@@ -50,7 +48,7 @@ workflow get_input_files {
         }
 
         if(params.spectral_library) {
-            if(params.spectral_library.startsWith(PANORAMA_URL)) {
+            if(params.spectral_library.startsWith(params.panorama.domain)) {
                 PANORAMA_GET_SPECTRAL_LIBRARY(params.spectral_library, aws_secret_id)
                 spectral_library = PANORAMA_GET_SPECTRAL_LIBRARY.out.panorama_file
             } else {
@@ -61,7 +59,7 @@ workflow get_input_files {
         }
 
         if(params.skyline.template_file != null) {
-            if(params.skyline.template_file.startsWith(PANORAMA_URL)) {
+            if(params.skyline.template_file.startsWith(params.panorama.domain)) {
                 PANORAMA_GET_SKYLINE_TEMPLATE(params.skyline.template_file, aws_secret_id)
                 skyline_template_zipfile = PANORAMA_GET_SKYLINE_TEMPLATE.out.panorama_file
             } else {
@@ -75,7 +73,7 @@ workflow get_input_files {
 
             // Split skyr files stored on Panorama and locally into separate channels.
             Channel.fromList(param_to_list(params.skyline.skyr_file)).branch{
-                panorama_files: it.startsWith(PANORAMA_URL)
+                panorama_files: it.startsWith(params.panorama.domain)
                 local_files: true
                     return file(it, checkIfExists: true)
                 }.set{skyr_paths}
@@ -90,7 +88,7 @@ workflow get_input_files {
         }
 
         if(params.replicate_metadata != null) {
-            if(params.replicate_metadata.trim().startsWith(PANORAMA_URL)) {
+            if(params.replicate_metadata.trim().startsWith(params.panorama.domain)) {
                 PANORAMA_GET_METADATA(params.replicate_metadata, aws_secret_id)
                 replicate_metadata = PANORAMA_GET_METADATA.out.panorama_file
             } else {
