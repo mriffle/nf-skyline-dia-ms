@@ -1,7 +1,6 @@
 process SKYLINE_ADD_LIB {
     publishDir "${params.result_dir}/skyline/add-lib", failOnError: true, mode: 'copy'
     label 'process_medium'
-    label 'process_short'
     label 'error_retry'
     container 'quay.io/protio/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24031-f33716d'
 
