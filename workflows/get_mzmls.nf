@@ -52,9 +52,9 @@ workflow get_mzmls {
             extensions = fileList.collect { it.substring(it.lastIndexOf('.') + 1) }.unique()
 
             // Check that we have exactly 1 MS file extension
-            directories = spectra_dir.collect{ it -> "${it}${it[-1] == '/' ? '' : '/' }${spectra_glob}" }.join('\n')
+            directories = spectra_dirs.collect{ it -> "${it}${it[-1] == '/' ? '' : '/' }${spectra_glob}" }.join('\n')
             if (extensions.size() == 0) {
-                error "No files matches fore:\n" + directories +
+                error "No files matches for:\n" + directories +
                       "\nPlease choose a file glob that will match raw or mzML files."
             }
             if (extensions.size() > 1) {

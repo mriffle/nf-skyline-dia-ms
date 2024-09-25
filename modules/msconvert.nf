@@ -32,6 +32,6 @@ process MSCONVERT {
 
     stub:
     """
-    touch ${raw_file.baseName}.mzML
+    touch '${raw_file.baseName}.mzML'
     """
 }
