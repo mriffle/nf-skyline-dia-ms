@@ -304,7 +304,7 @@ process SKYLINE_RUN_REPORTS {
 
     for skyrfile in ./*.skyr; do
         # Add report to document
-        echo "--report-add=\\"${skyrfile}\\"" >> export_reports.bat
+        echo "--report-add=\\"${skyrfile}\\" --report-conflict-resolution=overwrite" >> export_reports.bat
 
         # Export report
         awk -F'"' '/<view name=/ { print $2 }' "$skyrfile" | while read reportname; do
