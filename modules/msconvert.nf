@@ -1,5 +1,30 @@
+
+/**
+ * Generate the msconvert command based off user defined parameters.
+ */
+def msconvert_command() {
+    return """
+    wine msconvert -v --zlib --mzML --64 \
+        --ignoreUnknownInstrumentError --filter "peakPicking true 1-" \
+        ${params.msconvert.do_demultiplex ? '--filter "demultiplex optimization=overlap_only"' : ''} \
+        ${params.msconvert.do_simasspectra ? '--simAsSpectra' : ''} \
+        ${params.msconvert.mz_shift_ppm == null ? '' : '--filter "mzShift ' + "${params.msconvert.mz_shift_ppm}" + 'ppm msLevels=1-"'} \
+    """
+}
+
+/**
+ * Calculate a unique hash for msconvert configuration.
+ *
+ * The hash combines the text of the msconvert command without the raw file and
+ * the proteowizard container.
+ */
+def msconvert_cache_dir() {
+    def str = params.images.proteowizard + msconvert_command()
+    return str.md5()
+}
+
 process MSCONVERT {
-    storeDir "${params.mzml_cache_directory}/${workflow.commitId}/${params.msconvert.do_demultiplex}/${params.msconvert.do_simasspectra}"
+    storeDir "${params.mzml_cache_directory}/${msconvert_cache_dir()}"
     publishDir params.output_directories.msconvert, pattern: "*.mzML", failOnError: true, mode: 'copy', enabled: params.msconvert_only && !params.panorama.upload
     label 'process_medium'
     label 'process_high_memory'
@@ -8,26 +33,14 @@ process MSCONVERT {
 
     input:
         path raw_file
-        val do_demultiplex
-        val do_simasspectra
 
     output:
         path("${raw_file.baseName}.mzML"), emit: mzml_file
 
     script:
 
-    demultiplex_param = do_demultiplex ? '--filter "demultiplex optimization=overlap_only"' : ''
-    simasspectra = do_simasspectra ? '--simAsSpectra' : ''
-
     """
-    wine msconvert \
-        ${raw_file} \
-        -v \
-        --zlib \
-        --mzML \
-        --ignoreUnknownInstrumentError \
-        --filter "peakPicking true 1-" \
-        --64 ${simasspectra} ${demultiplex_param}
+    ${msconvert_command()} ${raw_file}
     """
 
     stub:

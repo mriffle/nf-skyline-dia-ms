@@ -42,9 +42,7 @@ workflow get_pdc_files {
             | map{row -> tuple(row.url, row.file_name, row.md5sum)} \
             | GET_FILE
 
-        MSCONVERT(GET_FILE.out.downloaded_file,
-                  params.msconvert.do_demultiplex,
-                  params.msconvert.do_simasspectra)
+        MSCONVERT(GET_FILE.out.downloaded_file)
 
         wide_mzml_ch = MSCONVERT.out.mzml_file
 }
