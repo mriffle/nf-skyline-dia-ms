@@ -102,6 +102,9 @@ The ``params`` Section
      - ``msconvert.do_simasspectra``
      - If starting with raw files, this is the value used by ``msconvert`` for the ``do_simasspectra`` parameter. Default: ``true``.
    * -
+     - ``msconvert.mz_shift_ppm``
+     - If starting with raw files, ``msconvert`` will shift all mz values by ``n`` ppm when converting to ``mzML``. If ``null`` the mz values are not shifed. Default: ``null``.
+   * -
      - ``encyclopedia.chromatogram.params``
      - If you are generating a chromatogram library for quantification, this is the command line options passed to EncyclopeDIA during the chromatogram generation step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
    * -

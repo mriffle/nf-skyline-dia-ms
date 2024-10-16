@@ -80,9 +80,7 @@ workflow get_mzmls {
             }.set{ms_file_ch}
 
         // Convert raw files if applicable
-        MSCONVERT(ms_file_ch.raw,
-                  params.msconvert.do_demultiplex,
-                  params.msconvert.do_simasspectra)
+        MSCONVERT(ms_file_ch.raw)
 
         mzml_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
 }
