@@ -27,6 +27,7 @@ jobs:
     - name: Run (${{ matrix.config }})
       run: |
         echo "Installing Nextflow:"
+        export NXF_VER=24.04.4   # Specify nextflow version. Currently there is a bug in 24.10.0
         curl -s https://get.nextflow.io | bash
         chmod +x nextflow
         echo "Running Nextflow stub with config: ${{ matrix.config }}"
