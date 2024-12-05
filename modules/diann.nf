@@ -131,7 +131,7 @@ process BLIB_BUILD_LIBRARY {
     script:
         """
         BlibBuild "${speclib}" lib_redundant.blib
-        BlibFilter lib_redundant.blib lib.blib
+        BlibFilter -b 1 lib_redundant.blib lib.blib
         """
 
     stub:
