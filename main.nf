@@ -345,8 +345,9 @@ workflow {
 
             // Export PDC gene tables
             if(params.pdc.gene_level_data != null) {
+                gene_level_data = file(params.pdc.gene_level_data, checkIfExists: true)
                 EXPORT_GENE_REPORTS(generate_dia_qc_report.out.qc_report_db,
-                                    params.pdc.gene_level_data,
+                                    gene_level_data,
                                     pdc_study_name)
                 EXPORT_GENE_REPORTS.out.gene_reports | flatten | set{ gene_reports }
             } else {
