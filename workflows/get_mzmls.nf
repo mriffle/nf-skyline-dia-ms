@@ -22,7 +22,7 @@ workflow get_mzmls {
         spectra_dirs = param_to_list(spectra_dir)
         spectra_dirs_ch = Channel.fromList(spectra_dirs)
             .branch{
-                panorama_dirs: it.startsWith(params.panorama.domain)
+                panorama_dirs: panorama_auth_required_for_url(it)
                 local_dirs: true
             }
 
@@ -83,4 +83,9 @@ workflow get_mzmls {
         MSCONVERT(ms_file_ch.raw)
 
         mzml_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
+}
+
+// return true if the URL requires panorama authentication (panorama public does not)
+def panorama_auth_required_for_url(url) {
+    return url.startsWith(params.panorama.domain) && !url.contains("/_webdav/Panorama%20Public/")
 }

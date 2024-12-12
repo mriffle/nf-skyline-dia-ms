@@ -86,7 +86,7 @@ workflow {
     }
 
     // if accessing panoramaweb and running on aws, set up an aws secret
-    if(workflow.profile == 'aws' && is_panorama_used) {
+    if(workflow.profile == 'aws' && is_panorama_authentication_required()) {
         GET_AWS_USER_ID()
         BUILD_AWS_SECRETS(GET_AWS_USER_ID.out)
         aws_secret_id = BUILD_AWS_SECRETS.out.aws_secret_id
@@ -424,23 +424,28 @@ workflow {
 
 }
 
-// return true if any entry in the list created from the param is a panoramaweb URL
-def any_entry_is_panorama(param) {
-    values = param_to_list(param)
-    return values.any { it.startsWith(params.panorama.domain) }
+// return true if the URL requires panorama authentication (panorama public does not)
+def panorama_auth_required_for_url(url) {
+    return url.startsWith(params.panorama.domain) && !url.contains("/_webdav/Panorama%20Public/")
 }
 
-// return true if panoramaweb will be accessed by this Nextflow run
-def is_panorama_used() {
+// return true if any entry in the list required panorama authentication
+def any_entry_requires_panorama_auth(param) {
+    values = param_to_list(param)
+    return values.any { panorama_auth_required_for_url(it) }
+}
+
+// return true if panoramaweb authentication will be required by this workflow run
+def is_panorama_authentication_required() {
 
     return params.panorama.upload ||
-           (params.fasta && params.fasta.startsWith(params.panorama.domain)) ||
-           (params.spectral_library && params.spectral_library.startsWith(params.panorama.domain)) ||
-           (params.replicate_metadata && params.replicate_metadata.startsWith(params.panorama.domain)) ||
-           (params.skyline.template_file && params.skyline.template_file.startsWith(params.panorama.domain)) ||
-           (params.quant_spectra_dir && any_entry_is_panorama(params.quant_spectra_dir)) ||
-           (params.chromatogram_library_spectra_dir && any_entry_is_panorama(params.chromatogram_library_spectra_dir)) ||
-           (params.skyline_skyr_file && any_entry_is_panorama(params.skyline_skyr_file))
+           (params.fasta && panorama_auth_required_for_url(params.fasta)) ||
+           (params.spectral_library && panorama_auth_required_for_url(params.spectral_library)) ||
+           (params.replicate_metadata && panorama_auth_required_for_url(params.replicate_metadata)) ||
+           (params.skyline.template_file && panorama_auth_required_for_url(params.skyline.template_file)) ||
+           (params.quant_spectra_dir && any_entry_requires_panorama_auth(params.quant_spectra_dir)) ||
+           (params.chromatogram_library_spectra_dir && any_entry_requires_panorama_auth(params.chromatogram_library_spectra_dir)) ||
+           (params.skyline_skyr_file && any_entry_requires_panorama_auth(params.skyline_skyr_file))
 
 }
 
