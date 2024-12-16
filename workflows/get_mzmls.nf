@@ -1,6 +1,8 @@
 // modules
 include { PANORAMA_GET_MS_FILE } from "../modules/panorama"
 include { PANORAMA_GET_MS_FILE_LIST } from "../modules/panorama"
+include { PANORAMA_PUBLIC_GET_MS_FILE } from "../modules/panorama"
+include { PANORAMA_PUBLIC_GET_MS_FILE_LIST } from "../modules/panorama"
 include { MSCONVERT } from "../modules/msconvert"
 
 // useful functions and variables
@@ -22,6 +24,7 @@ workflow get_mzmls {
         spectra_dirs = param_to_list(spectra_dir)
         spectra_dirs_ch = Channel.fromList(spectra_dirs)
             .branch{
+                panorama_public_dirs: is_panorama_url(it) && !panorama_auth_required_for_url(it)
                 panorama_dirs: panorama_auth_required_for_url(it)
                 local_dirs: true
             }
@@ -42,8 +45,16 @@ workflow get_mzmls {
             .flatten()
             .set{panorama_url_ch}
 
+        // List files matching spectra_glob in panorama public directories
+        PANORAMA_PUBLIC_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_public_dirs, spectra_glob)
+        PANORAMA_PUBLIC_GET_MS_FILE_LIST.out.ms_files
+            .map{it -> it.readLines().collect{ line -> line.strip() }}
+            .flatten()
+            .set{panorama_public_url_ch}
+
         // make sure that all files have the same extension
         all_paths_ch = panorama_url_ch.concat(
+            panorama_public_url_ch,
             local_file_ch.map{
                 it -> it.name
             }
@@ -70,7 +81,11 @@ workflow get_mzmls {
         // Download files from panorama if applicable
         PANORAMA_GET_MS_FILE(panorama_url_ch, aws_secret_id)
 
+        // Download files from panorama public if applicable
+        PANORAMA_PUBLIC_GET_MS_FILE(panorama_public_url_ch)
+
         PANORAMA_GET_MS_FILE.out.panorama_file
+            .concat(PANORAMA_PUBLIC_GET_MS_FILE.out.panorama_file)
             .concat(local_file_ch)
             .branch{
                 mzml: it.name.endsWith('.mzML')
@@ -85,7 +100,10 @@ workflow get_mzmls {
         mzml_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
 }
 
-// return true if the URL requires panorama authentication (panorama public does not)
+def is_panorama_url(url) {
+    return url.startsWith(params.panorama.domain)
+}
+
 def panorama_auth_required_for_url(url) {
-    return url.startsWith(params.panorama.domain) && !url.contains("/_webdav/Panorama%20Public/")
+    return is_panorama_url(url) && !url.contains("/_webdav/Panorama%20Public/")
 }

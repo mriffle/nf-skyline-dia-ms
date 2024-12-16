@@ -88,6 +88,40 @@ process PANORAMA_GET_MS_FILE_LIST {
     """
 }
 
+process PANORAMA_PUBLIC_GET_MS_FILE_LIST {
+    cache false
+    label 'process_low_constant'
+    label 'error_retry'
+    container params.images.panorama_client
+    publishDir params.output_directories.panorama, failOnError: true, mode: 'copy'
+
+    input:
+        each web_dav_url
+        val file_glob
+
+    output:
+        path('download_files.txt'), emit: ms_files
+        path("*.stdout"), emit: stdout
+        path("*.stderr"), emit: stderr
+
+    script:
+    // convert glob to regex that we can use to grep lines from a file of filenames
+    String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
+
+    """
+    echo "Running file list from Panorama Public..."
+        ${exec_java_command(task.memory)} \
+        -l \
+        -w "${web_dav_url}" \
+        -k "${params.panorama.public.key}" \
+        -o all_files.txt \
+        > >(tee "panorama-get-files.stdout") 2> >(tee "panorama-get-files.stderr" >&2) && \
+
+    # Filter raw files by file_glob and prepend web_dav_url to file names
+    grep -P '${regex}' all_files.txt | xargs -d'\\n' printf '${web_dav_url.replaceAll("%", "%%")}/%s\\n' > download_files.txt
+    """
+}
+
 process PANORAMA_GET_FILE {
     label 'process_low_constant'
     label 'error_retry'
@@ -153,6 +187,40 @@ process PANORAMA_GET_MS_FILE {
             -d \
             -w "${web_dav_url}" \
             -k \$PANORAMA_API_KEY \
+            > >(tee "panorama-get-${raw_file_name}.stdout") 2> >(tee "panorama-get-${raw_file_name}.stderr" >&2)
+        echo "Done!" # Needed for proper exit
+        """
+
+    stub:
+    """
+    touch "${file(web_dav_url).name}"
+    touch stub.stderr stub.stdout
+    """
+}
+
+process PANORAMA_PUBLIC_GET_MS_FILE {
+    label 'process_low_constant'
+    label 'error_retry'
+    maxForks 4
+    container params.images.panorama_client
+    storeDir "${params.panorama_cache_directory}"
+
+    input:
+        val web_dav_url
+
+    output:
+        path("${file(web_dav_url).name}"), emit: panorama_file
+        path("*.stdout"), emit: stdout
+        path("*.stderr"), emit: stderr
+
+    script:
+        raw_file_name = file(web_dav_url).name
+        """
+        echo "Downloading ${raw_file_name} from Panorama Public..."
+            ${exec_java_command(task.memory)} \
+            -d \
+            -w "${web_dav_url}" \
+            -k "${params.panorama.public.key}" \
             > >(tee "panorama-get-${raw_file_name}.stdout") 2> >(tee "panorama-get-${raw_file_name}.stderr" >&2)
         echo "Done!" # Needed for proper exit
         """
