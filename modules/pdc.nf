@@ -52,10 +52,13 @@ process METADATA_TO_SKY_ANNOTATIONS {
 
 process GET_FILE {
     storeDir "${params.panorama_cache_directory}"
-    label 'process_low_constant'
+    cpus 1
+    memory 8.GB
+    time 2.h
+    maxForks 10
+    errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
+    maxRetries 3
     container params.images.pdc_client
-    errorStrategy 'retry'
-    maxRetries 1
 
     input:
         tuple val(url), val(file_name), val(md5)
