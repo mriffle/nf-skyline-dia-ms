@@ -10,6 +10,12 @@ Multiple specific workflows may be run with this Nextflow workflow. Note that in
 workflow can automatically generate requested reports from the Skyline document and can automatically
 upload and (optionally) import the Skyline document into PanoramaWeb and ProteomeXchange.
 
+Cascadia workflow (coming soon):
+===================================
+The workflow will perform *de novo* identification of peptides using user-supplied DIA RAW (or mzML) files.
+The workflow will generate a Skyline document where users may visualize the *de novo* results and export
+integrated peak areas for the identified peptides.
+
 DIA-NN workflow:
 ===================================
 The workflow will quantify peptides and proteins using user-supplied DIA RAW (or mzML) files, FASTA file, and spectral
