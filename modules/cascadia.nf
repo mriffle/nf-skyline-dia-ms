@@ -28,7 +28,7 @@ process CASCADIA_SEARCH {
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        tuple(val(ms_file), path("${ms_file.baseName}.ssl"), emit: ssl)
+        tuple(path(ms_file), path("${ms_file.baseName}.ssl"), emit: ssl)
         path("${ms_file.baseName}.ssl"), emit: published_ssl
         path("cascadia_version_${ms_file.baseName}.txt"), emit: version
         path("output_file_stats_${ms_file.baseName}.txt"), emit: output_file_stats
@@ -76,23 +76,23 @@ process CASCADIA_FIX_SCAN_NUMBERS {
     script:
 
         """
-        python3 /usr/local/bin/fix_scan_numbers.py ${ssl_file} ${ssl_file.baseName}.fixed.ssl
+        python3 /usr/local/bin/fix_scan_numbers.py ${ssl_file} ${ms_file} ${ssl_file.baseName}.fixed.ssl
             > >(tee "fix_scan_numbers.stdout") 2> >(tee "fix_scan_numbers.stderr" >&2)
 
         echo "${params.images.cascadia_utils}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia-utils_version=%s\n" > cascadia-utils_version.txt
 
-        md5sum ${mzml_file} ${ssl_file} ${ssl_file.baseName}.fixed.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' ${ssl_file} ${ssl_file.baseName}.fixed.ssl | sort > sizes.txt
+        md5sum ${ms_file} ${ssl_file} ${ssl_file.baseName}.fixed.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' ${ms_file} ${ssl_file} ${ssl_file.baseName}.fixed.ssl | sort > sizes.txt
         join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 
     stub:
         """
-        touch stub.fixed.fasta
+        touch stub.fixed.ssl
         echo "${params.images.cascadia_utils}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia-utils_version=%s\n" > cascadia-utils_version.txt
 
-        md5sum ${mzml_file} ${ssl_file} stub.fixed.fasta | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' ${mzml_file} ${ssl_file} stub.fixed.ssl | sort > sizes.txt
+        md5sum ${ms_file} ${ssl_file} stub.fixed.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' ${ms_file} ${ssl_file} stub.fixed.ssl | sort > sizes.txt
         join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 }
@@ -109,7 +109,7 @@ process CASCADIA_CREATE_FASTA {
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
         path("${ssl_file.baseName}.fasta"), emit: fasta
-        path("cascadia-fasta_version.txt"), emit: version
+        path("cascadia-utils_version.txt"), emit: version
         path("output_file_stats.txt"), emit: output_file_stats
 
     script:
@@ -175,6 +175,7 @@ process BLIB_BUILD_LIBRARY {
 
     input:
         path ssl
+        path mzml_files
 
     output:
         path('lib.blib'), emit: blib

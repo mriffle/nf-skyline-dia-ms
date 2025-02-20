@@ -37,7 +37,8 @@ workflow cascadia_search {
 
         // create blib
         BLIB_BUILD_LIBRARY(
-            CASCADIA_COMBINE_SSL_FILES.out.ssl
+            CASCADIA_COMBINE_SSL_FILES.out.ssl,
+            ms_file_ch.collect()
         )
 
         // create the fasta used downstream to build skyline document
