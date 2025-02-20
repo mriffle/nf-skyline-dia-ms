@@ -40,11 +40,15 @@ workflow get_input_files {
     main:
 
         // get files from Panorama as necessary
-        if(panorama_auth_required_for_url(params.fasta)) {
-            PANORAMA_GET_FASTA(params.fasta, aws_secret_id)
-            fasta = PANORAMA_GET_FASTA.out.panorama_file
+        if(params.fasta) {
+            if(panorama_auth_required_for_url(params.fasta)) {
+                PANORAMA_GET_FASTA(params.fasta, aws_secret_id)
+                fasta = PANORAMA_GET_FASTA.out.panorama_file
+            } else {
+                fasta = Channel.value(file(params.fasta, checkIfExists: true))
+            }
         } else {
-            fasta = Channel.value(file(params.fasta, checkIfExists: true))
+            fasta = Channel.empty()
         }
 
         if(params.spectral_library) {

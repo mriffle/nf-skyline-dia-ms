@@ -166,6 +166,10 @@ workflow {
             error "The parameter \'spectral_library\' is required when using EncyclopeDIA."
         }
 
+        if(!params.fasta) {
+            error "The parameter \'fasta\' is required when using EncyclopeDIA."
+        }
+
         all_diann_file_ch = Channel.empty()  // will be no diann
         diann_version = Channel.empty()
 
@@ -230,6 +234,10 @@ workflow {
         )
 
     } else if(params.search_engine.toLowerCase() == 'diann') {
+
+        if(!params.fasta) {
+            error "The parameter \'fasta\' is required when using EncyclopeDIA."
+        }
 
         if (params.chromatogram_library_spectra_dir != null) {
             log.warn "The parameter 'chromatogram_library_spectra_dir' is set to a value (${params.chromatogram_library_spectra_dir}) but will be ignored."
