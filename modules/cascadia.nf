@@ -29,7 +29,7 @@ process CASCADIA_SEARCH {
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
         tuple(val(ms_file), path("${ms_file.baseName}.ssl"), emit: ssl)
-        path("${ms_file}.ssl"), emit: published_ssl
+        path("${ms_file.baseName}.ssl"), emit: published_ssl
         path("cascadia_version_${ms_file.baseName}.txt"), emit: version
         path("output_file_stats_${ms_file.baseName}.txt"), emit: output_file_stats
 
@@ -41,8 +41,8 @@ process CASCADIA_SEARCH {
 
         echo "${params.images.cascadia}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia_version=%s\n" > cascadia_version_${ms_file.baseName}.txt
 
-        md5sum '${ms_file.join('\' \'')}' ${ms_file}.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' ${ms_file}.ssl | sort > sizes.txt
+        md5sum '${ms_file.join('\' \'')}' ${ms_file.baseName}.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' ${ms_file.baseName}.ssl | sort > sizes.txt
         join -t'\t' hashes.txt sizes.txt > output_file_stats_${ms_file.baseName}.txt
         """
 
