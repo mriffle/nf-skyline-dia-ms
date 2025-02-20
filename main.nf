@@ -172,7 +172,9 @@ workflow {
         }
 
         all_diann_file_ch = Channel.empty()  // will be no diann
+        all_cascadia_file_ch = Channel.empty()
         diann_version = Channel.empty()
+        cascadia_version = Channel.empty()
 
         // convert blib to dlib if necessary
         if(params.spectral_library.endsWith(".blib")) {
@@ -284,7 +286,10 @@ workflow {
 
 
         all_elib_ch = Channel.empty()  // will be no encyclopedia
+        all_cascadia_file_ch = Channel.empty()
         encyclopedia_version = Channel.empty()
+        cascadia_version = Channel.empty()
+
         all_mzml_ch = wide_mzml_ch
 
         diann_search(
