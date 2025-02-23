@@ -30,16 +30,16 @@ process CASCADIA_SEARCH {
         path("*.stdout"), emit: stdout
         tuple(path(ms_file), path("${ms_file.baseName}.ssl"), emit: ssl)
         path("${ms_file.baseName}.ssl"), emit: published_ssl
-        path("cascadia_version_${ms_file.baseName}.txt"), emit: version
+        path("cascadia_version.txt"), emit: version
         path("output_file_stats_${ms_file.baseName}.txt"), emit: output_file_stats
 
     script:
 
         """
         cascadia sequence ${ms_file} /usr/local/bin/cascadia.ckpt --out ${ms_file.baseName}
-            > >(tee "cascadia.stdout") 2> >(tee "cascadia.stderr" >&2)
+            > >(tee "${ms_file.baseName}.stdout") 2> >(tee "${ms_file.baseName}.stderr" >&2)
 
-        echo "${params.images.cascadia}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia_version=%s\n" > cascadia_version_${ms_file.baseName}.txt
+        echo "${params.images.cascadia}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia_version=%s\n" > cascadia_version.txt
 
         md5sum '${ms_file.join('\' \'')}' ${ms_file.baseName}.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' ${ms_file.baseName}.ssl | sort > sizes.txt
@@ -50,7 +50,7 @@ process CASCADIA_SEARCH {
         """
         touch stub.ssl
         touch stub.stderr stub.stdout
-        echo "${params.images.cascadia}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia_version=%s\n" > cascadia_version_${ms_file.baseName}.txt
+        echo "${params.images.cascadia}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia_version=%s\n" > cascadia_version.txt
 
         md5sum '${ms_file.join('\' \'')}' stub.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' stub.ssl | sort > sizes.txt
