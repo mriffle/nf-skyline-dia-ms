@@ -58,10 +58,10 @@ The ``params`` Section
      - Description
    * -
      - ``spectral_library``
-     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. This parameter is required for EncyclopeDIA. If omitted when using DIA-NN, DIA-NN will be run in library-free mode.
-   * - ✓
+     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. This parameter is required for EncyclopeDIA. If omitted when using DIA-NN, DIA-NN will be run in library-free mode. This parameter is ignored when running Cascadia.
+   * - 
      - ``fasta``
-     - The path to the background FASTA file to use.
+     - The path to the background FASTA file to use. This parameter is required, except when running Cascadia.
    * - ✓
      - ``quant_spectra_dir``
      - The path to the directory containing the raw data to be quantified. If using narrow window DIA and GPF to generated a chromatogram library this is the location of the wide-window data to be searched using the chromatogram library.
@@ -76,7 +76,7 @@ The ``params`` Section
      - Which files in this directory to use. Default: ``*.raw``
    * -
      - ``search_engine``
-     - Must be set to either ``'encyclopedia'`` or ``'diann'``. If set to ``'diann'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
+     - Must be set to either ``'encyclopedia'``, ``'diann'``, or ``'cascadia'``. If set to ``'diann'`` or ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
    * -
      - ``pdc.study_id``
      - When this option is set, raw files and metadata will be downloaded from the PDC. Default: ``null``.
@@ -116,6 +116,9 @@ The ``params`` Section
    * -
      - ``diann.params``
      - The parameters passed to DIA-NN when it is run. Default: ``'--unimod4 --qvalue 0.01 --cut \'K*,R*,!*P\' --reanalyse --smart-profiling'``
+   * -
+     - ``cascadia.use_gpu``
+     - If set to ``true``, Cascadia will attempt to use the GPU(s) installed on the system where it is running. Do not set to true unless a GPU is available, otherwise an error will be gernated. Default: ``false``.
    * -
      - ``panorama.upload``
      - Whether or not to upload results to PanoramaWeb Default: ``false``.

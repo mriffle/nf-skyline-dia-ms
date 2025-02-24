@@ -6,11 +6,12 @@ These documents describe a standardized Nextflow workflow for processing **DIA m
 data to quantify peptides and proteins**. The source code for the workflow can be found at:
 https://github.com/mriffle/nf-skyline-dia-ms.
 
-Multiple specific workflows may be run with this Nextflow workflow. Note that in all cases, the
-workflow can automatically generate requested reports from the Skyline document and can automatically
-upload and (optionally) import the Skyline document into PanoramaWeb and ProteomeXchange.
+This workflow supports three search engines: DIA-NN, Encyclopedia, and Cascadia for performing *de novo* searches.
+Each search engine works as a drop-in replacement for the other, supporting all the same pre- and post-analysis steps.
+In all cases, the workflow supports converting RAW files, integrating with PanoramaWeb (ProteomeXchange) and Proteomic Data Commons,
+and will generate a Skyline document suitable for visualization and analysis in Skyline.
 
-Cascadia workflow (coming soon):
+Cascadia workflow:
 ===================================
 The workflow will perform *de novo* identification of peptides using user-supplied DIA RAW (or mzML) files.
 The workflow will generate a Skyline document where users may visualize the *de novo* results and export

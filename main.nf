@@ -7,6 +7,7 @@ include { get_input_files } from "./workflows/get_input_files"
 include { encyclopedia_search as encyclopeda_export_elib } from "./workflows/encyclopedia_search"
 include { encyclopedia_search as encyclopedia_quant } from "./workflows/encyclopedia_search"
 include { diann_search } from "./workflows/diann_search"
+include { cascadia_search } from "./workflows/cascadia_search"
 include { get_mzmls as get_narrow_mzmls } from "./workflows/get_mzmls"
 include { get_mzmls as get_wide_mzmls } from "./workflows/get_mzmls"
 include { skyline_import } from "./workflows/skyline_import"
@@ -166,8 +167,14 @@ workflow {
             error "The parameter \'spectral_library\' is required when using EncyclopeDIA."
         }
 
+        if(!params.fasta) {
+            error "The parameter \'fasta\' is required when using EncyclopeDIA."
+        }
+
         all_diann_file_ch = Channel.empty()  // will be no diann
+        all_cascadia_file_ch = Channel.empty()
         diann_version = Channel.empty()
+        cascadia_version = Channel.empty()
 
         // convert blib to dlib if necessary
         if(params.spectral_library.endsWith(".blib")) {
@@ -231,6 +238,10 @@ workflow {
 
     } else if(params.search_engine.toLowerCase() == 'diann') {
 
+        if(!params.fasta) {
+            error "The parameter \'fasta\' is required when using diann."
+        }
+
         if (params.chromatogram_library_spectra_dir != null) {
             log.warn "The parameter 'chromatogram_library_spectra_dir' is set to a value (${params.chromatogram_library_spectra_dir}) but will be ignored."
         }
@@ -275,7 +286,10 @@ workflow {
 
 
         all_elib_ch = Channel.empty()  // will be no encyclopedia
+        all_cascadia_file_ch = Channel.empty()
         encyclopedia_version = Channel.empty()
+        cascadia_version = Channel.empty()
+
         all_mzml_ch = wide_mzml_ch
 
         diann_search(
@@ -310,6 +324,36 @@ workflow {
             diann_search.out.stderr
         ).concat(
             diann_search.out.predicted_speclib
+        )
+    } else if(params.search_engine.toLowerCase() == 'cascadia') {
+
+        if (params.spectral_library != null) {
+            log.warn "The parameter 'spectral_library' is set to a value (${params.spectral_library}) but will be ignored."
+        }
+
+        all_elib_ch = Channel.empty()  // will be no encyclopedia
+        all_diann_file_ch = Channel.empty() // will be no diann
+        encyclopedia_version = Channel.empty()
+        diann_version = Channel.empty()
+
+        all_mzml_ch = wide_mzml_ch
+
+        cascadia_search(
+            wide_mzml_ch
+        )
+
+        cascadia_version = cascadia_search.out.cascadia_version
+        search_file_stats = cascadia_search.out.output_file_stats
+        final_elib = cascadia_search.out.blib
+        fasta = cascadia_search.out.fasta
+
+        // all files to upload to panoramaweb (if requested)
+        all_cascadia_file_ch = cascadia_search.out.blib.concat(
+            cascadia_search.out.fasta
+        ).concat(
+            cascadia_search.out.stdout
+        ).concat(
+            cascadia_search.out.stderr
         )
 
     } else {
@@ -385,6 +429,7 @@ workflow {
 
     version_files = encyclopedia_version.concat(diann_version,
                                                 proteowizard_version,
+                                                cascadia_version,
                                                 dia_qc_version).splitText()
 
     input_files = fasta.map{ it -> ['Fasta file', it.name] }.concat(
@@ -410,6 +455,7 @@ workflow {
             params.panorama.upload_url,
             all_elib_ch,
             all_diann_file_ch,
+            all_cascadia_file_ch,
             final_skyline_file,
             all_mzml_ch,
             fasta,

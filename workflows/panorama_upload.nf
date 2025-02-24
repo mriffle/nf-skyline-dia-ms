@@ -13,6 +13,7 @@ workflow panorama_upload_results {
         webdav_url
         all_elib_files
         all_diann_file_ch
+        all_cascadia_file_ch
         final_skyline_file
         mzml_file_ch
         fasta_file
@@ -41,6 +42,7 @@ workflow panorama_upload_results {
             .concat(user_supplied_spectral_lib.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(all_elib_files.map { path -> tuple(path, upload_webdav_url + "/results/encyclopedia") })
             .concat(all_diann_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/diann") })
+            .concat(all_cascadia_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/cascadia") })
             .concat(final_skyline_file.map { path -> tuple(path, upload_webdav_url + "/results/skyline") })
             .concat(skyr_file_ch.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(skyline_report_ch.map { path -> tuple(path, upload_webdav_url + "/results/skyline_reports") })
