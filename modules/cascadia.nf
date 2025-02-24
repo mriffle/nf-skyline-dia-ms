@@ -127,11 +127,11 @@ process CASCADIA_CREATE_FASTA {
 
     stub:
         """
-        touch stub.fasta stub.stderr stub.stdout
+        touch "${ssl_file.baseName}.fasta" stub.stderr stub.stdout
         echo "${params.images.cascadia_utils}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia-utils_version=%s\n" > cascadia-utils_version.txt
 
-        md5sum stub.fasta | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' stub.fasta | sort > sizes.txt
+        md5sum "${ssl_file.baseName}.fasta" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' "${ssl_file.baseName}.fasta" | sort > sizes.txt
         join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 }
