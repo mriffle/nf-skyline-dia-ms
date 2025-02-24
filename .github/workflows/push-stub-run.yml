@@ -13,6 +13,7 @@ jobs:
       matrix:
         config: [
           'test-diann.config',
+          'test-cascadia.config',
           'test-encyclopedia-narrow-gpf.config',
           'test-encyclopedia-wide-only.config',
           'test-diann-pdc.config',
