@@ -92,7 +92,7 @@ process CASCADIA_FIX_SCAN_NUMBERS {
         echo "${params.images.cascadia_utils}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia-utils_version=%s\n" > cascadia-utils_version.txt
 
         md5sum ${ms_file} ${ssl_file} "${ssl_file.baseName}.fixed.ssl" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' ${ms_file} ${ssl_file} stub.fixed.ssl | sort > sizes.txt
+        stat -L --printf='%n\t%s\n' ${ms_file} ${ssl_file} "${ssl_file.baseName}.fixed.ssl" | sort > sizes.txt
         join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 }
