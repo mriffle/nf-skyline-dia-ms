@@ -88,7 +88,7 @@ process CASCADIA_FIX_SCAN_NUMBERS {
 
     stub:
         """
-        touch stub.fixed.ssl
+        touch stub.fixed.ssl stub.stderr stub.stdout
         echo "${params.images.cascadia_utils}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia-utils_version=%s\n" > cascadia-utils_version.txt
 
         md5sum ${ms_file} ${ssl_file} stub.fixed.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
@@ -127,7 +127,7 @@ process CASCADIA_CREATE_FASTA {
 
     stub:
         """
-        touch stub.ssl stub.fasta
+        touch stub.fasta stub.stderr stub.stdout
         echo "${params.images.cascadia_utils}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia-utils_version=%s\n" > cascadia-utils_version.txt
 
         md5sum stub.ssl stub.fasta | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
