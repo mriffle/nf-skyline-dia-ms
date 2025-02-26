@@ -38,8 +38,8 @@ workflow get_pdc_files {
         study_name = get_pdc_study_metadata.out.study_name
 
         metadata \
-            | splitCsv(header:true, sep:'\t') \
-            | map{row -> tuple(row.url, row.file_name, row.md5sum)} \
+            | splitJson() \
+            | map{row -> tuple(row['url'], row['file_name'], row['md5sum'], row['file_size'])} \
             | GET_FILE
 
         MSCONVERT(GET_FILE.out.downloaded_file)

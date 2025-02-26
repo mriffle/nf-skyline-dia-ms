@@ -15,8 +15,8 @@ process GET_STUDY_METADATA {
         val pdc_study_id
 
     output:
-        path('study_metadata.tsv'), emit: metadata
-        path('study_metadata_annotations.csv'), emit: skyline_annotations
+        path('*_flat.json'), emit: metadata
+        path('*_skyline_annotations.csv'), emit: skyline_annotations
         env(study_id), emit: study_id
         env(study_name), emit: study_name
         path('pdc_client_version.txt'), emit: version
@@ -28,7 +28,7 @@ process GET_STUDY_METADATA {
     '''
     study_id=$(PDC_client studyID !{pdc_client_args} !{pdc_study_id} | tee study_id.txt)
     study_name=$(PDC_client studyName --normalize !{pdc_client_args} ${study_id} | tee study_name.txt)
-    PDC_client metadata !{pdc_client_args} -f tsv !{n_files_arg} --skylineAnnotations ${study_id}
+    PDC_client metadata !{pdc_client_args} --flatten -f json !{n_files_arg} --skylineAnnotations ${study_id}
 
     echo "pdc_client_git_repo='$GIT_REPO - $GIT_BRANCH [$GIT_SHORT_HASH]'" > pdc_client_version.txt
     '''
@@ -52,20 +52,23 @@ process METADATA_TO_SKY_ANNOTATIONS {
 
 process GET_FILE {
     storeDir "${params.panorama_cache_directory}"
-    label 'process_low_constant'
+    cpus 1
+    memory 8.GB
+    time 2.h
+    maxForks 10
+    errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
+    maxRetries 3
     container params.images.pdc_client
-    errorStrategy 'retry'
-    maxRetries 1
 
     input:
-        tuple val(url), val(file_name), val(md5)
+        tuple val(url), val(file_name), val(md5), val(file_size)
 
     output:
         path(file_name), emit: downloaded_file
 
     shell:
     '''
-    PDC_client file -o '!{file_name}' -m '!{md5}' '!{url}'
+    PDC_client file -o '!{file_name}' --size '!{file_size}' --md5sum '!{md5}' --url '!{url}'
     '''
 
     stub:

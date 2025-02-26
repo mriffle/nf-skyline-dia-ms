@@ -103,7 +103,7 @@ The ``params`` Section
      - If starting with raw files, this is the value used by ``msconvert`` for the ``do_simasspectra`` parameter. Default: ``true``.
    * -
      - ``msconvert.mz_shift_ppm``
-     - If starting with raw files, ``msconvert`` will shift all mz values by ``n`` ppm when converting to ``mzML``. If ``null`` the mz values are not shifed. Default: ``null``.
+     - If starting with raw files, ``msconvert`` will shift all mz values by ``n`` ppm when converting to ``mzML``. If ``null`` the mz values are not shifted. Default: ``null``.
    * -
      - ``encyclopedia.chromatogram.params``
      - If you are generating a chromatogram library for quantification, this is the command line options passed to EncyclopeDIA during the chromatogram generation step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
@@ -142,6 +142,9 @@ The ``params`` Section
    * -
      - ``skyline.protein_parsimony``
      - If ``true``, protein parsimony is performed in Skyline. If ``false`` the protein assignments given by the search engine are used as protein groups. Default is ``false``.
+   * -
+     - ``skyline.fasta``
+     - The fasta file to use as a background proteome in Skyline. If ``null`` the same fasta file (``params.fasta``) used for the DIA search is used. Default is ``null``.
    * -
      - ``skyline.group_by_gene``
      - If ``true``, when protein parsimony is performed in Skyline protein groups are formed by gene instead of by protein. Default is ``false``.
