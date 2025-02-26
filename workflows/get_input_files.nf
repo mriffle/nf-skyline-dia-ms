@@ -32,6 +32,7 @@ workflow get_input_files {
 
    emit:
        fasta
+       skyline_fasta
        spectral_library
        skyline_template_zipfile
        skyr_files
@@ -49,6 +50,17 @@ workflow get_input_files {
             }
         } else {
             fasta = Channel.empty()
+        }
+
+        if(params.skyline.fasta){
+            if(panorama_auth_required_for_url(params.fasta)) {
+                PANORAMA_GET_FASTA(params.skyline.fasta, aws_secret_id)
+                skyline_fasta = PANORAMA_GET_FASTA.out.panorama_file
+            } else {
+                skyline_fasta = Channel.value(file(params.skyline.fasta, checkIfExists: true))
+            }
+        } else {
+            skyline_fasta = fasta
         }
 
         if(params.spectral_library) {

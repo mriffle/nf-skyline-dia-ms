@@ -15,7 +15,7 @@ def get_search_file_dir() {
 
 workflow combine_file_hashes {
     take:
-        fasta
+        fasta_files
         spectral_library
 
         search_file_stats
@@ -55,7 +55,7 @@ workflow combine_file_hashes {
         ).map{ it -> tuple(it[0], it[1], it[3], it[2])}
 
         // Combine files we need to calculate the hash of into a single channel
-        file_stat_files = fasta.concat(spectral_library).map{
+        file_stat_files = fasta_files.concat(spectral_library).map{
             it -> tuple(it.name, it, params.result_dir, it.size())
         }.concat(
             skyline_reports.map{ tuple(it.name, it, params.output_directories.skyline.reports, it.size()) },
