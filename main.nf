@@ -65,6 +65,7 @@ workflow {
     // check for old param variable names
     params.skyline.document_name = check_old_param_name('skyline_document_name',
                                                         'skyline.document_name')
+    skyline_document_name = params.skyline.document_name
     params.skyline.skip = check_old_param_name('skip_skyline',
                                                'skyline.skip')
     params.skyline.template_file = check_old_param_name('skyline_template_file',
@@ -100,6 +101,7 @@ workflow {
         get_pdc_files()
         wide_mzml_ch = get_pdc_files.out.wide_mzml_ch
         pdc_study_name = get_pdc_files.out.study_name
+        skyline_document_name = skyline_document_name == 'final' ? pdc_study_name : skyline_document_name
     } else{
         get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)
         wide_mzml_ch = get_wide_mzmls.out.mzml_ch
@@ -370,7 +372,8 @@ workflow {
                 skyline_fasta,
                 final_elib,
                 wide_mzml_ch,
-                replicate_metadata
+                replicate_metadata,
+                skyline_document_name
             )
             proteowizard_version = skyline_import.out.proteowizard_version
         }

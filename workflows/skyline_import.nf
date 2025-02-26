@@ -14,6 +14,7 @@ workflow skyline_import {
         elib
         wide_mzml_file_ch
         replicate_metadata
+        skyline_document_name
 
     emit:
         skyline_results
@@ -36,7 +37,8 @@ workflow skyline_import {
             skyline_zipfile,
             SKYLINE_IMPORT_MZML.out.skyd_file.collect(),
             wide_mzml_file_ch.collect(),
-            fasta
+            fasta,
+            skyline_document_name
         )
 
         if(params.replicate_metadata != null || params.pdc.study_id != null) {

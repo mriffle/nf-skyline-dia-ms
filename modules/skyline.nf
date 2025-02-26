@@ -134,9 +134,10 @@ process SKYLINE_MERGE_RESULTS {
         path skyd_files
         val mzml_files
         path fasta
+        val skyline_document_name
 
     output:
-        path("${params.skyline.document_name}.sky.zip"), emit: final_skyline_zipfile
+        path("*.sky.zip"), emit: final_skyline_zipfile
         path("skyline-merge.stdout"), emit: stdout
         path("skyline-merge.stderr"), emit: stderr
         path('output_file_hashes.txt'), emit: output_file_hashes
@@ -158,13 +159,13 @@ process SKYLINE_MERGE_RESULTS {
         --in="${skyline_zipfile.baseName}" --memstamp \
         ${import_files_params} \
         ${params.skyline.protein_parsimony ? protein_parsimony_args : ''} \
-        --out="${params.skyline.document_name}.sky" \
+        --out="${skyline_document_name}.sky" \
         --save \
-        --share-zip="${params.skyline.document_name}.sky.zip" \
+        --share-zip="${skyline_document_name}.sky.zip" \
         --share-type="complete" \
         > >(tee 'skyline-merge.stdout') 2> >(tee 'skyline-merge.stderr' >&2)
 
-    md5sum ${params.skyline.document_name}.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum ${skyline_document_name}.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 
     stub:
