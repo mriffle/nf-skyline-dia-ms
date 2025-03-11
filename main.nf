@@ -3,21 +3,21 @@
 nextflow.enable.dsl = 2
 
 // Sub workflows
-include { get_input_files } from "./workflows/get_input_files"
-include { encyclopedia_search as encyclopeda_export_elib } from "./workflows/encyclopedia_search"
-include { encyclopedia_search as encyclopedia_quant } from "./workflows/encyclopedia_search"
-include { diann_search } from "./workflows/diann_search"
-include { cascadia_search } from "./workflows/cascadia_search"
-include { get_mzmls as get_narrow_mzmls } from "./workflows/get_mzmls"
-include { get_mzmls as get_wide_mzmls } from "./workflows/get_mzmls"
-include { skyline_import } from "./workflows/skyline_import"
-include { skyline_reports } from "./workflows/skyline_run_reports"
-include { generate_dia_qc_report } from "./workflows/generate_qc_report"
-include { panorama_upload_results } from "./workflows/panorama_upload"
-include { panorama_upload_mzmls } from "./workflows/panorama_upload"
-include { save_run_details } from "./workflows/save_run_details"
-include { get_pdc_files } from "./workflows/get_pdc_files"
-include { combine_file_hashes } from "./workflows/combine_file_hashes"
+include { get_input_files } from "./subworkflows/get_input_files"
+include { encyclopedia_search as encyclopeda_export_elib } from "./subworkflows/encyclopedia_search"
+include { encyclopedia_search as encyclopedia_quant } from "./subworkflows/encyclopedia_search"
+include { diann_search } from "./subworkflows/diann_search"
+include { cascadia_search } from "./subworkflows/cascadia_search"
+include { get_mzmls as get_narrow_mzmls } from "./subworkflows/get_mzmls"
+include { get_mzmls as get_wide_mzmls } from "./subworkflows/get_mzmls"
+include { skyline_import } from "./subworkflows/skyline_import"
+include { skyline_reports } from "./subworkflows/skyline_run_reports"
+include { generate_dia_qc_report } from "./subworkflows/generate_qc_report"
+include { panorama_upload_results } from "./subworkflows/panorama_upload"
+include { panorama_upload_mzmls } from "./subworkflows/panorama_upload"
+include { save_run_details } from "./subworkflows/save_run_details"
+include { get_pdc_files } from "./subworkflows/get_pdc_files"
+include { combine_file_hashes } from "./subworkflows/combine_file_hashes"
 
 // modules
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "./modules/encyclopedia"
@@ -28,7 +28,7 @@ include { BUILD_AWS_SECRETS } from "./modules/aws"
 include { EXPORT_GENE_REPORTS } from "./modules/qc_report"
 
 // useful functions and variables
-include { param_to_list } from "./workflows/get_input_files"
+include { param_to_list } from "./subworkflows/get_input_files"
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
