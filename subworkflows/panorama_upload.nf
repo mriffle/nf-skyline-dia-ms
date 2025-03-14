@@ -8,9 +8,8 @@ workflow panorama_upload_results {
 
     take:
         webdav_url
-        all_elib_files
-        all_diann_file_ch
-        all_cascadia_file_ch
+        all_search_file_ch
+        search_engine
         final_skyline_file
         mzml_file_ch
         fasta_file
@@ -34,9 +33,7 @@ workflow panorama_upload_results {
             .concat(Channel.fromPath(nextflow_config_file).map { path -> tuple(path, upload_webdav_url) })
             .concat(fasta_file.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(user_supplied_spectral_lib.map { path -> tuple(path, upload_webdav_url + "/input-files") })
-            .concat(all_elib_files.map { path -> tuple(path, upload_webdav_url + "/results/encyclopedia") })
-            .concat(all_diann_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/diann") })
-            .concat(all_cascadia_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/cascadia") })
+            .concat(all_search_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/${search_engine}") })
             .concat(final_skyline_file.map { path -> tuple(path, upload_webdav_url + "/results/skyline") })
             .concat(skyr_file_ch.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(skyline_report_ch.map { path -> tuple(path, upload_webdav_url + "/results/skyline_reports") })

@@ -52,11 +52,12 @@ workflow encyclopedia {
             all_elib_ch = encyclopeda_export_elib.out.elib.concat(
                 encyclopeda_export_elib.out.individual_elibs
             )
+        } else {
             quant_library = spectral_library_to_use
             spec_lib_hashes = Channel.empty()
-            all_mzml_ch = wide_mzml_ch
             all_elib_ch = Channel.empty()
         }
+
 
         // search wide-window data using chromatogram library
         encyclopedia_quant(
@@ -68,7 +69,7 @@ workflow encyclopedia {
             params.encyclopedia.quant.params
         )
 
-        all_elib_ch = all_elib_ch.concat(
+        search_file_ch = all_elib_ch.concat(
             encyclopedia_quant.out.individual_elibs,
             encyclopedia_quant.out.elib,
             encyclopedia_quant.out.peptide_quant,
@@ -77,7 +78,7 @@ workflow encyclopedia {
 
     emit:
         final_elib = encyclopedia_quant.out.elib
-        version = encyclopedia_quant.out.encyclopedia_version
+        encyclopedia_version = encyclopedia_quant.out.encyclopedia_version
         search_file_stats = encyclopedia_quant.out.output_file_stats.concat(spec_lib_hashes)
-        all_elib_ch = all_elib_ch
+        search_files = search_file_ch
 }

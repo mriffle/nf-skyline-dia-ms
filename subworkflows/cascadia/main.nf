@@ -1,9 +1,10 @@
+
 // modules
-include { CASCADIA_SEARCH } from "../modules/cascadia"
-include { CASCADIA_FIX_SCAN_NUMBERS } from "../modules/cascadia"
-include { CASCADIA_CREATE_FASTA } from "../modules/cascadia"
-include { CASCADIA_COMBINE_SSL_FILES } from "../modules/cascadia"
-include { BLIB_BUILD_LIBRARY } from "../modules/cascadia"
+include { CASCADIA_SEARCH } from "../../modules/cascadia"
+include { CASCADIA_FIX_SCAN_NUMBERS } from "../../modules/cascadia"
+include { CASCADIA_CREATE_FASTA } from "../../modules/cascadia"
+include { CASCADIA_COMBINE_SSL_FILES } from "../../modules/cascadia"
+include { BLIB_BUILD_LIBRARY } from "../../modules/cascadia"
 
 workflow cascadia_search {
 
@@ -52,4 +53,34 @@ workflow cascadia_search {
         stderr
         cascadia_version
         output_file_stats
+}
+
+workflow cascadia {
+    take:
+        mzml_ch
+
+    main:
+        if (params.spectral_library != null) {
+            log.warn "The parameter 'spectral_library' is set to a value (${params.spectral_library}) but will be ignored."
+        }
+
+        cascadia_search(
+            mzml_ch
+        )
+
+        // all files to upload to panoramaweb (if requested)
+        all_search_file_ch = cascadia_search.out.blib.concat(
+            cascadia_search.out.fasta
+        ).concat(
+            cascadia_search.out.stdout
+        ).concat(
+            cascadia_search.out.stderr
+        )
+
+    emit:
+        cascadia_version = cascadia_search.out.cascadia_version
+        all_search_files = all_search_file_ch
+        final_speclib = cascadia_search.out.blib
+        fasta = cascadia_search.out.fasta
+        search_file_stats = cascadia_search.out.output_file_stats
 }
