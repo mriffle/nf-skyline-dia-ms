@@ -5,11 +5,6 @@ include { GET_FILE } from "../modules/pdc.nf"
 include { MSCONVERT } from "../modules/msconvert.nf"
 
 workflow get_pdc_study_metadata {
-    emit:
-        study_name
-        metadata
-        annotations_csv
-
     main:
         if(params.pdc.metadata_tsv == null) {
             GET_STUDY_METADATA(params.pdc.study_id)
@@ -22,20 +17,17 @@ workflow get_pdc_study_metadata {
             annotations_csv = METADATA_TO_SKY_ANNOTATIONS.out
             study_name = params.pdc.study_name
         }
-}
 
-workflow get_pdc_files {
     emit:
         study_name
         metadata
         annotations_csv
-        wide_mzml_ch
+}
 
+workflow get_pdc_files {
     main:
         get_pdc_study_metadata()
         metadata = get_pdc_study_metadata.out.metadata
-        annotations_csv = get_pdc_study_metadata.out.annotations_csv
-        study_name = get_pdc_study_metadata.out.study_name
 
         metadata \
             | splitJson() \
@@ -44,6 +36,10 @@ workflow get_pdc_files {
 
         MSCONVERT(GET_FILE.out.downloaded_file)
 
+    emit:
+        study_name = get_pdc_study_metadata.out.study_name
+        metadata
+        annotations_csv = get_pdc_study_metadata.out.annotations_csv
         wide_mzml_ch = MSCONVERT.out.mzml_file
 }
 

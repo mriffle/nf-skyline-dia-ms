@@ -10,14 +10,6 @@ workflow cascadia_search {
     take:
         ms_file_ch
 
-    emit:
-        blib
-        fasta
-        stdout
-        stderr
-        cascadia_version
-        output_file_stats
-
     main:
 
         // run cascadia on all mzML files
@@ -52,4 +44,12 @@ workflow cascadia_search {
         output_file_stats = CASCADIA_SEARCH.out.output_file_stats
         stdout            = CASCADIA_SEARCH.out.stdout
         stderr            = CASCADIA_SEARCH.out.stderr
+
+    emit:
+        blib
+        fasta
+        stdout
+        stderr
+        cascadia_version
+        output_file_stats
 }

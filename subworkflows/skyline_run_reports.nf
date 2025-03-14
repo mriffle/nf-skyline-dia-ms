@@ -7,9 +7,6 @@ workflow skyline_reports {
         skyline_zipfile
         skyr_file_ch
 
-    emit:
-        skyline_report_files
-
     main:
 
         SKYLINE_RUN_REPORTS(
@@ -17,5 +14,6 @@ workflow skyline_reports {
             skyr_file_ch.collect()
         )
 
+    emit:
         skyline_report_files = SKYLINE_RUN_REPORTS.out.skyline_report_files
 }

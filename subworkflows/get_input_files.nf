@@ -30,14 +30,6 @@ workflow get_input_files {
    take:
         aws_secret_id
 
-   emit:
-       fasta
-       skyline_fasta
-       spectral_library
-       skyline_template_zipfile
-       skyr_files
-       replicate_metadata
-
     main:
 
         // get files from Panorama as necessary
@@ -116,6 +108,14 @@ workflow get_input_files {
             METADATA_PLACEHOLDER('EMPTY')
             replicate_metadata = METADATA_PLACEHOLDER.out
         }
+
+   emit:
+       fasta
+       skyline_fasta
+       spectral_library
+       skyline_template_zipfile
+       skyr_files
+       replicate_metadata
 }
 
 // return true if the URL requires panorama authentication (panorama public does not)

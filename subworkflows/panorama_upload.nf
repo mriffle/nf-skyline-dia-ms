@@ -1,8 +1,5 @@
 // workflow to upload results to PanoramaWeb
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 // modules
 include { UPLOAD_FILE } from "../modules/panorama"
 include { IMPORT_SKYLINE } from "../modules/panorama"
@@ -23,10 +20,7 @@ workflow panorama_upload_results {
         skyr_file_ch
         skyline_report_ch
         aws_secret_id
-    
-    emit:
-        uploads_finished
-    
+
     main:
 
         if(!webdav_url.endsWith("/")) {
@@ -67,6 +61,9 @@ workflow panorama_upload_results {
                 aws_secret_id
             )
         }
+
+    emit:
+        uploads_finished
 }
 
 workflow panorama_upload_mzmls {
@@ -77,7 +74,7 @@ workflow panorama_upload_mzmls {
         nextflow_run_details
         nextflow_config_file
         aws_secret_id
-    
+
     main:
 
         if(!webdav_url.endsWith("/")) {
@@ -95,11 +92,11 @@ workflow panorama_upload_mzmls {
 }
 
 def getUploadDirectory() {
-    directory = "nextflow/${getCurrentTimestamp()}/${workflow.sessionId}"
+    return "nextflow/${getCurrentTimestamp()}/${workflow.sessionId}"
 }
 
 def getCurrentTimestamp() {
-    LocalDateTime now = LocalDateTime.now()
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
+    java.time.LocalDateTime now = java.time.LocalDateTime.now()
+    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
     return now.format(formatter)
 }

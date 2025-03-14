@@ -3,7 +3,7 @@ process CASCADIA_SEARCH {
     label 'process_high_constant'
     container params.images.cascadia
 
-    containerOptions = { 
+    containerOptions = {
 
         def options = ''
         if (params.cascadia.use_gpu) {
@@ -24,7 +24,7 @@ process CASCADIA_SEARCH {
 
     input:
         path ms_file
-    
+
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
@@ -48,7 +48,7 @@ process CASCADIA_SEARCH {
 
     stub:
         """
-        touch "${ms_file.baseName}.ssl" 
+        touch "${ms_file.baseName}.ssl"
         touch stub.stderr stub.stdout
         echo "${params.images.cascadia}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia_version=%s\n" > cascadia_version.txt
 
@@ -62,10 +62,10 @@ process CASCADIA_FIX_SCAN_NUMBERS {
     publishDir params.output_directories.cascadia, failOnError: true, mode: 'copy'
     label 'process_medium'
     container params.images.cascadia_utils
-    
+
     input:
         tuple path(ms_file), path(ssl_file)
-    
+
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
@@ -101,10 +101,10 @@ process CASCADIA_CREATE_FASTA {
     publishDir params.output_directories.cascadia, failOnError: true, mode: 'copy'
     label 'process_medium'
     container params.images.cascadia_utils
-    
+
     input:
         path ssl_file
-    
+
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
@@ -140,10 +140,10 @@ process CASCADIA_COMBINE_SSL_FILES {
     publishDir params.output_directories.cascadia, failOnError: true, mode: 'copy'
     label 'process_medium'
     container params.images.cascadia_utils
-    
+
     input:
         path ssl_files
-    
+
     output:
         path("combined.ssl"), emit: ssl
         path("output_file_stats.txt"), emit: output_file_stats

@@ -14,8 +14,8 @@ String setupPanoramaAPIKeySecret(secret_id, executor_type) {
     if(executor_type != 'awsbatch') {
         return ''
     } else {
-        SECRET_NAME = 'PANORAMA_API_KEY'
-        REGION = params.aws.region
+        def SECRET_NAME = 'PANORAMA_API_KEY'
+        def REGION = params.aws.region
 
         return """
             echo "Getting Panorama API key from AWS secrets manager..."

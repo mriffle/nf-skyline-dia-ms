@@ -10,16 +10,6 @@ workflow diann_search {
         fasta
         spectral_library
 
-    emit:
-        quant_files
-        speclib
-        precursor_tsv
-        stdout
-        stderr
-        predicted_speclib
-        diann_version
-        output_file_stats
-
     main:
 
         diann_results = null
@@ -51,4 +41,14 @@ workflow diann_search {
         precursor_tsv     = diann_results.precursor_tsv
         stdout            = diann_results.stdout
         stderr            = diann_results.stderr
+
+    emit:
+        quant_files
+        speclib
+        precursor_tsv
+        stdout
+        stderr
+        predicted_speclib
+        diann_version
+        output_file_stats
 }

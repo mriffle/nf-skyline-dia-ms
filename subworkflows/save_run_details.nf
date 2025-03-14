@@ -33,15 +33,12 @@ workflow save_run_details {
         input_files
         version_files
 
-    emit:
-        run_details
-
     main:
 
         // Read version txt files and create a channel of variable name, value pairs
         version_vars = version_files.map{
             program -> program.collect{ it ->
-                elems = it.split('=').collect{ str ->
+                def elems = it.split('=').collect{ str ->
                     str.strip().replaceAll(/^['"]|['"]$/, '')
                 }
                 [elems[0], elems[1]]
@@ -72,6 +69,7 @@ workflow save_run_details {
         WRITE_VERSION_INFO(var_names.collect(), var_values.collect(),
                            'nextflow_run_details.txt')
 
+    emit:
         run_details = WRITE_VERSION_INFO.out.run_details
 }
 
