@@ -4,8 +4,7 @@ nextflow.enable.dsl = 2
 
 // Sub workflows
 include { get_input_files } from "./subworkflows/get_input_files"
-include { encyclopedia_search as encyclopeda_export_elib } from "./subworkflows/encyclopedia_search"
-include { encyclopedia_search as encyclopedia_quant } from "./subworkflows/encyclopedia_search"
+include { encyclopedia } from "./subworkflows/encyclopedia"
 include { diann_search } from "./subworkflows/diann_search"
 include { cascadia_search } from "./subworkflows/cascadia_search"
 include { get_mzmls as get_narrow_mzmls } from "./subworkflows/get_mzmls"
@@ -166,78 +165,19 @@ workflow {
 
     if(params.search_engine.toLowerCase() == 'encyclopedia') {
 
-        if(!params.spectral_library) {
-            error "The parameter \'spectral_library\' is required when using EncyclopeDIA."
-        }
-
-        if(!params.fasta) {
-            error "The parameter \'fasta\' is required when using EncyclopeDIA."
-        }
-
         all_diann_file_ch = Channel.empty()  // will be no diann
         all_cascadia_file_ch = Channel.empty()
         diann_version = Channel.empty()
         cascadia_version = Channel.empty()
 
-        // convert blib to dlib if necessary
-        if(params.spectral_library.endsWith(".blib")) {
-            ENCYCLOPEDIA_BLIB_TO_DLIB(
-                fasta,
-                spectral_library
-            )
+        encyclopedia(fasta, spectral_library,
+                     narrow_mzml_ch, wide_mzml_ch)
 
-            spectral_library_to_use = ENCYCLOPEDIA_BLIB_TO_DLIB.out.dlib
-        } else {
-            spectral_library_to_use = spectral_library
-        }
+        encyclopedia_version = encyclopedia.out.version
+        search_file_stats = encyclopedia.out.search_file_stats
 
-        // create elib if requested
-        if(params.chromatogram_library_spectra_dir != null) {
-
-            // create chromatogram library
-            encyclopeda_export_elib(
-                narrow_mzml_ch,
-                fasta,
-                spectral_library_to_use,
-                'false',
-                'narrow',
-                params.encyclopedia.chromatogram.params
-            )
-
-            quant_library = encyclopeda_export_elib.out.elib
-            spec_lib_hashes = encyclopeda_export_elib.out.output_file_stats
-
-            all_elib_ch = encyclopeda_export_elib.out.elib.concat(
-                encyclopeda_export_elib.out.individual_elibs
-            )
-        } else {
-            quant_library = spectral_library_to_use
-            spec_lib_hashes = Channel.empty()
-            all_mzml_ch = wide_mzml_ch
-            all_elib_ch = Channel.empty()
-        }
-
-        // search wide-window data using chromatogram library
-        encyclopedia_quant(
-            wide_mzml_ch,
-            fasta,
-            quant_library,
-            'true',
-            'wide',
-            params.encyclopedia.quant.params
-
-        )
-
-        encyclopedia_version = encyclopedia_quant.out.encyclopedia_version
-        search_file_stats = encyclopedia_quant.out.output_file_stats.concat(spec_lib_hashes)
-
-        final_elib = encyclopedia_quant.out.elib
-        all_elib_ch = all_elib_ch.concat(
-            encyclopedia_quant.out.individual_elibs,
-            encyclopedia_quant.out.elib,
-            encyclopedia_quant.out.peptide_quant,
-            encyclopedia_quant.out.protein_quant
-        )
+        final_elib = encyclopedia.out.final_elib
+        all_elib_ch = encyclopedia.out.all_elib_ch
 
     } else if(params.search_engine.toLowerCase() == 'diann') {
 
@@ -483,7 +423,7 @@ def panorama_auth_required_for_url(url) {
 
 // return true if any entry in the list required panorama authentication
 def any_entry_requires_panorama_auth(param) {
-    values = param_to_list(param)
+    def values = param_to_list(param)
     return values.any { panorama_auth_required_for_url(it) }
 }
 
