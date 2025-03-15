@@ -6,7 +6,7 @@ def exec_java_command(mem) {
 }
 
 String escapeRegex(String str) {
-    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { match, group -> '\\' + group }
+    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { _, group -> '\\' + group }
 }
 
 String setupPanoramaAPIKeySecret(secret_id, executor_type) {

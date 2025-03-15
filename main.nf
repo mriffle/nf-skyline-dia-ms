@@ -36,6 +36,16 @@ def check_old_param_name(old_var, new_var) {
     return params[section][param]
 }
 
+// check for old param variable names
+params.skyline.document_name = check_old_param_name('skyline_document_name',
+                                                    'skyline.document_name')
+params.skyline.skip = check_old_param_name('skip_skyline',
+                                            'skyline.skip')
+params.skyline.template_file = check_old_param_name('skyline_template_file',
+                                                    'skyline.template_file')
+params.skyline.skyr_file = check_old_param_name('skyline_skyr_file',
+                                                'skyline.skyr_file')
+
 //
 // The main workflow
 //
@@ -50,17 +60,7 @@ workflow {
 
     config_file = file(workflow.configFiles[1]) // the config file used
     search_engine = params.search_engine.toLowerCase().trim()
-
-    // check for old param variable names
-    params.skyline.document_name = check_old_param_name('skyline_document_name',
-                                                        'skyline.document_name')
     skyline_document_name = params.skyline.document_name
-    params.skyline.skip = check_old_param_name('skip_skyline',
-                                               'skyline.skip')
-    params.skyline.template_file = check_old_param_name('skyline_template_file',
-                                                        'skyline.template_file')
-    params.skyline.skyr_file = check_old_param_name('skyline_skyr_file',
-                                                    'skyline.skyr_file')
 
     // check for required params or incompatible params
     if(params.panorama.upload && !params.panorama.upload_url) {
@@ -214,7 +214,6 @@ workflow {
             aws_secret_id
         )
     }
-
 }
 
 // return true if the URL requires panorama authentication (panorama public does not)

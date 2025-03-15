@@ -10,9 +10,6 @@ def generateAWSSecretId(aws_user_id) {
     return sb.toString()
 }
 
-SECRET_NAME = 'PANORAMA_API_KEY'
-REGION = params.aws.region
-
 process GET_AWS_USER_ID {
     label 'process_low_constant'
     executor 'local'    // always run this locally
@@ -48,6 +45,8 @@ process BUILD_AWS_SECRETS {
 
     script:
         secret_id = generateAWSSecretId(aws_user_id)
+        SECRET_NAME = 'PANORAMA_API_KEY'
+        REGION = params.aws.region
 
         """
         # Check if the secret already exists

@@ -18,9 +18,7 @@ process CASCADIA_SEARCH {
     }
 
     // don't melt the GPU
-    if (params.cascadia.use_gpu) {
-        maxForks = 1
-    }
+    maxForks params.cascadia.use_gpu ? 1 : null
 
     input:
         path ms_file

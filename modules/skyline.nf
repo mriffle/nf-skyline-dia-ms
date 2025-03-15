@@ -170,9 +170,9 @@ process SKYLINE_MERGE_RESULTS {
 
     stub:
     """
-    touch "${params.skyline.document_name}.sky.zip"
+    touch "${skyline_document_name}.sky.zip"
     touch "skyline-merge.stderr" "skyline-merge.stdout"
-    md5sum ${params.skyline.document_name}.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum ${skyline_document_name}.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 
@@ -189,7 +189,7 @@ process ANNOTATION_TSV_TO_CSV {
         path("${replicate_metadata.baseName}.annotations.csv"), emit: annotation_csv
         path("${replicate_metadata.baseName}.definitions.bat"), emit: annotation_definitions
 
-    shell:
+    script:
     """
     dia_qc metadata_convert -o skyline ${replicate_metadata}
     """
@@ -256,7 +256,7 @@ process SKYLINE_ANNOTATE_DOCUMENT {
         path("*.stderr"), emit: stderr
         path('output_file_hashes.txt'), emit: output_file_hashes
 
-    shell:
+    script:
     """
     unzip ${skyline_zipfile}
 
@@ -296,21 +296,21 @@ process SKYLINE_RUN_REPORTS {
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
-    shell:
-    '''
-    unzip !{skyline_zipfile}
+    script:
+    """
+    unzip ${skyline_zipfile}
 
     # generate skyline batch file to export reports
-    echo "--in=\\"!{skyline_zipfile.baseName}\\" --memstamp" > export_reports.bat
+    echo "--in=\\"${skyline_zipfile.baseName}\\" --memstamp" > export_reports.bat
 
     for skyrfile in ./*.skyr; do
         # Add report to document
-        echo "--report-add=\\"${skyrfile}\\" --report-conflict-resolution=overwrite" >> export_reports.bat
+        echo "--report-add=\\"\${skyrfile}\\" --report-conflict-resolution=overwrite" >> export_reports.bat
 
         # Export report
-        awk -F'"' '/<view name=/ { print $2 }' "$skyrfile" | while read reportname; do
-            echo "--report-name=\\"${reportname}\\" \
-                  --report-file=\\"${reportname}.report.tsv\\" \
+        awk -F'"' '/<view name=/ { print \$2 }' "\$skyrfile" | while read reportname; do
+            echo "--report-name=\\"\${reportname}\\" \
+                  --report-file=\\"\${reportname}.report.tsv\\" \
                   --report-format=TSV --report-invariant" \
                   >> export_reports.bat
         done
@@ -319,7 +319,7 @@ process SKYLINE_RUN_REPORTS {
     # Run batch commands
     wine SkylineCmd --batch-commands=export_reports.bat \
         > >(tee 'export_reports.stdout') 2> >(tee 'export_reports.stderr' >&2)
-    '''
+    """
 
     stub:
     '''

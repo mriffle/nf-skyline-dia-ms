@@ -42,6 +42,7 @@ workflow dia_search{
             search_fasta = fasta
 
         } else if(search_engine.toLowerCase() == 'cascadia') {
+
             cascadia(wide_mzml_ch)
 
             search_engine_version = cascadia.out.cascadia_version
