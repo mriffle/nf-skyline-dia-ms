@@ -49,7 +49,7 @@ workflow combine_file_hashes {
             it -> tuple(it.name, params.output_directories.skyline.import_spectra, it.size())
         }.join(
             final_skyline_hash.splitText().map{ it ->
-                elems = it.split('\t')
+                elems = it.trim().split('\t')
                 tuple(elems[1], elems[0])
             }
         ).map{ it -> tuple(it[0], it[1], it[3], it[2])}
