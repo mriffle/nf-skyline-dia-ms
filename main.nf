@@ -207,8 +207,9 @@ workflow {
             all_mzml_ch,
             fasta,
             spectral_library,
-            run_details_file,
             config_file,
+            run_details_file,
+            combine_file_hashes.out.output_file_hashes,
             skyr_file_ch,
             skyline.out.skyline_reports_ch,
             aws_secret_id

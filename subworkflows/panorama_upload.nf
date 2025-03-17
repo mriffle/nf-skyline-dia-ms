@@ -14,8 +14,9 @@ workflow panorama_upload_results {
         mzml_file_ch
         fasta_file
         user_supplied_spectral_lib
-        nextflow_run_details
         nextflow_config_file
+        nextflow_run_details
+        output_file_hashes
         skyr_file_ch
         skyline_report_ch
         aws_secret_id
@@ -30,6 +31,7 @@ workflow panorama_upload_results {
 
         mzml_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/msconvert") }
             .concat(nextflow_run_details.map { path -> tuple(path, upload_webdav_url) })
+            .concat(output_file_hashes.map { path -> tuple(path, upload_webdav_url) })
             .concat(Channel.fromPath(nextflow_config_file).map { path -> tuple(path, upload_webdav_url) })
             .concat(fasta_file.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(user_supplied_spectral_lib.map { path -> tuple(path, upload_webdav_url + "/input-files") })

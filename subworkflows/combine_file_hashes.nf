@@ -65,7 +65,7 @@ workflow combine_file_hashes {
         CALCULATE_MD5(md5_input)
 
         // Combine all file hashes into a single channel
-        output_file_hashes = search_file_data.mzml_files.concat(
+        output_file_hash_ch = search_file_data.mzml_files.concat(
             file_stat_files.join(CALCULATE_MD5.out).map{
                 it -> tuple(it[0], it[2], it[4], it[3])
             }
@@ -73,11 +73,9 @@ workflow combine_file_hashes {
             it -> it.join('\\t')
         }
 
-        // output_file_hashes.view()
-
-        WRITE_FILE_STATS(output_file_hashes.collect())
+        WRITE_FILE_STATS(output_file_hash_ch.collect())
 
     emit:
-        output_file_hashes
+        output_file_hashes = WRITE_FILE_STATS.out
 }
 
