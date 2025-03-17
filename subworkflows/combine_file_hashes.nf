@@ -3,11 +3,15 @@ include { CALCULATE_MD5 } from "../modules/file_stats"
 include { WRITE_FILE_STATS } from "../modules/file_stats"
 
 def get_search_file_dir() {
-    if(params.search_engine.toLowerCase() == 'encyclopedia') {
+    def search_engine = params.search_engine.toLowerCase().trim()
+    if(search_engine == 'encyclopedia') {
         return params.output_directories.encyclopedia.search_file
     }
-    if(params.search_engine.toLowerCase() == 'diann') {
+    if(search_engine == 'diann') {
         return params.output_directories.diann
+    }
+    if(search_engine == 'cascadia') {
+        return params.output_directories.cascadia
     }
     return 'UNKNOWN_SEARCH_ENGINE'
 }
