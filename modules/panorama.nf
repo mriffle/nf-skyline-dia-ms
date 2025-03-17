@@ -328,7 +328,7 @@ process IMPORT_SKYLINE {
         echo "Importing ${skyline_filename} into Panorama..."
             ${exec_java_command(task.memory)} \
             -i \
-            -t "${skyline_filename}.sky.zip" \
+            -t "${skyline_filename}" \
             -w "${skyline_web_dav_dir_url}" \
             -p "${getPanoramaProjectURLForWebDavDirectory(skyline_web_dav_dir_url)}" \
             -k \$PANORAMA_API_KEY \

@@ -53,9 +53,10 @@ workflow panorama_upload_results {
 
         // import Skyline document if requested
         if(params.panorama.import_skyline) {
+            final_skyline_doc_name = final_skyline_file.map{ it -> it.name }
             IMPORT_SKYLINE(
                 uploads_finished,
-                params.skyline.document_name,
+                final_skyline_doc_name,
                 upload_webdav_url + "/results/skyline",
                 aws_secret_id
             )
