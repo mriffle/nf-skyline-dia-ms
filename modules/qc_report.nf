@@ -1,6 +1,6 @@
 
 def format_flag(var, flag) {
-    ret = (var == null ? "" : "${flag} ${var}")
+    def ret = (var == null ? "" : "${flag} ${var}")
     return ret
 }
 

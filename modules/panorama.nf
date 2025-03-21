@@ -6,7 +6,7 @@ def exec_java_command(mem) {
 }
 
 String escapeRegex(String str) {
-    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { match, group -> '\\' + group }
+    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { _, group -> '\\' + group }
 }
 
 String setupPanoramaAPIKeySecret(secret_id, executor_type) {
@@ -14,8 +14,8 @@ String setupPanoramaAPIKeySecret(secret_id, executor_type) {
     if(executor_type != 'awsbatch') {
         return ''
     } else {
-        SECRET_NAME = 'PANORAMA_API_KEY'
-        REGION = params.aws.region
+        def SECRET_NAME = 'PANORAMA_API_KEY'
+        def REGION = params.aws.region
 
         return """
             echo "Getting Panorama API key from AWS secrets manager..."
@@ -328,7 +328,7 @@ process IMPORT_SKYLINE {
         echo "Importing ${skyline_filename} into Panorama..."
             ${exec_java_command(task.memory)} \
             -i \
-            -t "${skyline_filename}.sky.zip" \
+            -t "${skyline_filename}" \
             -w "${skyline_web_dav_dir_url}" \
             -p "${getPanoramaProjectURLForWebDavDirectory(skyline_web_dav_dir_url)}" \
             -k \$PANORAMA_API_KEY \

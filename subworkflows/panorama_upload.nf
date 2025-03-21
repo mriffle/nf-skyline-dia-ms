@@ -1,8 +1,5 @@
 // workflow to upload results to PanoramaWeb
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 // modules
 include { UPLOAD_FILE } from "../modules/panorama"
 include { IMPORT_SKYLINE } from "../modules/panorama"
@@ -11,22 +8,19 @@ workflow panorama_upload_results {
 
     take:
         webdav_url
-        all_elib_files
-        all_diann_file_ch
-        all_cascadia_file_ch
+        all_search_file_ch
+        search_engine
         final_skyline_file
         mzml_file_ch
         fasta_file
         user_supplied_spectral_lib
-        nextflow_run_details
         nextflow_config_file
+        nextflow_run_details
+        output_file_hashes
         skyr_file_ch
         skyline_report_ch
         aws_secret_id
-    
-    emit:
-        uploads_finished
-    
+
     main:
 
         if(!webdav_url.endsWith("/")) {
@@ -37,12 +31,11 @@ workflow panorama_upload_results {
 
         mzml_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/msconvert") }
             .concat(nextflow_run_details.map { path -> tuple(path, upload_webdav_url) })
+            .concat(output_file_hashes.map { path -> tuple(path, upload_webdav_url) })
             .concat(Channel.fromPath(nextflow_config_file).map { path -> tuple(path, upload_webdav_url) })
             .concat(fasta_file.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(user_supplied_spectral_lib.map { path -> tuple(path, upload_webdav_url + "/input-files") })
-            .concat(all_elib_files.map { path -> tuple(path, upload_webdav_url + "/results/encyclopedia") })
-            .concat(all_diann_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/diann") })
-            .concat(all_cascadia_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/cascadia") })
+            .concat(all_search_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/${search_engine}") })
             .concat(final_skyline_file.map { path -> tuple(path, upload_webdav_url + "/results/skyline") })
             .concat(skyr_file_ch.map { path -> tuple(path, upload_webdav_url + "/input-files") })
             .concat(skyline_report_ch.map { path -> tuple(path, upload_webdav_url + "/results/skyline_reports") })
@@ -60,13 +53,17 @@ workflow panorama_upload_results {
 
         // import Skyline document if requested
         if(params.panorama.import_skyline) {
+            final_skyline_doc_name = final_skyline_file.map{ it -> it.name }
             IMPORT_SKYLINE(
                 uploads_finished,
-                params.skyline.document_name,
+                final_skyline_doc_name,
                 upload_webdav_url + "/results/skyline",
                 aws_secret_id
             )
         }
+
+    emit:
+        uploads_finished
 }
 
 workflow panorama_upload_mzmls {
@@ -77,7 +74,7 @@ workflow panorama_upload_mzmls {
         nextflow_run_details
         nextflow_config_file
         aws_secret_id
-    
+
     main:
 
         if(!webdav_url.endsWith("/")) {
@@ -95,11 +92,11 @@ workflow panorama_upload_mzmls {
 }
 
 def getUploadDirectory() {
-    directory = "nextflow/${getCurrentTimestamp()}/${workflow.sessionId}"
+    return "nextflow/${getCurrentTimestamp()}/${workflow.sessionId}"
 }
 
 def getCurrentTimestamp() {
-    LocalDateTime now = LocalDateTime.now()
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
+    java.time.LocalDateTime now = java.time.LocalDateTime.now()
+    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
     return now.format(formatter)
 }

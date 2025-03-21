@@ -1,6 +1,9 @@
+
+nextflow.enable.dsl = 2
+
 // Modules
-include { ENCYCLOPEDIA_SEARCH_FILE } from "../modules/encyclopedia"
-include { ENCYCLOPEDIA_CREATE_ELIB } from "../modules/encyclopedia"
+include { ENCYCLOPEDIA_SEARCH_FILE } from "../../modules/encyclopedia"
+include { ENCYCLOPEDIA_CREATE_ELIB } from "../../modules/encyclopedia"
 
 workflow encyclopedia_search {
 
@@ -12,14 +15,6 @@ workflow encyclopedia_search {
         output_file_prefix
         encyclopedia_params
 
-    emit:
-        individual_elibs
-        elib
-        peptide_quant
-        protein_quant
-        encyclopedia_version
-        output_file_stats
-
     main:
 
         // run encyclopedia for each mzML file
@@ -30,7 +25,6 @@ workflow encyclopedia_search {
             encyclopedia_params
         )
 
-        individual_elibs = ENCYCLOPEDIA_SEARCH_FILE.out.elib
 
         // aggregate results into single elib
         ENCYCLOPEDIA_CREATE_ELIB(
@@ -46,6 +40,9 @@ workflow encyclopedia_search {
             encyclopedia_params
         )
 
+
+    emit:
+        individual_elibs = ENCYCLOPEDIA_SEARCH_FILE.out.elib
         elib = ENCYCLOPEDIA_CREATE_ELIB.out.elib
         peptide_quant = ENCYCLOPEDIA_CREATE_ELIB.out.peptide_quant
         protein_quant = ENCYCLOPEDIA_CREATE_ELIB.out.protein_quant

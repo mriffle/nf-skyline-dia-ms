@@ -3,11 +3,15 @@ include { CALCULATE_MD5 } from "../modules/file_stats"
 include { WRITE_FILE_STATS } from "../modules/file_stats"
 
 def get_search_file_dir() {
-    if(params.search_engine.toLowerCase() == 'encyclopedia') {
+    def search_engine = params.search_engine.toLowerCase().trim()
+    if(search_engine == 'encyclopedia') {
         return params.output_directories.encyclopedia.search_file
     }
-    if(params.search_engine.toLowerCase() == 'diann') {
+    if(search_engine == 'diann') {
         return params.output_directories.diann
+    }
+    if(search_engine == 'cascadia') {
+        return params.output_directories.cascadia
     }
     return 'UNKNOWN_SEARCH_ENGINE'
 }
@@ -29,9 +33,6 @@ workflow combine_file_hashes {
 
         workflow_versions
 
-    emit:
-        output_file_hashes
-
     main:
 
         // process hash text files produced by search
@@ -49,7 +50,7 @@ workflow combine_file_hashes {
             it -> tuple(it.name, params.output_directories.skyline.import_spectra, it.size())
         }.join(
             final_skyline_hash.splitText().map{ it ->
-                elems = it.split('\t')
+                def elems = it.trim().split('\t')
                 tuple(elems[1], elems[0])
             }
         ).map{ it -> tuple(it[0], it[1], it[3], it[2])}
@@ -68,7 +69,7 @@ workflow combine_file_hashes {
         CALCULATE_MD5(md5_input)
 
         // Combine all file hashes into a single channel
-        output_file_hashes = search_file_data.mzml_files.concat(
+        output_file_hash_ch = search_file_data.mzml_files.concat(
             file_stat_files.join(CALCULATE_MD5.out).map{
                 it -> tuple(it[0], it[2], it[4], it[3])
             }
@@ -76,8 +77,9 @@ workflow combine_file_hashes {
             it -> it.join('\\t')
         }
 
-        // output_file_hashes.view()
+        WRITE_FILE_STATS(output_file_hash_ch.collect())
 
-        WRITE_FILE_STATS(output_file_hashes.collect())
+    emit:
+        output_file_hashes = WRITE_FILE_STATS.out
 }
 

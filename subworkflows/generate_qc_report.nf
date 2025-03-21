@@ -10,13 +10,6 @@ workflow generate_dia_qc_report {
         sky_zip_file
         replicate_metadata
 
-    emit:
-        qc_reports
-        qc_report_qmd
-        qc_report_db
-        qc_tables
-        dia_qc_version
-
     main:
 
         // export skyline reports
@@ -47,5 +40,12 @@ workflow generate_dia_qc_report {
         }
 
         dia_qc_version = PARSE_REPORTS.out.version
+
+    emit:
+        qc_reports
+        qc_report_qmd
+        qc_report_db
+        qc_tables
+        dia_qc_version
 }
 

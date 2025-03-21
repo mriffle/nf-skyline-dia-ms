@@ -16,13 +16,6 @@ workflow skyline_import {
         replicate_metadata
         skyline_document_name
 
-    emit:
-        skyline_results
-        skyline_results_hash
-        skyline_minimized_results
-        skyline_minimized_results_hash
-        proteowizard_version
-
     main:
 
         // add library to skyline file
@@ -64,5 +57,10 @@ workflow skyline_import {
             skyline_minimized_results_hash = Channel.empty()
         }
 
+    emit:
+        skyline_results
+        skyline_results_hash
+        skyline_minimized_results
+        skyline_minimized_results_hash
         proteowizard_version = SKYLINE_ADD_LIB.out.version
 }
