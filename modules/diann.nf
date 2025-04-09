@@ -151,7 +151,7 @@ process DIANN_MBR {
             --threads ${task.cpus} \
             --fasta ${fasta_file} \
             --lib ${spectral_library} \
-            --use-quant --reanalyse \
+            --use-quant \
             ${diann_params} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
 
