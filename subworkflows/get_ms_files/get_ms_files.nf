@@ -95,11 +95,8 @@ workflow get_ms_files {
         // Convert raw files if applicable
         MSCONVERT(ms_file_ch.raw)
 
-
         ms_file_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
-        if (batch_name != null) {
-            ms_file_ch = ms_file_ch.map{ it -> [batch_name, it] }
-        }
+            .map{ it -> [batch_name, it] }
 
     emit:
         ms_file_ch
