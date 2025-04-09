@@ -42,7 +42,7 @@ process DIANN_SEARCH {
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
         path("report-lib.parquet.skyline.speclib"), emit: speclib
-        path("report-lib.parquet"), emit: precursor_report
+        path("report.parquet"), emit: precursor_report
         path("*.quant"), emit: quant_files
         path("diann_version.txt"), emit: version
         path("output_file_stats.txt"), emit: output_file_stats
@@ -67,19 +67,19 @@ process DIANN_SEARCH {
 
         head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
 
-        md5sum '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report-lib.parquet *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report-lib.parquet *.quant | sort > sizes.txt
+        md5sum '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report.parquet *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report.parquet *.quant | sort > sizes.txt
         join -t\\t hashes.txt sizes.txt > output_file_stats.txt
         """
 
     stub:
         """
-        touch report-lib.parquet.skyline.speclib report-lib.parquet stub.quant
+        touch report-lib.parquet.skyline.speclib report.parquet stub.quant
         touch stub.stderr stub.stdout
         diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
 
-        md5sum '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report-lib.parquet *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report-lib.parquet *.quant | sort > sizes.txt
+        md5sum '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report.parquet *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report.parquet *.quant | sort > sizes.txt
         join -t\\t hashes.txt sizes.txt > output_file_stats.txt
         """
 }
@@ -133,7 +133,7 @@ process DIANN_MBR {
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
         path("*.skyline.speclib"), emit: speclib
-        path("report-lib.parquet"), emit: precursor_report
+        path("report.parquet"), emit: precursor_report
         path("diann_version.txt"), emit: version
         path("output_file_stats.txt"), emit: output_file_stats
 
@@ -157,19 +157,19 @@ process DIANN_MBR {
 
         head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
 
-        md5sum '${ms_files.join('\' \'')}' report-lib.parquet report-lib.parquet.skyline.speclib *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report-lib.parquet *.quant | sort > sizes.txt
+        md5sum '${ms_files.join('\' \'')}' report.parquet report-lib.parquet.skyline.speclib *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report.parquet *.quant | sort > sizes.txt
         join -t\\t hashes.txt sizes.txt > output_file_stats.txt
         """
 
     stub:
         """
-        touch report-lib.parquet.skyline.speclib report-lib.parquet stub.quant
+        touch report-lib.parquet.skyline.speclib report.parquet stub.quant
         touch stub.stderr stub.stdout
         diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
 
-        md5sum '${ms_files.join('\' \'')}' report-lib.parquet report-lib.parquet.skyline.speclib *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report-lib.parquet *.quant | sort > sizes.txt
+        md5sum '${ms_files.join('\' \'')}' report.parquet report-lib.parquet.skyline.speclib *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_files.join('\' \'')}' report-lib.parquet.skyline.speclib report.parquet *.quant | sort > sizes.txt
         join -t\\t hashes.txt sizes.txt > output_file_stats.txt
         """
 }
