@@ -1,18 +1,19 @@
 // modules
-include { PANORAMA_GET_MS_FILE } from "../modules/panorama"
-include { PANORAMA_GET_MS_FILE_LIST } from "../modules/panorama"
-include { PANORAMA_PUBLIC_GET_MS_FILE } from "../modules/panorama"
-include { PANORAMA_PUBLIC_GET_MS_FILE_LIST } from "../modules/panorama"
-include { MSCONVERT } from "../modules/msconvert"
+include { PANORAMA_GET_MS_FILE } from "../../modules/panorama"
+include { PANORAMA_GET_MS_FILE_LIST } from "../../modules/panorama"
+include { PANORAMA_PUBLIC_GET_MS_FILE } from "../../modules/panorama"
+include { PANORAMA_PUBLIC_GET_MS_FILE_LIST } from "../../modules/panorama"
+include { MSCONVERT } from "../../modules/msconvert"
 
 // useful functions and variables
-include { param_to_list } from "./get_input_files"
-include { escapeRegex } from "../modules/panorama"
+include { param_to_list } from "../get_input_files"
+include { escapeRegex } from "../../modules/panorama"
 
-workflow get_mzmls {
+workflow get_ms_files {
     take:
         spectra_dir
         spectra_glob
+        batch_name
         aws_secret_id
 
     main:
@@ -94,8 +95,14 @@ workflow get_mzmls {
         // Convert raw files if applicable
         MSCONVERT(ms_file_ch.raw)
 
+
+        ms_file_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
+        if (batch_name != null) {
+            ms_file_ch = ms_file_ch.map{ it -> [batch_name, it] }
+        }
+
     emit:
-        mzml_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
+        ms_file_ch
 }
 
 def is_panorama_url(url) {
