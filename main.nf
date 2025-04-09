@@ -4,8 +4,8 @@ nextflow.enable.dsl = 2
 
 // Sub workflows
 include { get_input_files } from "./subworkflows/get_input_files"
-include { get_mzmls as get_narrow_mzmls } from "./subworkflows/get_mzmls"
-include { get_mzmls as get_wide_mzmls } from "./subworkflows/get_mzmls"
+include { get_batched_ms_files as get_narrow_ms_files } from "./subworkflows/get_ms_files"
+include { get_batched_ms_files as get_wide_ms_files } from "./subworkflows/get_ms_files"
 include { dia_search } from "./workflows/dia_search"
 include { skyline } from "./workflows/skyline"
 include { panorama_upload_results } from "./subworkflows/panorama_upload"
@@ -91,18 +91,22 @@ workflow {
         wide_mzml_ch = get_pdc_files.out.wide_mzml_ch
         pdc_study_name = get_pdc_files.out.study_name
         skyline_document_name = skyline_document_name == 'final' ? pdc_study_name : skyline_document_name
+        use_batch_mode = false
     } else{
-        get_wide_mzmls(params.quant_spectra_dir, params.quant_spectra_glob, aws_secret_id)
-        wide_mzml_ch = get_wide_mzmls.out.mzml_ch
+        get_wide_ms_files(params.quant_spectra_dir,
+                          params.quant_spectra_glob,
+                          aws_secret_id)
+        wide_mzml_ch = get_wide_ms_files.out.ms_files
+        use_batch_mode = get_wide_ms_files.out.use_batch_mode
         pdc_study_name = null
     }
     narrow_mzml_ch = null
     if(params.chromatogram_library_spectra_dir != null) {
-        get_narrow_mzmls(params.chromatogram_library_spectra_dir,
-                         params.chromatogram_library_spectra_glob,
-                         aws_secret_id)
+        get_narrow_ms_files(params.chromatogram_library_spectra_dir,
+                            params.chromatogram_library_spectra_glob,
+                            aws_secret_id)
 
-        narrow_mzml_ch = get_narrow_mzmls.out.mzml_ch
+        narrow_mzml_ch = get_narrow_ms_files.out.ms_files
         all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
     } else {
         all_mzml_ch = wide_mzml_ch
@@ -158,6 +162,7 @@ workflow {
         spectral_library,
         narrow_mzml_ch,
         wide_mzml_ch,
+        use_batch_mode
     )
     search_engine_version = dia_search.out.search_engine_version
     final_speclib = dia_search.out.final_speclib
