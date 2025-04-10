@@ -8,7 +8,7 @@ include { EXPORT_GENE_REPORTS } from "../modules/qc_report"
 
 workflow skyline {
     take:
-        mzml_ch
+        ms_file_ch
         skyline_template_zipfile
         fasta
         replicate_metadata
@@ -28,10 +28,9 @@ workflow skyline {
                     skyline_template_zipfile,
                     fasta,
                     final_speclib,
-                    mzml_ch,
+                    ms_file_ch,
                     replicate_metadata,
-                    skyline_document_name,
-                    use_batch_mode
+                    skyline_document_name
                 )
                 proteowizard_version = skyline_import.out.proteowizard_version
             }

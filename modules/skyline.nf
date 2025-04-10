@@ -131,10 +131,8 @@ process SKYLINE_MERGE_RESULTS {
 
     input:
         path skyline_zipfile
-        path skyd_files
-        val mzml_files
         path fasta
-        val skyline_document_name
+        tuple path(skyd_files), val(mzml_files), val(skyline_document_name)
 
     output:
         path("*.sky.zip"), emit: final_skyline_zipfile

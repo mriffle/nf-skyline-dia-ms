@@ -6,6 +6,10 @@ include { ANNOTATION_TSV_TO_CSV } from "../modules/skyline"
 include { SKYLINE_MINIMIZE_DOCUMENT } from "../modules/skyline"
 include { SKYLINE_ANNOTATE_DOCUMENT } from "../modules/skyline"
 
+def get_skyline_doc_name_per_batch(document_basename, batch_name) {
+    return "${document_basename}_${batch_name == null ? '' : batch_name}"
+}
+
 workflow skyline_import {
 
     take:
@@ -15,7 +19,6 @@ workflow skyline_import {
         ms_file_ch
         replicate_metadata
         skyline_document_name
-        use_batch_mode
 
     main:
 
@@ -26,20 +29,21 @@ workflow skyline_import {
         // import spectra into skyline file
         SKYLINE_IMPORT_MZML(skyline_zipfile, ms_file_ch)
 
-        if(use_batch_mode == true){
-            error "Batch mode is not implemented yet!"
-        } else {
-            // merge sky files
-            skyd_file_ch = SKYLINE_IMPORT_MZML.out.skyd_file.map { it -> it[1] }
-            flat_ms_file_ch = ms_file_ch.map { it -> it[1] }
-            SKYLINE_MERGE_RESULTS(
-                skyline_zipfile,
-                skyd_file_ch.collect(),
-                flat_ms_file_ch.collect(),
-                fasta,
-                skyline_document_name
-            )
-        }
+        batched_skyd_file_ch = SKYLINE_IMPORT_MZML.out.skyd_file.groupTuple()
+        batched_ms_file_ch = ms_file_ch.groupTuple()
+
+        batched_input_files = batched_skyd_file_ch
+            .join(batched_ms_file_ch)
+            .map{ batch_name, ms_files, skyd_files ->
+                    [ms_files, skyd_files,
+                     get_skyline_doc_name_per_batch(skyline_document_name, batch_name)]
+                }
+
+        SKYLINE_MERGE_RESULTS(
+            skyline_zipfile,
+            fasta,
+            batched_input_files,
+        )
 
         if(params.replicate_metadata != null || params.pdc.study_id != null) {
             ANNOTATION_TSV_TO_CSV(replicate_metadata)
