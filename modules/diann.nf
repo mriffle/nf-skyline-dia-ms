@@ -183,7 +183,7 @@ process DIANN_MBR {
 process BLIB_BUILD_LIBRARY {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_medium'
-    container params.images.bibliospec
+    container params.images.proteowizard
 
     input:
         path speclib
@@ -194,8 +194,8 @@ process BLIB_BUILD_LIBRARY {
 
     script:
         """
-        BlibBuild "${speclib}" lib_redundant.blib
-        BlibFilter -b 1 lib_redundant.blib lib.blib
+        wine BlibBuild "${speclib}" lib_redundant.blib
+        wine BlibFilter -b 1 lib_redundant.blib lib.blib
         """
 
     stub:
