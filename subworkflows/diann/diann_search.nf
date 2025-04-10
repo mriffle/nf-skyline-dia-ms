@@ -6,9 +6,9 @@ include { DIANN_MBR } from "../../modules/diann"
 
 workflow diann_search_serial {
     take:
-        ms_file_ch
         fasta
         spectral_library
+        ms_file_ch
         reanalyze
 
     main:
@@ -56,9 +56,9 @@ workflow diann_search_serial {
 
 workflow diann_search_parallel {
     take:
-        ms_file_ch
         fasta
         spectral_library
+        ms_file_ch
         reanalyze
 
     main:

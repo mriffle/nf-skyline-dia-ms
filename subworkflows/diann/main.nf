@@ -61,18 +61,18 @@ workflow diann {
 
         if (params.chromatogram_library_spectra_dir) {
             diann_subset_search(
-                narrow_ms_file_ch,
                 fasta,
                 spectral_library_to_use,
+                narrow_ms_file_ch,
                 false
             )
             spectral_library_to_use = diann_subset_search.out.speclib
         }
 
         diann_full_search(
-            wide_ms_file_ch,
             fasta,
             spectral_library_to_use,
+            wide_ms_file_ch,
             true
         )
 

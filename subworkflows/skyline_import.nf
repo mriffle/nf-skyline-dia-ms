@@ -11,28 +11,35 @@ workflow skyline_import {
     take:
         skyline_template_zipfile
         fasta
-        elib
-        wide_mzml_file_ch
+        library
+        ms_file_ch
         replicate_metadata
         skyline_document_name
+        use_batch_mode
 
     main:
 
         // add library to skyline file
-        SKYLINE_ADD_LIB(skyline_template_zipfile, fasta, elib)
+        SKYLINE_ADD_LIB(skyline_template_zipfile, fasta, library)
         skyline_zipfile = SKYLINE_ADD_LIB.out.skyline_zipfile
 
         // import spectra into skyline file
-        SKYLINE_IMPORT_MZML(skyline_zipfile, wide_mzml_file_ch)
+        SKYLINE_IMPORT_MZML(skyline_zipfile, ms_file_ch)
 
-        // merge sky files
-        SKYLINE_MERGE_RESULTS(
-            skyline_zipfile,
-            SKYLINE_IMPORT_MZML.out.skyd_file.collect(),
-            wide_mzml_file_ch.collect(),
-            fasta,
-            skyline_document_name
-        )
+        if(use_batch_mode == true){
+            error "Batch mode is not implemented yet!"
+        } else {
+            // merge sky files
+            skyd_file_ch = SKYLINE_IMPORT_MZML.out.skyd_file.map { it -> it[1] }
+            flat_ms_file_ch = ms_file_ch.map { it -> it[1] }
+            SKYLINE_MERGE_RESULTS(
+                skyline_zipfile,
+                skyd_file_ch.collect(),
+                flat_ms_file_ch.collect(),
+                fasta,
+                skyline_document_name
+            )
+        }
 
         if(params.replicate_metadata != null || params.pdc.study_id != null) {
             ANNOTATION_TSV_TO_CSV(replicate_metadata)

@@ -22,7 +22,12 @@ workflow dia_search{
         search_fasta = null
 
         flat_wide_ms_file_ch = wide_ms_file_ch.map{ it -> it[1] }
-        flat_narrow_ms_file_ch = narrow_ms_file_ch.map{ it -> it[1] }
+
+        if(narrow_ms_file_ch == null) {
+            flat_narrow_ms_file_ch = null
+        } else {
+            flat_narrow_ms_file_ch = narrow_ms_file_ch.map{ it -> it[1] }
+        }
 
         if(search_engine.toLowerCase() == 'encyclopedia') {
 
@@ -41,8 +46,9 @@ workflow dia_search{
 
         } else if(search_engine.toLowerCase() == 'diann') {
 
-            diann(use_batch_mode, fasta, spectral_library,
-                  flat_wide_ms_file_ch, flat_narrow_ms_file_ch)
+            diann(fasta, spectral_library,
+                  flat_wide_ms_file_ch, flat_narrow_ms_file_ch,
+                  use_batch_mode)
 
             search_engine_version = diann.out.diann_version
             search_file_stats = diann.out.search_file_stats
