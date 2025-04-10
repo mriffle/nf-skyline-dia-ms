@@ -12,26 +12,12 @@ workflow diann_search_serial {
         speclib_only
 
     main:
-
-        diann_speclib = null
-        if(params.spectral_library) {
-            diann_speclib = spectral_library
-            predicted_speclib = Channel.empty()
-        } else {
-            DIANN_BUILD_LIB(
-                fasta,
-                params.diann.fasta_digest_params
-            )
-            diann_speclib = DIANN_BUILD_LIB.out.speclib
-            predicted_speclib = DIANN_BUILD_LIB.out.speclib
-        }
-
         def search_params = params.diann.search_params + (speclib_only == true ? " --reanalyze" : "")
 
         diann_results = DIANN_SEARCH (
             ms_file_ch.collect(),
             fasta,
-            diann_speclib,
+            spectral_library,
             (speclib_only == true ? "subset_library" : "quant"),
             search_params
         )
@@ -50,7 +36,6 @@ workflow diann_search_serial {
         precursor_report
         stdout
         stderr
-        predicted_speclib
         diann_version
         output_file_stats
 }
@@ -63,23 +48,10 @@ workflow diann_search_parallel {
         speclib_only
 
     main:
-        diann_speclib = null
-        if(params.spectral_library) {
-            diann_speclib = spectral_library
-            predicted_speclib = Channel.empty()
-        } else {
-            DIANN_BUILD_LIB(
-                fasta,
-                params.diann.fasta_digest_params
-            )
-            diann_speclib = DIANN_BUILD_LIB.out.speclib
-            predicted_speclib = DIANN_BUILD_LIB.out.speclib
-        }
-
         DIANN_QUANT(
             ms_file_ch,
             fasta,
-            diann_speclib,
+            spectral_library,
             params.diann.search_params
         )
 
@@ -89,7 +61,7 @@ workflow diann_search_parallel {
             ms_file_ch.collect(),
             DIANN_QUANT.out.quant_file.collect(),
             fasta,
-            diann_speclib,
+            spectral_library,
             (speclib_only == true ? "subset_library" : "quant"),
             mbr_params
         )
@@ -100,7 +72,6 @@ workflow diann_search_parallel {
         precursor_report  = DIANN_MBR.out.precursor_report
         stdout            = DIANN_MBR.out.stdout
         stderr            = DIANN_MBR.out.stderr
-        predicted_speclib = diann_speclib
         diann_version     = DIANN_MBR.out.version
         output_file_stats = DIANN_MBR.out.output_file_stats
 }

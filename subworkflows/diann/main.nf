@@ -1,9 +1,9 @@
 
 include { diann_search_parallel as diann_full_search } from "./diann_search"
 include { diann_search_parallel as diann_subset_search } from "./diann_search"
-// include { diann_search_serial as diann_search } from "./diann_search"
 
 // modules
+include { DIANN_BUILD_LIB } from "../../modules/diann"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "../../modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "../../modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "../../modules/diann"
@@ -55,8 +55,13 @@ workflow diann {
                 spectral_library_to_use = spectral_library
             }
         } else {
-            // no spectral library
-            spectral_library_to_use = Channel.empty()
+            // create predicted spectral library from fasta
+            DIANN_BUILD_LIB(
+                fasta,
+                params.diann.fasta_digest_params
+            )
+            spectral_library_to_use = DIANN_BUILD_LIB.out.speclib
+            predicted_speclib = DIANN_BUILD_LIB.out.speclib
         }
 
         if (params.chromatogram_library_spectra_dir) {
@@ -98,7 +103,7 @@ workflow diann {
         ).concat(
             diann_full_search.out.stderr
         ).concat(
-            diann_full_search.out.predicted_speclib
+            predicted_speclib
         )
 
     emit:

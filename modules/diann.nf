@@ -17,7 +17,7 @@ process DIANN_BUILD_LIB {
         """
         diann --fasta ${fasta_file} \
             ${lib_build_params} \
-            --predictor --gen-spec-lib --fasta-search --out-lib ${fasta_file.baseName}.predicted.speclib \
+            --predictor --gen-spec-lib --fasta-search --out-lib ${fasta_file.baseName}.speclib \
             > >(tee "predict_lib.stdout") 2> >(tee "predict_lib.stderr" >&2)
         """
 
