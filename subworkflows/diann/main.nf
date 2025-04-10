@@ -64,7 +64,7 @@ workflow diann {
                 fasta,
                 spectral_library_to_use,
                 narrow_ms_file_ch,
-                false
+                true
             )
             spectral_library_to_use = diann_subset_search.out.speclib
         }
@@ -73,7 +73,7 @@ workflow diann {
             fasta,
             spectral_library_to_use,
             wide_ms_file_ch,
-            true
+            false
         )
 
         // create compatible spectral library for Skyline, if needed

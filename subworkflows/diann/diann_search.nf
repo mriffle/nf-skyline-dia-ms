@@ -9,7 +9,7 @@ workflow diann_search_serial {
         fasta
         spectral_library
         ms_file_ch
-        reanalyze
+        speclib_only
 
     main:
 
@@ -26,12 +26,13 @@ workflow diann_search_serial {
             predicted_speclib = DIANN_BUILD_LIB.out.speclib
         }
 
-        def search_params = params.diann.search_params + (reanalyze == true ? " --reanalyze" : "")
+        def search_params = params.diann.search_params + (speclib_only == true ? " --reanalyze" : "")
 
         diann_results = DIANN_SEARCH (
             ms_file_ch.collect(),
             fasta,
             diann_speclib,
+            (speclib_only == true ? "subset_library" : "quant"),
             search_params
         )
 
@@ -59,7 +60,7 @@ workflow diann_search_parallel {
         fasta
         spectral_library
         ms_file_ch
-        reanalyze
+        speclib_only
 
     main:
         diann_speclib = null
@@ -82,13 +83,14 @@ workflow diann_search_parallel {
             params.diann.search_params
         )
 
-        def mbr_params = params.diann.search_params + (reanalyze == true ? " --reanalyze" : "")
+        def mbr_params = params.diann.search_params + (speclib_only == true ? " --reanalyze" : "")
 
         DIANN_MBR(
             ms_file_ch.collect(),
             DIANN_QUANT.out.quant_file.collect(),
             fasta,
             diann_speclib,
+            (speclib_only == true ? "subset_library" : "quant"),
             mbr_params
         )
 
