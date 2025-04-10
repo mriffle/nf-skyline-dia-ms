@@ -54,6 +54,7 @@ workflow diann {
             } else {
                 spectral_library_to_use = spectral_library
             }
+            predicted_speclib = Channel.empty()
         } else {
             // create predicted spectral library from fasta
             DIANN_BUILD_LIB(

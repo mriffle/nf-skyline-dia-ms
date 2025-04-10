@@ -12,7 +12,7 @@ workflow diann_search_serial {
         speclib_only
 
     main:
-        def search_params = params.diann.search_params + (speclib_only == true ? " --reanalyze" : "")
+        def search_params = params.diann.search_params + " --reanalyse"
 
         diann_results = DIANN_SEARCH (
             ms_file_ch.collect(),
@@ -55,7 +55,7 @@ workflow diann_search_parallel {
             params.diann.search_params
         )
 
-        def mbr_params = params.diann.search_params + (speclib_only == true ? " --reanalyze" : "")
+        def mbr_params = params.diann.search_params + " --reanalyse"
 
         DIANN_MBR(
             ms_file_ch.collect(),
