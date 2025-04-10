@@ -6,6 +6,7 @@ nextflow.enable.dsl = 2
 include { get_input_files } from "./subworkflows/get_input_files"
 include { get_ms_files as get_narrow_ms_files } from "./subworkflows/get_ms_files"
 include { get_ms_files as get_wide_ms_files } from "./subworkflows/get_ms_files"
+include { carafe } from "./workflows/carafe"
 include { dia_search } from "./workflows/dia_search"
 include { skyline } from "./workflows/skyline"
 include { panorama_upload_results } from "./subworkflows/panorama_upload"
@@ -138,12 +139,18 @@ workflow {
 
     get_input_files(aws_secret_id)   // get input files
 
-    // set up some convenience variables
-    if(params.spectral_library) {
+    // Get input spectral library
+    if(params.carafe.spectra_file != null) {
+        carafe()
+        spectral_library = carafe.out.spectral_library
+    }
+    else if(params.spectral_library) {
         spectral_library = get_input_files.out.spectral_library
     } else {
         spectral_library = Channel.empty()
     }
+
+    // set up some convenience variables
     if(params.pdc.study_id) {
         if(params.replicate_metadata) {
             log.warn "params.replicate_metadata will be overritten by PDC metadata"
