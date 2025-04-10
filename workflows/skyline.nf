@@ -16,6 +16,7 @@ workflow skyline {
         final_speclib
         pdc_study_name
         skyr_files
+        use_batch_mode
 
     main:
 
@@ -29,7 +30,8 @@ workflow skyline {
                     final_speclib,
                     mzml_ch,
                     replicate_metadata,
-                    skyline_document_name
+                    skyline_document_name,
+                    use_batch_mode
                 )
                 proteowizard_version = skyline_import.out.proteowizard_version
             }

@@ -4,8 +4,8 @@ nextflow.enable.dsl = 2
 
 // Sub workflows
 include { get_input_files } from "./subworkflows/get_input_files"
-include { get_batched_ms_files as get_narrow_ms_files } from "./subworkflows/get_ms_files"
-include { get_batched_ms_files as get_wide_ms_files } from "./subworkflows/get_ms_files"
+include { get_ms_files as get_narrow_ms_files } from "./subworkflows/get_ms_files"
+include { get_ms_files as get_wide_ms_files } from "./subworkflows/get_ms_files"
 include { dia_search } from "./workflows/dia_search"
 include { skyline } from "./workflows/skyline"
 include { panorama_upload_results } from "./subworkflows/panorama_upload"
@@ -86,18 +86,17 @@ workflow {
     }
 
     // get mzML files
+    use_batch_mode = params.quant_spectra_dir instanceof Map
     if(params.pdc.study_id) {
         get_pdc_files()
         wide_mzml_ch = get_pdc_files.out.wide_mzml_ch
         pdc_study_name = get_pdc_files.out.study_name
         skyline_document_name = skyline_document_name == 'final' ? pdc_study_name : skyline_document_name
-        use_batch_mode = false
     } else{
         get_wide_ms_files(params.quant_spectra_dir,
                           params.quant_spectra_glob,
                           aws_secret_id)
-        wide_mzml_ch = get_wide_ms_files.out.ms_files
-        use_batch_mode = get_wide_ms_files.out.use_batch_mode
+        wide_mzml_ch = get_wide_ms_files.out.ms_file_ch
         pdc_study_name = null
     }
     narrow_mzml_ch = null
@@ -106,10 +105,10 @@ workflow {
                             params.chromatogram_library_spectra_glob,
                             aws_secret_id)
 
-        narrow_mzml_ch = get_narrow_ms_files.out.ms_files
-        all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch)
+        narrow_mzml_ch = get_narrow_ms_files.out.ms_file_ch
+        all_mzml_ch = wide_mzml_ch.concat(narrow_mzml_ch).map{ it -> it[1] }
     } else {
-        all_mzml_ch = wide_mzml_ch
+        all_mzml_ch = wide_mzml_ch.map{ it -> it[1] }
     }
 
     // only perform msconvert and terminate
@@ -176,7 +175,8 @@ workflow {
         skyline_document_name,
         final_speclib,
         pdc_study_name,
-        skyr_file_ch
+        skyr_file_ch,
+        use_batch_mode
     )
 
     version_files = search_engine_version
@@ -186,7 +186,7 @@ workflow {
     input_files = fasta.map{ it -> ['Fasta file', it.name] }.concat(
         fasta.map{ it -> ['Skyline fasta file', it.name] },
         spectral_library.map{ it -> ['Spectra library', it.baseName] },
-        all_mzml_ch.map{ it -> ['Spectra file', it.baseName] })
+        all_mzml_ch.map{ it -> ['Spectra file', it[1].baseName] })
 
     save_run_details(input_files.collect(), version_files.collect())
     run_details_file = save_run_details.out.run_details

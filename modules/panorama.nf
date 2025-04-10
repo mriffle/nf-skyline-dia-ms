@@ -59,12 +59,12 @@ process PANORAMA_GET_MS_FILE_LIST {
     secret 'PANORAMA_API_KEY'
 
     input:
-        each web_dav_url
+        tuple val(batch_name), val(web_dav_url)
         val file_glob
         val aws_secret_id
 
     output:
-        path('download_files.txt'), emit: ms_files
+        tuple val(batch_name), path('download_files.txt'), emit: ms_files
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
@@ -96,11 +96,11 @@ process PANORAMA_PUBLIC_GET_MS_FILE_LIST {
     publishDir params.output_directories.panorama, failOnError: true, mode: 'copy'
 
     input:
-        each web_dav_url
+        tuple val(batch_name), val(web_dav_url)
         val file_glob
 
     output:
-        path('download_files.txt'), emit: ms_files
+        tuple val(batch_name), path('download_files.txt'), emit: ms_files
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
@@ -131,7 +131,7 @@ process PANORAMA_GET_FILE {
     secret 'PANORAMA_API_KEY'
 
     input:
-        val web_dav_url
+        val(web_dav_url)
         val aws_secret_id
 
     output:
@@ -169,11 +169,11 @@ process PANORAMA_GET_MS_FILE {
     secret 'PANORAMA_API_KEY'
 
     input:
-        val web_dav_url
+        tuple val(batch_name), val(web_dav_url)
         val aws_secret_id
 
     output:
-        path("${file(web_dav_url).name}"), emit: panorama_file
+        tuple val(batch_name), path("${file(web_dav_url).name}"), emit: panorama_file
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
@@ -206,10 +206,10 @@ process PANORAMA_PUBLIC_GET_MS_FILE {
     storeDir "${params.panorama_cache_directory}"
 
     input:
-        val web_dav_url
+        tuple val(batch_name), val(web_dav_url)
 
     output:
-        path("${file(web_dav_url).name}"), emit: panorama_file
+        tuple val(batch_name), path("${file(web_dav_url).name}"), emit: panorama_file
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 

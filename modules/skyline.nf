@@ -96,10 +96,10 @@ process SKYLINE_IMPORT_MZML {
 
     input:
         path skyline_zipfile
-        path mzml_file
+        tuple val(batch_name), path(mzml_file)
 
     output:
-        path("*.skyd"), emit: skyd_file
+        tuple val(batch_name), path("*.skyd"), emit: skyd_file
         path("${mzml_file.baseName}.stdout"), emit: stdout
         path("${mzml_file.baseName}.stderr"), emit: stderr
 
