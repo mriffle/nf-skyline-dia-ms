@@ -9,10 +9,24 @@ include { MSCONVERT_MULTI_BATCH as MSCONVERT } from "../modules/msconvert"
 include { param_to_list } from "./get_input_files"
 include { escapeRegex } from "../modules/panorama"
 
+/**
+ * Randomly sample a list and return a list with n elements.
+ */
+def sample_list(list, n, long seed) {
+    if (n == null || n >= list.size()) {
+        return list
+    }
+    def random = new Random(seed)
+    def shuffled = list.toList()
+    Collections.shuffle(shuffled, random)
+    return shuffled.take(n)
+}
+
 workflow get_ms_files {
     take:
         spectra_dir
         spectra_glob
+        n_files
         aws_secret_id
 
     main:
@@ -40,11 +54,21 @@ workflow get_ms_files {
                     .listFiles()
                     .findAll{ it ==~ spectra_regex }]
             }.transpose()
+            .groupTuple()
+            .map{ batch, file_list ->
+                [batch, sample_list(file_list, n_files, params.random_file_seed)]
+            }
+            .transpose()
 
         // List files matching spectra_glob in panorama directories
         PANORAMA_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_dirs, spectra_glob, aws_secret_id)
         PANORAMA_GET_MS_FILE_LIST.out.ms_files
             .map{batch, file_list -> [batch, file_list.readLines().collect{ line -> line.strip() }]}
+            .transpose()
+            .groupTuple()
+            .map{ batch, file_list ->
+                [batch, sample_list(file_list, n_files, params.random_file_seed)]
+            }
             .transpose()
             .set{panorama_url_ch}
 
@@ -52,6 +76,11 @@ workflow get_ms_files {
         PANORAMA_PUBLIC_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_public_dirs, spectra_glob)
         PANORAMA_PUBLIC_GET_MS_FILE_LIST.out.ms_files
             .map{batch, file_list -> [batch, file_list.readLines().collect{ line -> line.strip() }]}
+            .transpose()
+            .groupTuple()
+            .map{ batch, file_list ->
+                [batch, sample_list(file_list, n_files, params.random_file_seed)]
+            }
             .transpose()
             .set{panorama_public_url_ch}
 

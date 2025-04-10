@@ -95,6 +95,7 @@ workflow {
     } else{
         get_wide_ms_files(params.quant_spectra_dir,
                           params.quant_spectra_glob,
+                          params.files_per_quant_batch,
                           aws_secret_id)
         wide_mzml_ch = get_wide_ms_files.out.ms_file_ch
         pdc_study_name = null
@@ -103,6 +104,7 @@ workflow {
     if(params.chromatogram_library_spectra_dir != null) {
         get_narrow_ms_files(params.chromatogram_library_spectra_dir,
                             params.chromatogram_library_spectra_glob,
+                            params.files_per_chrom_lib_batch,
                             aws_secret_id)
 
         narrow_mzml_ch = get_narrow_ms_files.out.ms_file_ch
