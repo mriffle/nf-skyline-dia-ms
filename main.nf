@@ -154,9 +154,11 @@ workflow {
     skyr_file_ch = get_input_files.out.skyr_files
 
     // Get input spectral library
+    carafe_version = Channel.empty()
     if(params.carafe.spectra_file != null) {
         carafe(fasta, aws_secret_id)
         spectral_library = carafe.out.spectral_library
+        carafe_version = carafe.out.carafe_version
     }
     else if(params.spectral_library) {
         spectral_library = get_input_files.out.spectral_library
@@ -190,7 +192,8 @@ workflow {
 
     version_files = search_engine_version
         .concat(proteowizard_version,
-                dia_qc_version).splitText()
+                dia_qc_version,
+                carafe_version).splitText()
 
     input_files = fasta.map{ it -> ['Fasta file', it.name] }.concat(
         fasta.map{ it -> ['Skyline fasta file', it.name] },

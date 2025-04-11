@@ -49,13 +49,13 @@ process CARAFE {
         > >(tee "carafe.stdout") 2> >(tee "carafe.stderr" >&2)
 
         mv -v SkylineAI_spectral_library.tsv carafe_spectral_library.tsv
-
-        grep "Version:" carafe.stdout | head -n 1 | awk '{print \$2}' | xargs printf "carafe_version=%s\n" > carafe_version.txt
+        echo "carafe_version=\$CARAFE_VERSION" > carafe_version.txt
         """
 
     stub:
         """
-        touch carafe_spectral_library.tsv carafe_version.txt
+        echo "carafe_version=\$CARAFE_VERSION" > carafe_version.txt
+        touch carafe_spectral_library.tsv
         touch stub.stderr stub.stdout
         touch parameter.txt
         """

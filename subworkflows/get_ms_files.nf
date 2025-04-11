@@ -130,7 +130,7 @@ workflow get_ms_files {
                 mzml: it[1].name.endsWith('.mzML')
                 raw: it[1].name.endsWith('.raw')
                 other: true
-                    error "Unknown file type:" + it.name
+                    error "Unknown file type:" + it[1].name
             }.set{ms_file_ch}
 
         // Convert raw files if applicable

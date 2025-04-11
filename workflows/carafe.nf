@@ -34,30 +34,31 @@ workflow carafe {
         }
 
         // Get input spectral file
-        if (is_panorama_url(params.carafe.spectral_file)) {
-            batched_url_ch = Channel.value(tuple(null, params.carfe.spectral_file))
+        if (is_panorama_url(params.carafe.spectra_file)) {
+            batched_url_ch = Channel.value(params.carafe.spectra_file)
+                .map{ it -> ['dummy_batch', it] }
 
-            if(panorama_auth_required_for_url(params.carafe.spectral_file)) {
-                panorama_file = PANORAMA_GET_MS_FILE(batched_url_ch, aws_secret_id)
+            if(panorama_auth_required_for_url(params.carafe.spectra_file)) {
+                panorama_download = PANORAMA_GET_MS_FILE(batched_url_ch, aws_secret_id)
             } else {
-                panorama_file = PANORAMA_PUBLIC_GET_MS_FILE(batched_url_ch)
+                panorama_download = PANORAMA_PUBLIC_GET_MS_FILE(batched_url_ch)
             }
-            input_spectral_raw_file = panorama_file.map{ it -> it[1] }
+            input_spectral_raw_file = panorama_download.panorama_file.map{ it -> it[1] }
         } else {
-            input_spectral_raw_file = Channel.value(file(params.carafe.spectral_file, checkIfExists: true))
+            input_spectral_raw_file = Channel.value(file(params.carafe.spectra_file, checkIfExists: true))
         }
 
         // Convert spectral file to mzML if necissary
         input_spectral_raw_file.branch{
-            mzml: it[1].name.endsWith('.mzML')
-            raw: it[1].name.endsWith('.raw')
+            mzml: it.name.endsWith('.mzML')
+            raw: it.name.endsWith('.raw')
             other: true
                 error "Unknown file type:" + it.name
         }.set{ branched_ms_file_ch }
 
         MSCONVERT(branched_ms_file_ch.raw)
 
-        spectral_file = MSCONVERT.out.concat(input_spectral_raw_file.mzml)
+        spectra_file = MSCONVERT.out.concat(branched_ms_file_ch.mzml)
 
         // Get carafe input peptide results file
         if (params.carafe.peptide_results_file != null){
@@ -67,12 +68,12 @@ workflow carafe {
             DIANN_BUILD_LIB(diann_fasta, params.diann.fasta_digest_params)
             diann_search(diann_fasta,
                          DIANN_BUILD_LIB.out.speclib,
-                         spectral_file,
+                         spectra_file,
                          false)
             carafe_psm_file = diann_search.out.precursor_report
         }
 
-        run_carafe(spectral_file,
+        run_carafe(spectra_file,
                    carafe_fasta,
                    carafe_psm_file,
                    params.carafe.cli_options,
