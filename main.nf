@@ -139,17 +139,6 @@ workflow {
 
     get_input_files(aws_secret_id)   // get input files
 
-    // Get input spectral library
-    if(params.carafe.spectra_file != null) {
-        carafe()
-        spectral_library = carafe.out.spectral_library
-    }
-    else if(params.spectral_library) {
-        spectral_library = get_input_files.out.spectral_library
-    } else {
-        spectral_library = Channel.empty()
-    }
-
     // set up some convenience variables
     if(params.pdc.study_id) {
         if(params.replicate_metadata) {
@@ -163,6 +152,17 @@ workflow {
     skyline_fasta = get_input_files.out.skyline_fasta
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
     skyr_file_ch = get_input_files.out.skyr_files
+
+    // Get input spectral library
+    if(params.carafe.spectra_file != null) {
+        carafe(fasta, aws_secret_id)
+        spectral_library = carafe.out.spectral_library
+    }
+    else if(params.spectral_library) {
+        spectral_library = get_input_files.out.spectral_library
+    } else {
+        spectral_library = Channel.empty()
+    }
 
     dia_search(
         search_engine,
