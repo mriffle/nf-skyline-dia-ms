@@ -89,7 +89,7 @@ process SKYLINE_IMPORT_MZML {
     publishDir params.output_directories.skyline.import_spectra, pattern: '*.std[oe][ur][tr]', failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
-    label 'process_short'
+    label 'process_twohours'
     label 'error_retry'
     container params.images.proteowizard
     stageInMode "${params.skyline.use_hardlinks && workflow.profile != 'aws' ? 'link' : 'symlink'}"
