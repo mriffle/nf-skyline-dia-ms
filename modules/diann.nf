@@ -7,9 +7,11 @@ def get_diann_output_file_stats_script(List ms_files, String report_name) {
         [[ \${#report_files[@]} -eq 1 ]] && md5sum "\${report_files[0]}" > unsorted_hashes.txt || \
             { echo "Expected exactly one match for precursor report, found \${#report_files[@]}" >&2; exit 1; }
 
+        shopt -s nullglob
         for f in '${ms_files.join('\' \'')}' ${report_name}*.speclib *.quant ; do
             report_files+=("\$f")
         done
+        shopt -u nullglob
 
         printf "%s\\n" "\${report_files[@]}" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         printf "%s\\n" "\${report_files[@]}" | while IFS= read -r file; do
@@ -49,8 +51,6 @@ process DIANN_BUILD_LIB {
         """
 }
 
-// path("${output_report_name}.{parquet,tsv}"), emit: precursor_report
-
 process DIANN_SEARCH {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high_constant'
@@ -87,15 +87,21 @@ process DIANN_SEARCH {
             --threads ${task.cpus} \
             --fasta ${fasta_file} \
             --lib ${spectral_library} \
-            --out-lib ${output_report_name} \
-            --out ${output_report_name} \
+            --gen-spec-lib --reanalyse \
             ${diann_params} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
 
-        # In DiaNN 1.8 the '.tsv' file extension is not appended to the precursor report
-        # In DiaNN >= 2 the '.parquet' file extension is automatically added
-        if [[ -f quant ]] ; then
-            mv -v quant quant.tsv
+        # DiaNN does weird things with output file names depending on the version
+        # Instead of specifying them as options to DiaNN we will rename the default output files manually
+        if [[ -f report.tsv && -f lib.tsv.speclib ]] ; then
+            mv -nv report.tsv ${output_report_name}.tsv
+            mv -nv lib.tsv.speclib ${output_report_name}.tsv.speclib
+        elif [[ -f report.parquet && -f report-lib.parquet.skyline.speclib ]] ; then
+            mv -nv report.parquet ${output_report_name}.parquet
+            mv -nv report-lib.parquet.skyline.speclib ${output_report_name}.parquet.skyline.speclib
+        else
+            echo "Missing DiaNN precursor report and/or speclib!" >&2
+            exit 1
         fi
 
         head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
@@ -107,6 +113,66 @@ process DIANN_SEARCH {
         touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet stub.quant
         touch stub.stderr stub.stdout
         diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+'| head -1 | xargs printf "diann_version=%s\\n" > diann_version.txt
+
+        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
+        """
+}
+
+process CARAFE_DIANN_SEARCH {
+    publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
+    label 'process_high_constant'
+    container params.images.diann
+
+    input:
+        path ms_files
+        path fasta_file
+        path spectral_library
+        val output_report_name
+        val diann_params
+
+    output:
+        path("*.stderr"), emit: stderr
+        path("*.stdout"), emit: stdout
+        path("${output_report_name}.{parquet,tsv}"), emit: precursor_report
+        path("output_file_stats.txt"), emit: output_file_stats
+
+    script:
+
+        /*
+         * dia-nn will produce different results if the order of the input files is different
+         * sort the files to ensure they are in the same order in every run
+         */
+        sorted_ms_files = ms_files.toList().sort { a, b -> a.toString() <=> b.toString() }
+
+        ms_file_args = "--f '${sorted_ms_files.join('\' --f \'')}'"
+
+        """
+        diann ${ms_file_args} \
+            --threads ${task.cpus} \
+            --fasta ${fasta_file} \
+            --lib ${spectral_library} \
+            --gen-spec-lib --reanalyse \
+            ${diann_params} \
+            > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
+
+        # DiaNN does weird things with output file names depending on the version
+        # Instead of specifying them as options to DiaNN we will rename the default output files manually
+        if [[ -f report.tsv ]] ; then
+            mv -nv report.tsv ${output_report_name}.tsv
+        elif [[ -f report.parquet ]] ; then
+            mv -nv report.parquet ${output_report_name}.parquet
+        else
+            echo "Missing DiaNN precursor report and/or speclib!" >&2
+            exit 1
+        fi
+
+        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
+        """
+
+    stub:
+        """
+        touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet stub.quant
+        touch stub.stderr stub.stdout
 
         ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
@@ -180,16 +246,21 @@ process DIANN_MBR {
             --threads ${task.cpus} \
             --fasta ${fasta_file} \
             --lib ${spectral_library} \
-            --use-quant \
-            --out-lib ${output_report_name} \
-            --out ${output_report_name} \
+            --use-quant --gen-spec-lib --reanalyse \
             ${diann_params} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
 
-        # In DiaNN 1.8 the '.tsv' file extension is not appended to the precursor report
-        # In DiaNN >= 2 the '.parquet' file extension is automatically added
-        if [[ -f quant ]] ; then
-            mv -v quant quant.tsv
+        # DiaNN does weird things with output file names depending on the version
+        # Instead of specifying them as options to DiaNN we will rename the default output files manually
+        if [[ -f report.tsv && -f lib.tsv.speclib ]] ; then
+            mv -nv report.tsv ${output_report_name}.tsv
+            mv -nv lib.tsv.speclib ${output_report_name}.tsv.speclib
+        elif [[ -f report.parquet && -f report-lib.parquet.skyline.speclib ]] ; then
+            mv -nv report.parquet ${output_report_name}.parquet
+            mv -nv report-lib.parquet.skyline.speclib ${output_report_name}.parquet.skyline.speclib
+        else
+            echo "Missing DiaNN precursor report and/or speclib!" >&2
+            exit 1
         fi
 
         head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt

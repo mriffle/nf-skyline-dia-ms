@@ -3,12 +3,12 @@
 include { run_carafe } from "../subworkflows/run_carafe"
 include { get_input_file as get_input_fasta } from "../subworkflows/get_input_file"
 include { get_input_file as get_peptide_results } from "../subworkflows/get_input_file"
-include { diann_search_parallel as diann_search} from "../subworkflows/diann/diann_search"
 
 include { PANORAMA_GET_MS_FILE } from "../modules/panorama"
 include { PANORAMA_PUBLIC_GET_MS_FILE } from "../modules/panorama"
 include { MSCONVERT } from "../modules/msconvert"
 include { DIANN_BUILD_LIB } from "../modules/diann"
+include { CARAFE_DIANN_SEARCH as DIANN_SEARCH } from "../modules/diann"
 
 include { panorama_auth_required_for_url } from "../subworkflows/get_ms_files"
 include { is_panorama_url } from "../subworkflows/get_ms_files"
