@@ -12,7 +12,7 @@ workflow diann_search_serial {
         speclib_only
 
     main:
-        def search_params = params.diann.search_params + " --reanalyse"
+        def search_params = params.diann.search_params
 
         diann_results = DIANN_SEARCH (
             ms_file_ch.collect(),

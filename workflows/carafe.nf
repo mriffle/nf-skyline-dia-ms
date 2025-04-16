@@ -60,17 +60,27 @@ workflow carafe {
 
         spectra_file = MSCONVERT.out.concat(branched_ms_file_ch.mzml)
 
+        // Check that there is exactly 1 MS file
+        spectra_file.collect().subscribe{ file_list ->
+            if (file_list.size() != 1) {
+                error "There must be exactly 1 Carafe spectra_file! Found ${file_list.size()}:\n\t${file_list.join(', ')}"
+            }
+        }
+
         // Get carafe input peptide results file
         if (params.carafe.peptide_results_file != null){
             get_peptide_results(params.carafe.peptide_results_file, aws_secret_id)
             carafe_psm_file = get_peptide_results.out.file
         } else {
             DIANN_BUILD_LIB(diann_fasta, params.diann.fasta_digest_params)
-            diann_search(diann_fasta,
+            def diann_search_params = "--qvalue 0.01 --export-quant"
+            DIANN_SEARCH(spectra_file,
+                         diann_fasta,
                          DIANN_BUILD_LIB.out.speclib,
-                         spectra_file,
-                         false)
-            carafe_psm_file = diann_search.out.precursor_report
+                         'carafe_input',
+                         diann_search_params)
+
+            carafe_psm_file = DIANN_SEARCH.out.precursor_report
         }
 
         run_carafe(spectra_file,
@@ -79,7 +89,11 @@ workflow carafe {
                    params.carafe.cli_options,
                    params.search_engine)
 
+        // We need to make sure speclib_tsv is a value channel
+        // because Nextflow thinks it should be a queue channel
+        spectral_library = run_carafe.out.speclib_tsv.first()
+
     emit:
-        spectral_library = run_carafe.out.speclib_tsv
+        spectral_library
         carafe_version = run_carafe.out.carafe_version
 }

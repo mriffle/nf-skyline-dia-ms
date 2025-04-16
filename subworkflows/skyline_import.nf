@@ -33,7 +33,7 @@ workflow skyline_import {
         batched_ms_file_ch = ms_file_ch.groupTuple()
 
         batched_input_files = batched_skyd_file_ch
-            .join(batched_ms_file_ch)
+            .join(batched_ms_file_ch, failOnMismatch: true, failOnDuplicate: true)
             .map{ batch_name, ms_files, skyd_files ->
                     [ms_files, skyd_files,
                      get_skyline_doc_name_per_batch(skyline_document_name, batch_name)]

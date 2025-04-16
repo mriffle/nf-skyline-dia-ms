@@ -142,7 +142,7 @@ workflow {
     // set up some convenience variables
     if(params.pdc.study_id) {
         if(params.replicate_metadata) {
-            log.warn "params.replicate_metadata will be overritten by PDC metadata"
+            log.warn "PDC metadata will override params.replicate_metadata"
         }
         replicate_metadata = get_pdc_files.out.annotations_csv
     } else {
@@ -154,16 +154,20 @@ workflow {
     skyr_file_ch = get_input_files.out.skyr_files
 
     // Get input spectral library
-    carafe_version = Channel.empty()
     if(params.carafe.spectra_file != null) {
+        if(params.spectral_library) {
+            log.warn "Carafe spectral library will override params.spectral_library"
+        }
         carafe(fasta, aws_secret_id)
         spectral_library = carafe.out.spectral_library
         carafe_version = carafe.out.carafe_version
     }
     else if(params.spectral_library) {
         spectral_library = get_input_files.out.spectral_library
+        carafe_version = Channel.empty()
     } else {
         spectral_library = Channel.empty()
+        carafe_version = Channel.empty()
     }
 
     dia_search(
@@ -198,7 +202,7 @@ workflow {
     input_files = fasta.map{ it -> ['Fasta file', it.name] }.concat(
         fasta.map{ it -> ['Skyline fasta file', it.name] },
         spectral_library.map{ it -> ['Spectra library', it.baseName] },
-        all_mzml_ch.map{ it -> ['Spectra file', it[1].baseName] })
+        all_mzml_ch.map{ it -> ['Spectra file', it.baseName] })
 
     save_run_details(input_files.collect(), version_files.collect())
     run_details_file = save_run_details.out.run_details

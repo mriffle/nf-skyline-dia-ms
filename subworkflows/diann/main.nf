@@ -17,7 +17,7 @@ workflow diann {
         use_batch_mode
 
     main:
-        if(!params.fasta) {
+        if (!params.fasta) {
             error "The parameter \'fasta\' is required when using diann."
         }
 
@@ -29,7 +29,11 @@ workflow diann {
             log.warn "The parameter 'encyclopedia.chromatogram.params' is set to a value (${params.encyclopedia.chromatogram.params}) but will be ignored."
         }
 
-        if(params.spectral_library) {
+        if (params.carafe.spectra_file) {
+            spectral_library_to_use = spectral_library
+            predicted_speclib = Channel.empty()
+        }
+        else if (params.spectral_library) {
 
             // convert spectral library to required format for dia-nn
             if(params.spectral_library.endsWith(".blib")) {
