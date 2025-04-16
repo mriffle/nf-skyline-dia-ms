@@ -1,4 +1,26 @@
 
+def get_diann_output_file_stats_script(List ms_files, String report_name) {
+    def command = """
+        report_files=()
+        [[ -f ${report_name}.tsv ]] && report_files+=(${report_name}.tsv)
+        [[ -f ${report_name}.parquet ]] && report_files+=(${report_name}.parquet)
+        [[ \${#report_files[@]} -eq 1 ]] && md5sum "\${report_files[0]}" > unsorted_hashes.txt || \
+            { echo "Expected exactly one match for precursor report, found \${#report_files[@]}" >&2; exit 1; }
+
+        for f in '${ms_files.join('\' \'')}' ${report_name}*.speclib *.quant ; do
+            report_files+=("\$f")
+        done
+
+        printf "%s\\n" "\${report_files[@]}" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        printf "%s\\n" "\${report_files[@]}" | while IFS= read -r file; do
+            stat -L --printf='%n\t%s\n' "\$file"
+        done | sort > sizes.txt
+
+        join -t\$\'\t\' hashes.txt sizes.txt > output_file_stats.txt
+    """
+    return command
+}
+
 process DIANN_BUILD_LIB {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high'
@@ -27,6 +49,8 @@ process DIANN_BUILD_LIB {
         """
 }
 
+// path("${output_report_name}.{parquet,tsv}"), emit: precursor_report
+
 process DIANN_SEARCH {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high_constant'
@@ -42,8 +66,8 @@ process DIANN_SEARCH {
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        path("*.parquet.skyline.speclib"), emit: speclib
-        path("${output_report_name}.parquet"), emit: precursor_report
+        path("${output_report_name}*.speclib"), emit: speclib
+        path("${output_report_name}.{parquet,tsv}"), emit: precursor_report
         path("*.quant"), emit: quant_files
         path("diann_version.txt"), emit: version
         path("output_file_stats.txt"), emit: output_file_stats
@@ -68,22 +92,23 @@ process DIANN_SEARCH {
             ${diann_params} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
 
-        head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+        # In DiaNN 1.8 the '.tsv' file extension is not appended to the precursor report
+        # In DiaNN >= 2 the '.parquet' file extension is automatically added
+        if [[ -f quant ]] ; then
+            mv -v quant quant.tsv
+        fi
 
-        md5sum '${ms_files.join('\' \'')}' ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\\t%s\\n' '${ms_files.join('\' \'')}' ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet *.quant | sort > sizes.txt
-        join -t\$'\t' hashes.txt sizes.txt > output_file_stats.txt
+        head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 
     stub:
         """
         touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet stub.quant
         touch stub.stderr stub.stdout
-        diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+        diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+'| head -1 | xargs printf "diann_version=%s\\n" > diann_version.txt
 
-        md5sum '${ms_files.join('\' \'')}' ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\\t%s\\n' '${ms_files.join('\' \'')}' ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet *.quant | sort > sizes.txt
-        join -t\$'\t' hashes.txt sizes.txt > output_file_stats.txt
+        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 }
 
@@ -136,8 +161,8 @@ process DIANN_MBR {
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        path("${output_report_name}.parquet.skyline.speclib"), emit: speclib
-        path("${output_report_name}.parquet"), emit: precursor_report
+        path("${output_report_name}*.speclib"), emit: speclib
+        path("${output_report_name}.{parquet,tsv}"), emit: precursor_report
         path("diann_version.txt"), emit: version
         path("output_file_stats.txt"), emit: output_file_stats
 
@@ -161,22 +186,23 @@ process DIANN_MBR {
             ${diann_params} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
 
-        head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+        # In DiaNN 1.8 the '.tsv' file extension is not appended to the precursor report
+        # In DiaNN >= 2 the '.parquet' file extension is automatically added
+        if [[ -f quant ]] ; then
+            mv -v quant quant.tsv
+        fi
 
-        md5sum '${ms_files.join('\' \'')}' ${output_report_name}.parquet ${output_report_name}.parquet.skyline.speclib *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\\t%s\\n' '${ms_files.join('\' \'')}' ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet *.quant | sort > sizes.txt
-        join -t\$'\t' hashes.txt sizes.txt > output_file_stats.txt
+        head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 
     stub:
         """
-        touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet stub.quant
+        touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet
         touch stub.stderr stub.stdout
-        diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
+        diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+'| head -1 | xargs printf "diann_version=%s\\n" > diann_version.txt
 
-        md5sum '${ms_files.join('\' \'')}' ${output_report_name}.parquet ${output_report_name}.parquet.skyline.speclib *.quant | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\\t%s\\n' '${ms_files.join('\' \'')}' ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet *.quant | sort > sizes.txt
-        join -t\$'\t' hashes.txt sizes.txt > output_file_stats.txt
+        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 }
 
