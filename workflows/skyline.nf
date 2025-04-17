@@ -54,7 +54,7 @@ workflow skyline {
                 .map{ it -> [it[1], it[2]] }
 
             // generate QC report
-            if(!params.qc_report.skip) {
+            if(!params.qc_report.skip || !params.batch_report.skip) {
                 generate_dia_qc_report(batched_skyline_files, replicate_metadata)
                 dia_qc_version = generate_dia_qc_report.out.dia_qc_version
                 qc_report_files = generate_dia_qc_report.out.qc_reports.concat(
@@ -86,7 +86,9 @@ workflow skyline {
                     batched_skyline_files,
                     skyr_files
                 )
-                skyline_reports_ch = skyline_reports.out.skyline_report_files.flatten()
+                skyline_reports_ch = skyline_reports.out.skyline_report_files
+                    .map{ it -> it[1] }
+                    .flatten()
             } else {
                 skyline_reports_ch = Channel.empty()
             }

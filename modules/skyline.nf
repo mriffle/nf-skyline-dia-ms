@@ -290,7 +290,7 @@ process SKYLINE_RUN_REPORTS {
         path skyr_files
 
     output:
-        path("*.report.tsv"), emit: skyline_report_files
+        tuple val(batch), path("*.report.tsv"), emit: skyline_report_files
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
