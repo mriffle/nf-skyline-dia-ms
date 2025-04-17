@@ -4,13 +4,13 @@ include { SKYLINE_RUN_REPORTS } from "../modules/skyline"
 workflow skyline_reports {
 
     take:
-        skyline_zipfile
+        skyline_zipfiles
         skyr_file_ch
 
     main:
 
         SKYLINE_RUN_REPORTS(
-            skyline_zipfile,
+            skyline_zipfiles,
             skyr_file_ch.collect()
         )
 

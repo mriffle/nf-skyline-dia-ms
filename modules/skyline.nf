@@ -286,7 +286,7 @@ process SKYLINE_RUN_REPORTS {
     container params.images.proteowizard
 
     input:
-        path skyline_zipfile
+        tuple val(batch), path(skyline_zipfile)
         path skyr_files
 
     output:
@@ -308,7 +308,7 @@ process SKYLINE_RUN_REPORTS {
         # Export report
         awk -F'"' '/<view name=/ { print \$2 }' "\$skyrfile" | while read reportname; do
             echo "--report-name=\\"\${reportname}\\" \
-                  --report-file=\\"\${reportname}.report.tsv\\" \
+                  --report-file=\\"${batch == null ? '' : batch + '_'}\${reportname}.report.tsv\\" \
                   --report-format=TSV --report-invariant" \
                   >> export_reports.bat
         done
@@ -320,17 +320,17 @@ process SKYLINE_RUN_REPORTS {
     """
 
     stub:
-    '''
+    """
     for skyrfile in ./*.skyr; do
-        awk -F'"' '/<view name=/ { print $2 }' "$skyrfile" | while read reportname; do
-            touch "${reportname}.report.tsv"
+        awk -F'"' '/<view name=/ { print \$2 }' "\$skyrfile" | while read reportname; do
+            touch ${batch == null ? '' : batch + '_'}\${reportname}.report.tsv
         done
     done
 
-    if [ $(ls *.report.tsv|wc -l) -eq 0 ] ; then
+    if [ \$(ls *.report.tsv|wc -l) -eq 0 ] ; then
         touch stub.report.tsv
     fi
 
     touch stub.stdout stub.stderr
-    '''
+    """
 }

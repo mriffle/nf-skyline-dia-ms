@@ -6,6 +6,9 @@ include { skyline_reports } from "../subworkflows/skyline_run_reports"
 // modules
 include { EXPORT_GENE_REPORTS } from "../modules/qc_report"
 
+// functions
+include { get_skyline_doc_name_per_batch } from "../subworkflows/skyline_import"
+
 workflow skyline {
     take:
         ms_file_ch
@@ -38,9 +41,21 @@ workflow skyline {
             final_skyline_file = skyline_import.out.skyline_results
             final_skyline_hash = skyline_import.out.skyline_results_hash
 
+            // Map Skyline documents to batch names
+            if (use_batch_mode == true) {
+                batch_names = params.quant_spectra_dir.collect{ k, v -> k }
+            } else {
+                batch_names = [null]
+            }
+            batched_skyline_files = Channel.fromList(batch_names)
+                .map{ it -> [get_skyline_doc_name_per_batch(skyline_document_name, it), it] }
+                .join(final_skyline_file.map{ it -> [it.baseName.replaceAll(/(_annotated)?\.sky$/, ''), it] },
+                      failOnMismatch: true, failOnDuplicate: true)
+                .map{ it -> [it[1], it[2]] }
+
             // generate QC report
             if(!params.qc_report.skip) {
-                generate_dia_qc_report(final_skyline_file, replicate_metadata)
+                generate_dia_qc_report(batched_skyline_files, replicate_metadata)
                 dia_qc_version = generate_dia_qc_report.out.dia_qc_version
                 qc_report_files = generate_dia_qc_report.out.qc_reports.concat(
                     generate_dia_qc_report.out.qc_report_qmd,
@@ -68,7 +83,7 @@ workflow skyline {
             skyline_reports_ch = null;
             if(params.skyline.skyr_file) {
                 skyline_reports(
-                    final_skyline_file,
+                    batched_skyline_files,
                     skyr_files
                 )
                 skyline_reports_ch = skyline_reports.out.skyline_report_files.flatten()
