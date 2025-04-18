@@ -249,6 +249,14 @@ def any_entry_requires_panorama_auth(param) {
     return values.any { panorama_auth_required_for_url(it) }
 }
 
+def any_map_entry_requires_panorama_auth(param) {
+    if(param instanceof Map){
+        println('Instance of Map!')
+        return param.any{ k, v -> any_entry_requires_panorama_auth(v) }
+    }
+    return any_entry_requires_panorama_auth(param)
+}
+
 // return true if panoramaweb authentication will be required by this workflow run
 def is_panorama_authentication_required() {
 
@@ -258,7 +266,7 @@ def is_panorama_authentication_required() {
            (params.spectral_library && panorama_auth_required_for_url(params.spectral_library)) ||
            (params.replicate_metadata && panorama_auth_required_for_url(params.replicate_metadata)) ||
            (params.skyline.template_file && panorama_auth_required_for_url(params.skyline.template_file)) ||
-           (params.quant_spectra_dir && any_entry_requires_panorama_auth(params.quant_spectra_dir)) ||
+           (params.quant_spectra_dir && any_map_entry_requires_panorama_auth(params.quant_spectra_dir)) ||
            (params.chromatogram_library_spectra_dir && any_entry_requires_panorama_auth(params.chromatogram_library_spectra_dir)) ||
            (params.skyline_skyr_file && any_entry_requires_panorama_auth(params.skyline_skyr_file))
 
