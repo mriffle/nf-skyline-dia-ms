@@ -12,7 +12,7 @@ workflow diann_search_serial {
         speclib_only
 
     main:
-        def search_params = params.diann.search_params
+        def search_params = params.diann.search_params + (speclib_only == true ? " --id-profiling" : " --rt-profiling")
 
         diann_results = DIANN_SEARCH (
             ms_file_ch.collect(),
@@ -55,8 +55,7 @@ workflow diann_search_parallel {
             params.diann.search_params
         )
 
-        def mbr_params = params.diann.search_params + " --reanalyse"
-
+        def mbr_params = params.diann.search_params + (speclib_only == true ? " --id-profiling" : " --rt-profiling")
         DIANN_MBR(
             ms_file_ch.collect(),
             DIANN_QUANT.out.quant_file.collect(),
