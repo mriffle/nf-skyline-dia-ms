@@ -291,8 +291,7 @@ process BLIB_BUILD_LIBRARY {
 
     script:
         """
-        wine BlibBuild "${speclib}" lib_redundant.blib
-        wine BlibFilter -b 1 lib_redundant.blib lib.blib
+        wine BlibBuild "${speclib}" lib.blib
         """
 
     stub:
