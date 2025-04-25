@@ -58,8 +58,8 @@ The ``params`` Section
      - Description
    * -
      - ``spectral_library``
-     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. This parameter is required for EncyclopeDIA. If omitted when using DIA-NN, DIA-NN will be run in library-free mode. This parameter is ignored when running Cascadia.
-   * - 
+     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. If a Carafe library is being generated the Carafe spectral libray will override this parameter. This parameter is required for EncyclopeDIA. If omitted when using DIA-NN, DIA-NN will be run in library-free mode. This parameter is ignored when running Cascadia.
+   * -
      - ``fasta``
      - The path to the background FASTA file to use. This parameter is required, except when running Cascadia.
    * - ✓
@@ -76,114 +76,164 @@ The ``params`` Section
      - Which files in this directory to use. Default: ``*.raw``
    * -
      - ``search_engine``
-     - Must be set to either ``'encyclopedia'``, ``'diann'``, or ``'cascadia'``. If set to ``'diann'`` or ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
-   * -
-     - ``pdc.study_id``
-     - When this option is set, raw files and metadata will be downloaded from the PDC. Default: ``null``.
-   * -
-     - ``pdc.gene_level_data``
-     - A ``tsv`` file mapping gene names to NCIB gene IDs and gene metadata. Required for PDC gene reports. Default: ``null``.
-   * -
-     - ``pdc.n_raw_files``
-     - If this option is set, only ``n`` raw files are downloaded. This is useful for testing but otherwise should be ``null``.
-   * -
-     - ``pdc.client_args``
-     - Additional command line arguments passed to ``PDC_client``. Default is ``null``.
-   * -
-     - ``skyline.skip``
-     - If set to ``true``, will skip the creation of a Skyline document. Default: ``false``.
-   * -
-     - ``skyline.document_name``
-     - The base of the file name of the generated Skyline document. If set to ``'human_dia'``, the output file name would be ``human_dia.sky.zip``. Note: If importing into PanoramaWeb, this is also the name that appears in the list of imported Skyline documents on the project page. Default: ``final``.
-   * -
-     - ``msconvert.do_demultiplex``
-     - If starting with raw files, this is the value used by ``msconvert`` for the ``do_demultiplex`` parameter. Default: ``true``.
-   * -
-     - ``msconvert.do_simasspectra``
-     - If starting with raw files, this is the value used by ``msconvert`` for the ``do_simasspectra`` parameter. Default: ``true``.
-   * -
-     - ``msconvert.mz_shift_ppm``
-     - If starting with raw files, ``msconvert`` will shift all mz values by ``n`` ppm when converting to ``mzML``. If ``null`` the mz values are not shifted. Default: ``null``.
-   * -
-     - ``encyclopedia.chromatogram.params``
-     - If you are generating a chromatogram library for quantification, this is the command line options passed to EncyclopeDIA during the chromatogram generation step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
-   * -
-     - ``encyclopedia.quant.params``
-     - The command line options passed to EncyclopeDIA during the quantification step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
-   * -
-     - ``encyclopedia.save_output``
-     - EncyclopeDIA generates many intermediate files that are subsequently processed by the workflow to generate the final results. These intermediate files may be large. If this is set to ``'true'``, these intermediate files will be saved locally in your ``results`` directory. Default: ``'false'``.
-   * -
-     - ``diann.params``
-     - The parameters passed to DIA-NN when it is run. Default: ``'--unimod4 --qvalue 0.01 --cut \'K*,R*,!*P\' --reanalyse --smart-profiling'``
-   * -
-     - ``cascadia.use_gpu``
-     - If set to ``true``, Cascadia will attempt to use the GPU(s) installed on the system where it is running. Do not set to true unless a GPU is available, otherwise an error will be gernated. Default: ``false``.
-   * -
-     - ``panorama.upload``
-     - Whether or not to upload results to PanoramaWeb Default: ``false``.
-   * -
-     - ``panorama.upload_url``
-     - The WebDAV URL of a directory in PanoramaWeb to which to upload the results. Note that ``panorama.upload`` must be set to ``true`` to upload results.
-   * -
-     - ``panorama.import_skyline``
-     - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the named used for the ``skyline_document_name`` parameter. Default: ``false``. Note: ``panorama_upload`` must be set to ``true`` and ``skip_skyline`` must be set to ``false`` to use this feature.
-   * -
-     - ``skyline.skyr_file``
-     - Path(s) (local file system or Panorama WebDAV) to a ``.skyr`` file, which is a Skyline report template. Any reports specified in the ``.skyr`` file will be run automatically as the last step of the workflow and the results saved in your ``results`` directory and (if requested) uploaded to Panorama. The report template(s) can be a single string, or for multiple ``.skyr`` files can be given as a list of strings.
-       For example: ``'/path/to/report.skyr'`` for a single file, or
-       ``['/path/to/report_1.skyr', '/path/to/report_2.skyr']`` for multiple files.
-   * -
-     - ``skyline.template_file``
-     - The Skyline template file used to generate the final Skyline file. By default a
-       pre-made Skyline template file suitable for EncyclopeDIA or DIA-NN will be used. Specify a file
-       location here to use your own template. Note: The filenames in the .zip file must match
-       the name of the zip file, itself. E.g., ``my-skyline-template.zip`` must contain ``my-skyline-template.sky``.
-   * -
-     - ``skyline.protein_parsimony``
-     - If ``true``, protein parsimony is performed in Skyline. If ``false`` the protein assignments given by the search engine are used as protein groups. Default is ``false``.
-   * -
-     - ``skyline.fasta``
-     - The fasta file to use as a background proteome in Skyline. If ``null`` the same fasta file (``params.fasta``) used for the DIA search is used. Default is ``null``.
-   * -
-     - ``skyline.group_by_gene``
-     - If ``true``, when protein parsimony is performed in Skyline protein groups are formed by gene instead of by protein. Default is ``false``.
-   * -
-     - ``skyline.minimize``
-     - If ``true``, the size of the final Skyline document is minimized. Chromatograms for isotopic peaks that are not in the document are removed from the ``skyd`` file and a minimal spectral library is generated by removing spectra that are not in the document. Default is ``false``.
-   * -
-     - ``skyline.use_hardlinks``
-     - On systems that allow it, setting this to ``true`` allows the use of cached Skyline workflow steps and may improve performance on subsequent runs. Note: some systems do not allow this, which will result in an error. Default: ``false``.
+     - Must be set to either ``'encyclopedia'``, ``'diann'``, or ``'cascadia'``. If set to ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
    * -
      - ``replicate_metadata``
      - Metadata annotations for each ``raw`` or ``mzML`` file. Can be in ``tsv`` or ``csv`` format. See the :ref:`replicate_metadata` section for details of how the file should be formatted. If a metadata file is specified it will be used to add annotations to the final Skyline document and can be used to color PCA plots in the QC report by specifying the ``qc_report.color_vars`` parameter. If this parameter is set to ``null`` the skyline document annotation step is skipped.
    * -
-     - ``qc_report.skip``
+     - ``email``
+     - The email address to which a notification should be sent upon workflow completion. If no email is specified, no email will be sent. To send email, you must configure mail server settings (see below).
+
+
+``params.pdc``
+==============
+
+.. list-table:: Parameters for getting raw files and metadata from the Proteomics Data Commons. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``pdc.study_id``
+     - When this option is set, raw files and metadata will be downloaded from the PDC. Default: ``null``.
+   * - ``pdc.gene_level_data``
+     - A ``tsv`` file mapping gene names to NCIB gene IDs and gene metadata. Required for PDC gene reports. Default: ``null``.
+   * - ``pdc.n_raw_files``
+     - If this option is set, only ``n`` raw files are downloaded. This is useful for testing but otherwise should be ``null``.
+   * - ``pdc.client_args``
+     - Additional command line arguments passed to ``PDC_client``. Default is ``null``.
+
+
+``params.msconvert``
+====================
+
+.. list-table:: Parameters for Msconvert. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``msconvert.do_demultiplex``
+     - If starting with raw files, this is the value used by ``msconvert`` for the ``do_demultiplex`` parameter. Default: ``true``.
+   * - ``msconvert.do_simasspectra``
+     - If starting with raw files, this is the value used by ``msconvert`` for the ``do_simasspectra`` parameter. Default: ``true``.
+   * - ``msconvert.mz_shift_ppm``
+     - If starting with raw files, ``msconvert`` will shift all mz values by ``n`` ppm when converting to ``mzML``. If ``null`` the mz values are not shifted. Default: ``null``.
+
+
+
+``params.diann``
+================
+
+.. list-table:: Parameters for DIA-NN. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``diann.params``
+     - The parameters passed to DIA-NN when it is run. Default: ``'--unimod4 --qvalue 0.01 --cut \'K*,R*,!*P\' --reanalyse --smart-profiling'``
+
+
+``params.encyclopedia`` and ``params.cascadia``
+===============================================
+
+.. list-table:: Parameters for EncyclopeDIA and Cacsadia. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``encyclopedia.chromatogram.params``
+     - If you are generating a chromatogram library for quantification, this is the command line options passed to EncyclopeDIA during the chromatogram generation step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
+   * - ``encyclopedia.quant.params``
+     - The command line options passed to EncyclopeDIA during the quantification step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
+   * - ``encyclopedia.save_output``
+     - EncyclopeDIA generates many intermediate files that are subsequently processed by the workflow to generate the final results. These intermediate files may be large. If this is set to ``'true'``, these intermediate files will be saved locally in your ``results`` directory. Default: ``'false'``.
+   * - ``cascadia.use_gpu``
+     - If set to ``true``, Cascadia will attempt to use the GPU(s) installed on the system where it is running. Do not set to true unless a GPU is available, otherwise an error will be gernated. Default: ``false``.
+
+
+``params.skyline``
+==================
+
+.. list-table:: Parameters for the ``params.skyline`` section. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``skyline.skip``
+     - If set to ``true``, will skip the creation of a Skyline document. Default: ``false``.
+   * - ``skyline.document_name``
+     - The base of the file name of the generated Skyline document. If set to ``'human_dia'``, the output file name would be ``human_dia.sky.zip``. Note: If importing into PanoramaWeb, this is also the name that appears in the list of imported Skyline documents on the project page. Default: ``final``.
+   * - ``skyline.skyr_file``
+     - Path(s) (local file system or Panorama WebDAV) to a ``.skyr`` file, which is a Skyline report template. Any reports specified in the ``.skyr`` file will be run automatically as the last step of the workflow and the results saved in your ``results`` directory and (if requested) uploaded to Panorama. The report template(s) can be a single string, or for multiple ``.skyr`` files can be given as a list of strings.
+       For example: ``'/path/to/report.skyr'`` for a single file, or
+       ``['/path/to/report_1.skyr', '/path/to/report_2.skyr']`` for multiple files.
+   * - ``skyline.template_file``
+     - The Skyline template file used to generate the final Skyline file. By default a
+       pre-made Skyline template file suitable for EncyclopeDIA or DIA-NN will be used. Specify a file
+       location here to use your own template. Note: The filenames in the .zip file must match
+       the name of the zip file, itself. E.g., ``my-skyline-template.zip`` must contain ``my-skyline-template.sky``.
+   * - ``skyline.protein_parsimony``
+     - If ``true``, protein parsimony is performed in Skyline. If ``false`` the protein assignments given by the search engine are used as protein groups. Default is ``false``.
+   * - ``skyline.fasta``
+     - The fasta file to use as a background proteome in Skyline. If ``null`` the same fasta file (``params.fasta``) used for the DIA search is used. Default is ``null``.
+   * - ``skyline.group_by_gene``
+     - If ``true``, when protein parsimony is performed in Skyline protein groups are formed by gene instead of by protein. Default is ``false``.
+   * - ``skyline.minimize``
+     - If ``true``, the size of the final Skyline document is minimized. Chromatograms for isotopic peaks that are not in the document are removed from the ``skyd`` file and a minimal spectral library is generated by removing spectra that are not in the document. Default is ``false``.
+   * - ``skyline.use_hardlinks``
+     - On systems that allow it, setting this to ``true`` allows the use of cached Skyline workflow steps and may improve performance on subsequent runs. Note: some systems do not allow this, which will result in an error. Default: ``false``.
+
+
+``params.qc_report`` and ``params.batch_report``
+================================================
+
+.. list-table:: Parameters for QC and batch reports. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``qc_report.skip``
      - If set to ``true``, will skip the creation of a the QC report. Default: ``true``.
-   * -
-     - ``qc_report.normalization_method``
+   * - ``qc_report.normalization_method``
      - Normalization method to use for plots in QC report. Available options are ``DirectLFQ`` and ``median``.
-       Default is ``median``
-   * -
-     - ``qc_report.standard_proteins``
+       Default is ``median``.
+   * - ``qc_report.standard_proteins``
      - List of protein names in Skyline document to plot retention times for.
 
        For example: ``['iRT', 'sp|P00924|ENO1_YEAST']``
 
-       If ``null``, the standard protein retention time plot is skipped. Default is ``null``
-   * -
-     - ``qc_report.color_vars``
+       If ``null``, the standard protein retention time plot is skipped. Default is ``null``.
+   * - ``qc_report.color_vars``
      - List of metadata variables to color PCA plots by.
 
        For example: ``['sample_type', 'strain']``
 
-       If ``null``, only a single PCA plot colored by file acquisition order is generated. Default is ``null``
-   * -
-     - ``qc_report.export_tables``
-     - Export tsv files containing normalized precursor and protein quantities? Default is ``false``
-   * -
-     - ``email``
-     - The email address to which a notification should be sent upon workflow completion. If no email is specified, no email will be sent. To send email, you must configure mail server settings (see below).
+       If ``null``, only a single PCA plot colored by file acquisition order is generated.
+       Default is ``null``.
+   * - ``qc_report.export_tables``
+     - Export tsv files containing normalized precursor and protein quantities? Default is ``false``.
+
+
+``params.panorama``
+===================
+
+.. list-table:: Parameters for uploading pipeline results to PanoramaWeb. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``panorama.upload``
+     - Whether or not to upload results to PanoramaWeb Default: ``false``.
+   * - ``panorama.upload_url``
+     - The WebDAV URL of a directory in PanoramaWeb to which to upload the results. Note that ``panorama.upload`` must be set to ``true`` to upload results.
+   * - ``panorama.import_skyline``
+     - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the named used for the ``skyline_document_name`` parameter. Default: ``false``. Note: ``panorama_upload`` must be set to ``true`` and ``skip_skyline`` must be set to ``false`` to use this feature.
 
 
 .. _replicate_metadata:
