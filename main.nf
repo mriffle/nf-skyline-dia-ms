@@ -53,6 +53,7 @@ params.skyline.skyr_file = check_old_param_name('skyline_skyr_file',
 workflow {
 
     all_ms_file_ch = null       // hold all mzml files generated
+    all_mzml_ch = null
 
     // version file channels
     search_engine_version = null
@@ -90,6 +91,7 @@ workflow {
     if(params.pdc.study_id) {
         get_pdc_files()
         wide_ms_file_ch = get_pdc_files.out.wide_ms_file_ch
+        wide_mzml_ch = get_pdc_files.out.wide_ms_file_ch
         pdc_study_name = get_pdc_files.out.study_name
         if(params.skyline.document_name == 'final') {
             skyline_document_name = pdc_study_name
@@ -102,6 +104,7 @@ workflow {
                           params.files_per_quant_batch,
                           aws_secret_id)
         wide_ms_file_ch = get_wide_ms_files.out.ms_file_ch
+        wide_mzml_ch = get_wide_ms_files.out.converted_mzml_ch
         pdc_study_name = null
         skyline_document_name = Channel.value(params.skyline.document_name)
     }
@@ -114,8 +117,10 @@ workflow {
 
         narrow_ms_file_ch = get_narrow_ms_files.out.ms_file_ch
         all_ms_file_ch = wide_ms_file_ch.concat(narrow_ms_file_ch).map{ it -> it[1] }
+        all_mzml_ch = wide_mzml_ch.concat(get_narrow_ms_files.out.converted_mzml_ch)
     } else {
         all_ms_file_ch = wide_ms_file_ch.map{ it -> it[1] }
+        all_mzml_ch = wide_mzml_ch
     }
 
     // only perform msconvert and terminate
@@ -242,6 +247,7 @@ workflow {
             combine_file_hashes.out.output_file_hashes,
             skyr_file_ch,
             skyline.out.skyline_reports_ch,
+            use_batch_mode,
             aws_secret_id
         )
     }

@@ -136,10 +136,12 @@ workflow get_ms_files {
         // Convert raw files if applicable
         MSCONVERT(ms_file_ch.raw)
 
+        converted_mzml_ch = MSCONVERT.out
         ms_file_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
 
     emit:
         ms_file_ch
+        converted_mzml_ch
 }
 
 def is_panorama_url(url) {
