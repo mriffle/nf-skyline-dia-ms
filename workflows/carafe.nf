@@ -1,7 +1,8 @@
 
 // subworkflows
 include { run_carafe } from "../subworkflows/run_carafe"
-include { get_input_file as get_input_fasta } from "../subworkflows/get_input_file"
+include { get_input_file as get_carafe_fasta } from "../subworkflows/get_input_file"
+include { get_input_file as get_diann_fasta } from "../subworkflows/get_input_file"
 include { get_input_file as get_peptide_results } from "../subworkflows/get_input_file"
 
 include { PANORAMA_GET_MS_FILE } from "../modules/panorama"
@@ -23,14 +24,14 @@ workflow carafe {
         if (params.carafe.carafe_fasta == null){
             carafe_fasta = input_fasta
         } else {
-            get_input_fasta(params.carafe.fasta, aws_secret_id)
-            carafe_fasta = get_input_fasta.out.file
+            get_carafe_fasta(params.carafe.fasta, aws_secret_id)
+            carafe_fasta = get_carafe_fasta.out.file
         }
         if (params.carafe.diann_fasta == null){
             diann_fasta = carafe_fasta
         } else {
-            get_input_fasta(params.carafe.fasta, aws_secret_id)
-            diann_fasta = get_input_fasta.out.file
+            get_diann_fasta(params.carafe.diann_fasta, aws_secret_id)
+            diann_fasta = get_diann_fasta.out.file
         }
 
         // Get input spectral file
