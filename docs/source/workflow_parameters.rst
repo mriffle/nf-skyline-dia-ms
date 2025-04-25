@@ -69,11 +69,20 @@ The ``params`` Section
      - ``quant_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
    * -
+     - ``files_per_quant_batch``
+     - Randomly select ``n`` files per batch in ``quant_spectra_dir``. If ``null`` all the files in ``quant_spectra_dir`` are used. Default is ``null``.
+   * -
      - ``chromatogram_library_spectra_dir``
      - If you are creating a chromatogram library using GPF and narrow window DIA, this is the path to the directory containing the narrow-window raw data.
    * -
      - ``chromatogram_library_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
+   * -
+     - ``files_per_chrom_lib``
+     - Randomly select ``n`` files in ``chromatogram_library_spectra_dir`` to use to build chromatogram library. If ``null`` all the files in ``chromatogram_library_spectra_dir`` are used. Default is ``null``.
+   * -
+     - ``random_file_seed``
+     - The seed used to randomly select files for the ``files_per_chrom_lib`` and ``files_per_quant_batch`` paramters. A seed is used so that if the workflow is re-run the same sequence of files will be randomly selected each time. Default is ``12``.
    * -
      - ``search_engine``
      - Must be set to either ``'encyclopedia'``, ``'diann'``, or ``'cascadia'``. If set to ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
@@ -104,6 +113,27 @@ The ``params`` Section
      - Additional command line arguments passed to ``PDC_client``. Default is ``null``.
 
 
+``params.carafe``
+=================
+
+.. list-table:: Parameters for Carafe. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``carafe.spectra_file``
+     - ``raw`` or ``mzML`` file used by Carafe to generate final spectral library. If set to ``null`` Carafe is skipped. Default: ``null``.
+   * - ``carafe.peptide_results_file``
+     - The path to a DIA-NN ``tsv`` or ``parquet`` precursor report file. If this parameter is set, the DIA-NN search will be skipped and this file used. Default: ``null`` (run DIA-NN).
+   * - ``carafe.carafe_fasta``
+     - FASTA file used by Carafe to generate final spectral library. If ``null``, ``params.fasta`` is used.
+   * - ``carafe_cli_options``
+     - Command line options to pass to Carafe. Note: Do not set the ``se``, ``lf_type``, ``-db``, ``-i``, ``-o`` parameters, these are handled by the workflow. The default is to not pass any command line option and use Carafe's defaults, see https://github.com/Noble-Lab/Carafe for more details.
+   * - ``carafe.diann_fasta``
+     - The FASTA file used by the DIA-NN search in the Carafe subworkflow. If not set either ``params.carafe_fasta`` or ``params.fasta`` will be used. Default: ``null``.
+
+
 ``params.msconvert``
 ====================
 
@@ -125,14 +155,26 @@ The ``params`` Section
 ``params.diann``
 ================
 
+When using DIA-NN, the ``chromatogram_library_spectra_dir`` parameter can optionally be used to create a subset library.
+The files in ``chromatogram_library_spectra_dir`` are searched first using a spectral library either specified by ``params.spectral_library``, or a predicted library generated in the workflow by Carafe or DiaNN.
+Then, the resulting subset library containing only those precursors identified in the first search, is then used to search the files in ``quant_spectra_dir``.
+
 .. list-table:: Parameters for DIA-NN. All parameters in this section are optional.
    :widths: 20 80
    :header-rows: 1
 
    * - Parameter Name
      - Description
-   * - ``diann.params``
-     - The parameters passed to DIA-NN when it is run. Default: ``'--unimod4 --qvalue 0.01 --cut \'K*,R*,!*P\' --reanalyse --smart-profiling'``
+   * - ``diann.search_params``
+     - The parameters passed to DIA-NN when it is run. Default: ``'--qvalue 0.01'``
+       Note: Do not set the ``--fasta``, ``--lib``, ``--threads``, ``--use-quant``, ``--gen-spec-lib``, ``--reanalyse``, ``--rt-profiling``, or ``--id-profliing``, parameters.
+       These parameters are are handled by the ``DIANN_QUANT`` and ``DIANN_MBR`` processes.
+   * - ``diann.fasta_digest_params``
+     - Parameters used when generateing predicted spectral library with DIA-NN.
+       Note: Do not set the ``--fasta``, ``--predictor``, ``--gen-spec-lib``, ``--fasta-search``, or ``--out-lib`` parameters.
+       These parameters are are handled by the ``DIANN_BUILD_LIB`` process.
+
+       Default is: ``'--cut \'K*,R*,!*P\' --unimod4 --missed-cleavages 1 --min-pep-len 8 --min-pr-charge 2 --max-pep-len 30'``
 
 
 ``params.encyclopedia`` and ``params.cascadia``
@@ -200,7 +242,7 @@ The ``params`` Section
    * - ``qc_report.skip``
      - If set to ``true``, will skip the creation of a the QC report. Default: ``true``.
    * - ``qc_report.normalization_method``
-     - Normalization method to use for plots in QC report. Available options are ``DirectLFQ`` and ``median``.
+     - Normalization method to use for plots in QC report. This option applies to both the QC and batch reports. Available options are ``DirectLFQ`` and ``median``.
        Default is ``median``.
    * - ``qc_report.standard_proteins``
      - List of protein names in Skyline document to plot retention times for.
@@ -213,10 +255,25 @@ The ``params`` Section
 
        For example: ``['sample_type', 'strain']``
 
+       This option applies to both the QC and batch reports.
        If ``null``, only a single PCA plot colored by file acquisition order is generated.
        Default is ``null``.
    * - ``qc_report.export_tables``
      - Export tsv files containing normalized precursor and protein quantities? Default is ``false``.
+   * - ``batch_report.skip``
+     - If set to ``true``, will skip the creation of a the batch report. Default: ``true``.
+   * - ``batch_report.batch1``
+     - Metadata key for batch level 1. If ``null``, the project name in ``documents`` is used as the batch variable.
+   * - ``batch_report.batch2``
+     - Metadata key for batch level 2. A second batch level is only supported with ``limma`` as the batch correction method.
+   * - ``batch_report.covariate_vars``
+     - Metadata key(s) to use as covariates for batch correction.  If ``null``, no covariates are used.
+   * - ``batch_report.control_key``
+     - Metadata key indicating replicates which are controls for CV plots. If ``null``, all replicates are used in CV distribution plot.
+   * - ``batch_report.control_values``
+     - Metadata value(s) mapping to ``control_key`` indicating whether a replicate is a control.
+   * - ``batch_report.plot_ext``
+     - File extension for standalone plots. If ``null``, no standalone plots are produced.
 
 
 ``params.panorama``
@@ -235,6 +292,39 @@ The ``params`` Section
    * - ``panorama.import_skyline``
      - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the named used for the ``skyline_document_name`` parameter. Default: ``false``. Note: ``panorama_upload`` must be set to ``true`` and ``skip_skyline`` must be set to ``false`` to use this feature.
 
+
+Running the workflow in multi-bath mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The workflow can be run in multi-batch mode if the ``params.search_engine`` supports it.
+Currently the only search engine option that supports multi batch mode is ``'diann'``.
+
+To activate multi-batch mode ``params.quant_spectra_dir`` must be a ``Map`` where each key, value pair is a batch name and the ms files corresponding to the batch.
+For example:
+
+.. code-block:: groovy
+
+    params {
+      quant_spectra_dir = ['Plate_1': '<path to mzML/raw files>',
+                           'Plate_2': '<path to mzML/raw files>']
+    }
+
+
+**Note:** mzML/raw file names can not be duplicated in any batch. If there are duplicate file names the ``DIANN_MBR`` process will fail.
+
+Differences in result files in multi batch mode
+===============================================
+
+- A seperate Skyline document is generated for each batch and prefixed with the batch name.
+
+  * For example, if ``params.skyline.document_name`` is ``'human_dia'`` and using the batches in the example above, 2 documents would be generated.
+
+    #. ``Plate1_human_dia.sky.zip``
+    #. ``Plate2_human_dia.sky.zip``
+
+- Any optional Skyline reports will be genearted seperatly for each document.
+- A seperate QC report is generated for each Skyline document.
+- If results are uploaded to PanoramaWeb, any ``mzML`` files generated in the workflow are put into a seperate subdirectory for each batch.
 
 .. _replicate_metadata:
 
