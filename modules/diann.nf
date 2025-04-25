@@ -1,24 +1,25 @@
 
-def get_diann_output_file_stats_script(List ms_files, String report_name) {
-    def command = """
-        report_files=()
-        [[ -f ${report_name}.tsv ]] && report_files+=(${report_name}.tsv)
-        [[ -f ${report_name}.parquet ]] && report_files+=(${report_name}.parquet)
-        [[ \${#report_files[@]} -eq 1 ]] && md5sum "\${report_files[0]}" > unsorted_hashes.txt || \
-            { echo "Expected exactly one match for precursor report, found \${#report_files[@]}" >&2; exit 1; }
+def generate_diann_output_file_stats_script(List ms_files, String report_name) {
+    def command = """stat_files=()
+[[ -f ${report_name}.tsv ]] && stat_files+=(${report_name}.tsv)
+[[ -f ${report_name}.parquet ]] && stat_files+=(${report_name}.parquet)
+[[ \${#stat_files[@]} -eq 1 ]] || \
+    { echo "Expected exactly one match for precursor report, found \${#stat_files[@]}" >&2; exit 1; }
 
-        shopt -s nullglob
-        for f in '${ms_files.join('\' \'')}' ${report_name}*.speclib *.quant ; do
-            report_files+=("\$f")
-        done
-        shopt -u nullglob
+shopt -s nullglob
+for f in '${ms_files.join('\' \'')}' ${report_name}*.speclib *.quant ; do
+    stat_files+=("\$f")
+done
+shopt -u nullglob
 
-        printf "%s\\n" "\${report_files[@]}" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        printf "%s\\n" "\${report_files[@]}" | while IFS= read -r file; do
-            stat -L --printf='%n\t%s\n' "\$file"
-        done | sort > sizes.txt
+printf "%s\\n" "\${stat_files[@]}" | while IFS= read -r file; do
+    md5sum "\$file" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/'
+done | sort > hashes.txt
+printf "%s\\n" "\${stat_files[@]}" | while IFS= read -r file; do
+    stat -L --printf='%n\t%s\n' "\$file"
+done | sort > sizes.txt
 
-        join -t\$\'\t\' hashes.txt sizes.txt > output_file_stats.txt
+join -t\$\'\t\' hashes.txt sizes.txt > output_file_stats.txt
     """
     return command
 }
@@ -105,7 +106,7 @@ process DIANN_SEARCH {
         fi
 
         head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
-        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
+        ${generate_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 
     stub:
@@ -114,7 +115,7 @@ process DIANN_SEARCH {
         touch stub.stderr stub.stdout
         diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+'| head -1 | xargs printf "diann_version=%s\\n" > diann_version.txt
 
-        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
+        ${generate_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 }
 
@@ -166,7 +167,7 @@ process CARAFE_DIANN_SEARCH {
             exit 1
         fi
 
-        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
+        ${generate_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 
     stub:
@@ -174,7 +175,7 @@ process CARAFE_DIANN_SEARCH {
         touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet stub.quant
         touch stub.stderr stub.stdout
 
-        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
+        ${generate_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 }
 
@@ -264,7 +265,7 @@ process DIANN_MBR {
         fi
 
         head -n 2 diann.stdout | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "diann_version=%s\\n" > diann_version.txt
-        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
+        ${generate_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 
     stub:
@@ -273,7 +274,7 @@ process DIANN_MBR {
         touch stub.stderr stub.stdout
         diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+'| head -1 | xargs printf "diann_version=%s\\n" > diann_version.txt
 
-        ${get_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
+        ${generate_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
 }
 
