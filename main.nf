@@ -211,25 +211,31 @@ workflow {
     version_files = search_engine_version
         .concat(proteowizard_version,
                 dia_qc_version,
-                carafe_version).splitText()
+                carafe_version)
+        .splitText()
 
-    input_files = fasta.map{ it -> ['Fasta file', it.name] }.concat(
-        skyline_fasta.map{ it -> ['Skyline fasta file', it.name] },
-        spectral_library.map{ it -> ['Spectra library', it.baseName] },
-        all_ms_file_ch.map{ it -> ['Spectra file', it.baseName] })
+    input_files = fasta
+        .map{ it -> ['Fasta file', it.name] }
+        .concat(
+            skyline_fasta.map{ it -> ['Skyline fasta file', it.name] },
+            spectral_library.map{ it -> ['Spectra library', it.baseName] },
+            all_ms_file_ch.map{ it -> ['Spectra file', it.baseName] }
+        )
 
     save_run_details(input_files.collect(), version_files.collect())
     run_details_file = save_run_details.out.run_details
 
     fasta_files = fasta.concat(skyline_fasta).unique()
-    combine_file_hashes(fasta_files, spectral_library,
-                        dia_search.out.search_file_stats,
-                        skyline.out.final_skyline_file,
-                        skyline.out.final_skyline_hash,
-                        skyline.out.skyline_reports_ch,
-                        skyline.out.qc_report_files,
-                        skyline.out.gene_reports,
-                        run_details_file)
+    combine_file_hashes(
+        fasta_files, spectral_library,
+        dia_search.out.search_file_stats,
+        skyline.out.final_skyline_file,
+        skyline.out.final_skyline_hash,
+        skyline.out.skyline_reports_ch,
+        skyline.out.qc_report_files,
+        skyline.out.gene_reports,
+        run_details_file
+    )
 
     // upload results to Panorama
     if(params.panorama.upload) {

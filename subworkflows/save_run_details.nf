@@ -7,24 +7,23 @@ process WRITE_VERSION_INFO {
     input:
         val workflow_var_names
         val workflow_values
-        val version_file_name
 
     output:
-        path(version_file_name), emit: run_details
+        path('nextflow_run_details.txt'), emit: run_details
 
-    shell:
-        '''
-        workflow_var_names=( '!{workflow_var_names.join("' '")}' )
-        workflow_values=( '!{workflow_values.join("' '")}' )
+    script:
+        """
+        workflow_var_names=( '${workflow_var_names.join("' '")}' )
+        workflow_values=( '${workflow_values.join("' '")}' )
 
-        for i in ${!workflow_var_names[@]} ; do
-            if [ $i -eq 0 ] ; then
-                echo "${workflow_var_names[$i]}: ${workflow_values[$i]}" > '!{version_file_name}'
+        for i in \${!workflow_var_names[@]} ; do
+            if [ \$i -eq 0 ] ; then
+                echo "\${workflow_var_names[\$i]}: \${workflow_values[\$i]}" > 'nextflow_run_details.txt'
             else
-                echo "${workflow_var_names[$i]}: ${workflow_values[$i]}" >> '!{version_file_name}'
+                echo "\${workflow_var_names[\$i]}: \${workflow_values[\$i]}" >> 'nextflow_run_details.txt'
             fi
         done
-        '''
+        """
 }
 
 workflow save_run_details {
@@ -36,14 +35,15 @@ workflow save_run_details {
     main:
 
         // Read version txt files and create a channel of variable name, value pairs
-        version_vars = version_files.map{
-            program -> program.collect{ it ->
-                def elems = it.split('=').collect{ str ->
-                    str.strip().replaceAll(/^['"]|['"]$/, '')
+        version_vars = version_files
+            .map{ program ->
+                program.collect{ it ->
+                    def elems = it.split('=').collect{ str ->
+                        str.strip().replaceAll(/^['"]|['"]$/, '')
+                    }
+                    [elems[0], elems[1]]
                 }
-                [elems[0], elems[1]]
             }
-        }
 
         // Create channel of workflow run metadata
         workflow_vars = Channel.fromList([["Nextflow run at", workflow.start],
@@ -57,17 +57,17 @@ workflow save_run_details {
         // Create channel of docker image names and paths
         docker_images = Channel.fromList(params.images.collect{k, v -> ["${k} docker image", v]})
 
-        all_vars = workflow_vars.concat(
-            input_files.flatten().collate(2),
-            version_vars.flatten().collate(2),
-            docker_images
-        )
+        all_vars = workflow_vars
+            .concat(
+                input_files.flatten().collate(2),
+                version_vars.flatten().collate(2),
+                docker_images
+            )
 
         var_names = all_vars.map{ it -> it[0] }
         var_values = all_vars.map{ it -> it[1] }
 
-        WRITE_VERSION_INFO(var_names.collect(), var_values.collect(),
-                           'nextflow_run_details.txt')
+        WRITE_VERSION_INFO(var_names.collect(), var_values.collect())
 
     emit:
         run_details = WRITE_VERSION_INFO.out.run_details
