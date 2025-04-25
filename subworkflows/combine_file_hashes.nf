@@ -54,6 +54,7 @@ workflow combine_file_hashes {
                     def elems = it.trim().split('\t')
                     tuple(elems[1], elems[0])
                 },
+                failOnMismatch: true, failOnDuplicate: true
             )
             .map{ it -> tuple(it[0], it[1], it[3], it[2]) }
 
@@ -75,7 +76,7 @@ workflow combine_file_hashes {
         output_file_hash_ch = search_file_data.mzml_files
             .concat(
                 file_stat_files
-                    .join(CALCULATE_MD5.out)
+                    .join(CALCULATE_MD5.out, failOnMismatch: true, failOnDuplicate: true)
                     .map{ it -> tuple(it[0], it[2], it[4], it[3]) }
             )
             .concat(search_file_data.search_files, skyline_doc_data)
