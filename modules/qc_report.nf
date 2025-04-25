@@ -12,8 +12,8 @@ def format_flags(vars, flag) {
 }
 
 process MAKE_EMPTY_FILE {
-    container params.images.ubuntu
     label 'process_low'
+    executor 'local'
 
     input:
         val file_name

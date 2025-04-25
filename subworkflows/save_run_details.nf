@@ -1,8 +1,8 @@
 
 process WRITE_VERSION_INFO {
     label 'process_low_constant'
+    executor 'local'
     publishDir "${params.result_dir}", failOnError: true, mode: 'copy'
-    container params.images.ubuntu
 
     input:
         val workflow_var_names
