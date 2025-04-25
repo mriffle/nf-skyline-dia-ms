@@ -14,7 +14,7 @@ workflow dia_search{
 
     main:
 
-        // Variables which must be defined by earch search engine
+        // Variables which must be defined by each search engine
         search_engine_version = null
         all_search_file_ch = null
         final_speclib = null

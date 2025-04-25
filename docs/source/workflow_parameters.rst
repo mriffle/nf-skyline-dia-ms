@@ -58,7 +58,7 @@ The ``params`` Section
      - Description
    * -
      - ``spectral_library``
-     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. If a Carafe library is being generated the Carafe spectral libray will override this parameter. This parameter is required for EncyclopeDIA. If omitted when using DIA-NN, DIA-NN will be run in library-free mode. This parameter is ignored when running Cascadia.
+     - That path to the spectral library to use. May be a ``dlib``, ``elib``, ``blib``, ``speclib`` (DIA-NN), ``tsv`` (DIA-NN), or other formats supported by EncyclopeDIA or DIA-NN. If a Carafe library is being generated the Carafe spectral library will override this parameter. This parameter is required for EncyclopeDIA. If omitted when using DIA-NN, DIA-NN will be run in library-free mode. This parameter is ignored when running Cascadia.
    * -
      - ``fasta``
      - The path to the background FASTA file to use. This parameter is required, except when running Cascadia.
@@ -82,7 +82,7 @@ The ``params`` Section
      - Randomly select ``n`` files in ``chromatogram_library_spectra_dir`` to use to build chromatogram library. If ``null`` all the files in ``chromatogram_library_spectra_dir`` are used. Default is ``null``.
    * -
      - ``random_file_seed``
-     - The seed used to randomly select files for the ``files_per_chrom_lib`` and ``files_per_quant_batch`` paramters. A seed is used so that if the workflow is re-run the same sequence of files will be randomly selected each time. Default is ``12``.
+     - The seed used to randomly select files for the ``files_per_chrom_lib`` and ``files_per_quant_batch`` parameters. A seed is used so that if the workflow is re-run the same sequence of files will be randomly selected each time. Default is ``12``.
    * -
      - ``search_engine``
      - Must be set to either ``'encyclopedia'``, ``'diann'``, or ``'cascadia'``. If set to ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
@@ -315,16 +315,16 @@ For example:
 Differences in result files in multi batch mode
 ===============================================
 
-- A seperate Skyline document is generated for each batch and prefixed with the batch name.
+- A separate Skyline document is generated for each batch and prefixed with the batch name.
 
   * For example, if ``params.skyline.document_name`` is ``'human_dia'`` and using the batches in the example above, 2 documents would be generated.
 
     #. ``Plate1_human_dia.sky.zip``
     #. ``Plate2_human_dia.sky.zip``
 
-- Any optional Skyline reports will be genearted seperatly for each document.
-- A seperate QC report is generated for each Skyline document.
-- If results are uploaded to PanoramaWeb, any ``mzML`` files generated in the workflow are put into a seperate subdirectory for each batch.
+- Any optional Skyline reports will be generated separately for each document.
+- A separate QC report is generated for each Skyline document.
+- If results are uploaded to PanoramaWeb, any ``mzML`` files generated in the workflow are put into a separate subdirectory for each batch.
 
 .. _replicate_metadata:
 

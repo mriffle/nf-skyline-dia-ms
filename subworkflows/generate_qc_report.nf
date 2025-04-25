@@ -26,7 +26,7 @@ workflow generate_dia_qc_report {
                                        params.qc_report.precursor_report_template]).map{ file(it, checkIfExists: true) }
         SKYLINE_RUN_REPORTS(sky_zip_files, skyr_files.collect())
 
-        // Rearange skyline report channles before calling MERGE_REPORTS
+        // Rearange skyline report channels before calling MERGE_REPORTS
         sky_reports = SKYLINE_RUN_REPORTS.out.skyline_report_files
             .transpose()
             .map{ batch, file -> tuple(batch, file.name, file) }
