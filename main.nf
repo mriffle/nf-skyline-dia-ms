@@ -112,7 +112,7 @@ workflow {
     if(params.chromatogram_library_spectra_dir != null) {
         get_narrow_ms_files(params.chromatogram_library_spectra_dir,
                             params.chromatogram_library_spectra_glob,
-                            params.files_per_chrom_lib_batch,
+                            params.files_per_chrom_lib,
                             aws_secret_id)
 
         narrow_ms_file_ch = get_narrow_ms_files.out.ms_file_ch
