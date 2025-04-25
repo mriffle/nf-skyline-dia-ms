@@ -61,7 +61,6 @@ workflow {
 
     config_file = file(workflow.configFiles[1]) // the config file used
     search_engine = params.search_engine.toLowerCase().trim()
-    skyline_document_name = params.skyline.document_name
 
     // check for required params or incompatible params
     if(params.panorama.upload && !params.panorama.upload_url) {
@@ -92,14 +91,19 @@ workflow {
         get_pdc_files()
         wide_mzml_ch = get_pdc_files.out.wide_mzml_ch
         pdc_study_name = get_pdc_files.out.study_name
-        skyline_document_name = skyline_document_name == 'final' ? pdc_study_name : skyline_document_name
-    } else{
+        if(params.skyline.document_name == 'final') {
+            skyline_document_name = pdc_study_name
+         } else {
+            skyline_document_name = Channel.value(params.skyline.document_name)
+         }
+    } else {
         get_wide_ms_files(params.quant_spectra_dir,
                           params.quant_spectra_glob,
                           params.files_per_quant_batch,
                           aws_secret_id)
         wide_mzml_ch = get_wide_ms_files.out.ms_file_ch
         pdc_study_name = null
+        skyline_document_name = Channel.value(params.skyline.document_name)
     }
     narrow_mzml_ch = null
     if(params.chromatogram_library_spectra_dir != null) {

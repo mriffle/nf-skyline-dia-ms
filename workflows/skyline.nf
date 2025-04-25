@@ -48,7 +48,8 @@ workflow skyline {
                 batch_names = [null]
             }
             batched_skyline_files = Channel.fromList(batch_names)
-                .map{ it -> [get_skyline_doc_name_per_batch(skyline_document_name, it), it] }
+                .combine(skyline_document_name)
+                .map{ it, doc_name -> [get_skyline_doc_name_per_batch(doc_name, it), it] }
                 .join(final_skyline_file.map{ it -> [it.baseName.replaceAll(/(_annotated)?\.sky$/, ''), it] },
                       failOnMismatch: true, failOnDuplicate: true)
                 .map{ it -> [it[1], it[2]] }

@@ -1,6 +1,6 @@
 
 def sky_basename(path) {
-    return path.baseName.replaceAll(/(\.zip)?\.sky$/, '')
+    return path.baseName.replaceAll(/(\.zip)?\.sky$/, '').replaceAll(/_$/, '')
 }
 
 process SKYLINE_ADD_LIB {

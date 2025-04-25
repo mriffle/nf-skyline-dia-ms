@@ -7,7 +7,7 @@ include { SKYLINE_MINIMIZE_DOCUMENT } from "../modules/skyline"
 include { SKYLINE_ANNOTATE_DOCUMENT } from "../modules/skyline"
 
 def get_skyline_doc_name_per_batch(document_basename, batch_name) {
-    return "${document_basename}_${batch_name == null ? '' : batch_name}"
+    return "${document_basename}${batch_name == null ? '' : '_' + batch_name}"
 }
 
 workflow skyline_import {
@@ -34,9 +34,9 @@ workflow skyline_import {
 
         batched_input_files = batched_skyd_file_ch
             .join(batched_ms_file_ch, failOnMismatch: true, failOnDuplicate: true)
-            .map{ batch_name, ms_files, skyd_files ->
-                    [ms_files, skyd_files,
-                     get_skyline_doc_name_per_batch(skyline_document_name, batch_name)]
+            .combine(skyline_document_name)
+            .map{ batch_name, ms_files, skyd_files, document_name ->
+                    [ms_files, skyd_files, get_skyline_doc_name_per_batch(document_name, batch_name)]
                 }
 
         SKYLINE_MERGE_RESULTS(

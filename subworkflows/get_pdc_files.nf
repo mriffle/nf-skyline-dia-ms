@@ -2,7 +2,7 @@
 include { GET_STUDY_METADATA } from "../modules/pdc.nf"
 include { METADATA_TO_SKY_ANNOTATIONS } from "../modules/pdc.nf"
 include { GET_FILE } from "../modules/pdc.nf"
-include { MSCONVERT } from "../modules/msconvert.nf"
+include { MSCONVERT_MULTI_BATCH as MSCONVERT } from "../modules/msconvert.nf"
 
 workflow get_pdc_study_metadata {
     main:
@@ -31,10 +31,12 @@ workflow get_pdc_files {
 
         metadata \
             | splitJson() \
-            | map{row -> tuple(row['url'], row['file_name'], row['md5sum'], row['file_size'])} \
+            | map{ row -> tuple(row['url'], row['file_name'], row['md5sum'], row['file_size']) } \
             | GET_FILE
 
-        MSCONVERT(GET_FILE.out.downloaded_file)
+        GET_FILE.out.downloaded_file \
+            | map{ file -> [null, file] } \
+            | MSCONVERT
 
     emit:
         study_name = get_pdc_study_metadata.out.study_name

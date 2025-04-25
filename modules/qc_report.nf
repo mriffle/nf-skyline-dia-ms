@@ -249,7 +249,7 @@ process RENDER_QC_REPORT {
 
     stub:
         """
-        touch "${qmd.name}.${report_format}"
+        touch "${qmd.baseName}.${report_format}"
         touch stub.stdout stub.stderr
         """
 }
