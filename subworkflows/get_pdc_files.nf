@@ -42,5 +42,5 @@ workflow get_pdc_files {
         study_name = get_pdc_study_metadata.out.study_name
         metadata
         annotations_csv = get_pdc_study_metadata.out.annotations_csv
-        wide_mzml_ch = MSCONVERT.out.mzml_file
+        wide_ms_file_ch = MSCONVERT.out.mzml_file
 }
