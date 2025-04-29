@@ -272,7 +272,6 @@ def any_entry_requires_panorama_auth(param) {
 
 def any_map_entry_requires_panorama_auth(param) {
     if(param instanceof Map){
-        println('Instance of Map!')
         return param.any{ k, v -> any_entry_requires_panorama_auth(v) }
     }
     return any_entry_requires_panorama_auth(param)

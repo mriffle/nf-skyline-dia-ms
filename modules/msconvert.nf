@@ -76,3 +76,25 @@ process MSCONVERT {
     touch '${raw_file.baseName}.mzML'
     """
 }
+
+process UNZIP_DIRECTORY {
+    label 'process_medium'
+    container params.images.proteowizard
+    // containerOptions "--user ${ext.host_uid}:${ext.host_gid}"
+
+    input:
+        tuple val(batch), path(zip_file)
+
+    output:
+        tuple val(batch), path("${zip_file.baseName}", type: "dir")
+
+    script:
+        """
+        unzip ${zip_file}
+        """
+
+    stub:
+        """
+        mkdir '${zip_file.baseName}'
+        """
+}
