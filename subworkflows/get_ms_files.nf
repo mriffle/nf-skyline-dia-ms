@@ -134,10 +134,14 @@ workflow get_ms_files {
             }.set{ms_file_ch}
 
         // Convert raw files if applicable
-        MSCONVERT(ms_file_ch.raw)
-
-        converted_mzml_ch = MSCONVERT.out
-        ms_file_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
+        if (params.use_vendor_raw) {
+            converted_mzml_ch = Channel.empty()
+            ms_file_ch = ms_file_ch.raw.concat(ms_file_ch.mzml)
+        } else {
+            MSCONVERT(ms_file_ch.raw)
+            converted_mzml_ch = MSCONVERT.out
+            ms_file_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
+        }
 
     emit:
         ms_file_ch

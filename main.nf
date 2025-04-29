@@ -91,7 +91,7 @@ workflow {
     if(params.pdc.study_id) {
         get_pdc_files()
         wide_ms_file_ch = get_pdc_files.out.wide_ms_file_ch
-        wide_mzml_ch = get_pdc_files.out.wide_ms_file_ch
+        wide_mzml_ch = get_pdc_files.out.converted_mzml_ch
         pdc_study_name = get_pdc_files.out.study_name
         if(params.skyline.document_name == 'final') {
             skyline_document_name = pdc_study_name

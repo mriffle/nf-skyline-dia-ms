@@ -34,13 +34,43 @@ workflow get_pdc_files {
             | map{ row -> tuple(row['url'], row['file_name'], row['md5sum'], row['file_size']) } \
             | GET_FILE
 
-        GET_FILE.out.downloaded_file \
-            | map{ file -> [null, file] } \
-            | MSCONVERT
+        GET_FILE.out.downloaded_file
+            .tap{ all_paths_ch }
+            .map{ file -> [null, file] }
+            .branch{
+                mzml: it[1].name.endsWith('.mzML')
+                raw: it[1].name.endsWith('.raw')
+                other: true
+                    error "Unknown file type:" + it[1].name
+            }
+            .set{ ms_file_ch }
+
+        all_paths_ch.collect().subscribe{ fileList ->
+            // Check that we have exactly 1 MS file extension
+            def extensions = fileList.collect { it.name.substring(it.name.lastIndexOf('.') + 1) }.unique()
+            if (extensions.size() == 0) {
+                error "No MS files found in study:\n" + params.pdc.study_id
+            }
+            if (extensions.size() > 1) {
+                error "Matched more than 1 MS file type for study:\n" + params.pdc.study_id +
+                      "\nFound extensions: [" + extensions.join(", ") + "]"
+            }
+        }
+
+        // Convert raw files if applicable
+        if (params.use_vendor_raw) {
+            converted_mzml_ch = Channel.empty()
+            wide_ms_file_ch = ms_file_ch.raw.concat(ms_file_ch.mzml)
+        } else {
+            MSCONVERT(ms_file_ch.raw)
+            converted_mzml_ch = MSCONVERT.out
+            wide_ms_file_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
+        }
 
     emit:
         study_name = get_pdc_study_metadata.out.study_name
         metadata
         annotations_csv = get_pdc_study_metadata.out.annotations_csv
-        wide_ms_file_ch = MSCONVERT.out.mzml_file
+        wide_ms_file_ch
+        converted_mzml_ch
 }
