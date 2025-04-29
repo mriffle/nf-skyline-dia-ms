@@ -3,6 +3,11 @@ def sky_basename(path) {
     return path.baseName.replaceAll(/(\.zip)?\.sky$/, '').replaceAll(/_$/, '')
 }
 
+/** Check if the user in the contaioner owns /wineprefix64. If not, change the ownership to the user. */
+def wine_setup_script() {
+    return '[[ -O /wineprefix64 ]] || sudo chown $(id -u):$(id -g) /wineprefix64'
+}
+
 process SKYLINE_ADD_LIB {
     publishDir params.output_directories.skyline.add_lib, failOnError: true, mode: 'copy'
     label 'process_medium'
@@ -23,6 +28,7 @@ process SKYLINE_ADD_LIB {
 
     script:
     """
+    ${wine_setup_script()}
     unzip ${skyline_template_zipfile}
 
     wine SkylineCmd \
@@ -58,7 +64,8 @@ process SKYLINE_ADD_LIB {
     """
 
     stub:
-    '''
+    """
+    ${wine_setup_script()}
     touch "results.sky.zip"
     touch "skyline_add_library.stderr" "skyline_add_library.stdout"
 
@@ -82,7 +89,7 @@ process SKYLINE_ADD_LIB {
     echo "skyline_version=\${skyline_version}" >> pwiz_versions.txt
     echo "skyline_commit=\${skyline_commit}" >> pwiz_versions.txt
     echo "msconvert_version=\${msconvert_version}" >> pwiz_versions.txt
-    '''
+    """
 }
 
 process SKYLINE_IMPORT_MZML {
@@ -105,6 +112,7 @@ process SKYLINE_IMPORT_MZML {
 
     script:
     """
+    ${wine_setup_script()}
     unzip ${skyline_zipfile}
 
     cp ${mzml_file} /tmp/${mzml_file}
@@ -149,6 +157,7 @@ process SKYLINE_MERGE_RESULTS {
     }
 
     """
+    ${wine_setup_script()}
     unzip ${skyline_zipfile}
 
     cp -v ${skyd_files} /tmp/
@@ -215,6 +224,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 
     script:
         """
+        ${wine_setup_script()}
         unzip ${skyline_zipfile}
 
         wine SkylineCmd \
@@ -256,6 +266,7 @@ process SKYLINE_ANNOTATE_DOCUMENT {
 
     script:
     """
+    ${wine_setup_script()}
     unzip ${skyline_zipfile}
 
     # Create Skyline batch file with annotation definitions
@@ -296,6 +307,7 @@ process SKYLINE_RUN_REPORTS {
 
     script:
     """
+    ${wine_setup_script()}
     unzip ${skyline_zipfile}
 
     # generate skyline batch file to export reports

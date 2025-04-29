@@ -40,6 +40,7 @@ process MSCONVERT_MULTI_BATCH {
     script:
 
     """
+    sudo chown -R \$(id -u):\$(id -g) /wineprefix64
     ${msconvert_command()} ${raw_file}
     """
 
@@ -66,6 +67,7 @@ process MSCONVERT {
     script:
 
     """
+    sudo chown -R \$(id -u):\$(id -g) /wineprefix64
     ${msconvert_command()} ${raw_file}
     """
 

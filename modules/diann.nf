@@ -1,4 +1,6 @@
 
+include { wine_setup_script } from "./skyline.nf"
+
 def generate_diann_output_file_stats_script(List ms_files, String report_name) {
     def command = """stat_files=()
 [[ -f ${report_name}.tsv ]] && stat_files+=(${report_name}.tsv)
@@ -56,6 +58,7 @@ process DIANN_SEARCH {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high_constant'
     container params.images.diann
+    stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
     input:
         path ms_files
@@ -183,6 +186,7 @@ process DIANN_QUANT {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high'
     container params.images.diann
+    stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
     input:
         path ms_file
@@ -216,6 +220,7 @@ process DIANN_MBR {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high_constant'
     container params.images.diann
+    stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
     input:
         path ms_files
@@ -292,6 +297,7 @@ process BLIB_BUILD_LIBRARY {
 
     script:
         """
+        ${wine_setup_script()}
         wine BlibBuild "${speclib}" lib.blib
         """
 
