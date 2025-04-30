@@ -40,7 +40,7 @@ workflow generate_dia_qc_report {
                 failOnMismatch: true, failOnDuplicate: true
             ).set{ batched_sky_reports }
 
-        study_names = batched_sky_reports.map{ it -> it[0] }
+        study_names = batched_sky_reports.map{ it -> it[0] == null ? params.skyline.document_name : it[0] }
         replicate_reports = batched_sky_reports.map{ it -> it[1] }
         precursor_reports = batched_sky_reports.map{ it -> it[2] }
 
@@ -58,8 +58,7 @@ workflow generate_dia_qc_report {
 
         // Generate and render QC reports if applicable
         if (!params.qc_report.skip) {
-            batch_names = sky_reports.map{ it -> it[0] }.unique()
-            GENERATE_QC_QMD(batch_names, qc_report_db)
+            GENERATE_QC_QMD(study_names, qc_report_db)
 
             GENERATE_QC_QMD.out.qc_report_qmd
                 .combine(Channel.fromList(['html', 'pdf']))
