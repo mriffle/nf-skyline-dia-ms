@@ -29,6 +29,7 @@ process MSCONVERT_MULTI_BATCH {
     label 'process_medium'
     label 'process_high_memory'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -40,7 +41,6 @@ process MSCONVERT_MULTI_BATCH {
     script:
 
     """
-    sudo chown -R \$(id -u):\$(id -g) /wineprefix64
     ${msconvert_command()} ${raw_file}
     """
 
@@ -56,6 +56,7 @@ process MSCONVERT {
     label 'process_medium'
     label 'process_high_memory'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -67,7 +68,6 @@ process MSCONVERT {
     script:
 
     """
-    sudo chown -R \$(id -u):\$(id -g) /wineprefix64
     ${msconvert_command()} ${raw_file}
     """
 
@@ -79,8 +79,8 @@ process MSCONVERT {
 
 process UNZIP_DIRECTORY {
     label 'process_medium'
+    label 'proteowizard'
     container params.images.proteowizard
-    // containerOptions "--user ${ext.host_uid}:${ext.host_gid}"
 
     input:
         tuple val(batch), path(zip_file)

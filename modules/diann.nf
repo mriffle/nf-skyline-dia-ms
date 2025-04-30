@@ -1,6 +1,4 @@
 
-include { wine_setup_script } from "./skyline.nf"
-
 def generate_diann_output_file_stats_script(List ms_files, String report_name) {
     def command = """stat_files=()
 [[ -f ${report_name}.tsv ]] && stat_files+=(${report_name}.tsv)
@@ -286,6 +284,7 @@ process DIANN_MBR {
 process BLIB_BUILD_LIBRARY {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_medium'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -297,7 +296,6 @@ process BLIB_BUILD_LIBRARY {
 
     script:
         """
-        ${wine_setup_script()}
         wine BlibBuild "${speclib}" lib.blib
         """
 

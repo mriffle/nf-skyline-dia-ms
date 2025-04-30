@@ -3,16 +3,12 @@ def sky_basename(path) {
     return path.baseName.replaceAll(/(\.zip)?\.sky$/, '').replaceAll(/_$/, '')
 }
 
-/** Check if the user in the contaioner owns /wineprefix64. If not, change the ownership to the user. */
-def wine_setup_script() {
-    return '[[ -O /wineprefix64 ]] || sudo chown $(id -u):$(id -g) /wineprefix64'
-}
-
 process SKYLINE_ADD_LIB {
     publishDir params.output_directories.skyline.add_lib, failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_short'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -28,7 +24,6 @@ process SKYLINE_ADD_LIB {
 
     script:
     """
-    ${wine_setup_script()}
     unzip ${skyline_template_zipfile}
 
     wine SkylineCmd \
@@ -65,7 +60,6 @@ process SKYLINE_ADD_LIB {
 
     stub:
     """
-    ${wine_setup_script()}
     touch "results.sky.zip"
     touch "skyline_add_library.stderr" "skyline_add_library.stdout"
 
@@ -98,6 +92,7 @@ process SKYLINE_IMPORT_MZML {
     label 'process_high_memory'
     label 'process_twohours'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
     stageInMode "${params.skyline.use_hardlinks && executor != 'awsbatch' ? 'link' : 'symlink'}"
 
@@ -112,7 +107,6 @@ process SKYLINE_IMPORT_MZML {
 
     script:
     """
-    ${wine_setup_script()}
     unzip ${skyline_zipfile}
 
     cp ${mzml_file} /tmp/${mzml_file}
@@ -134,6 +128,7 @@ process SKYLINE_MERGE_RESULTS {
     publishDir params.output_directories.skyline.import_spectra, enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
     stageInMode "${params.skyline.use_hardlinks && executor != 'awsbatch' ? 'link' : 'symlink'}"
 
@@ -157,7 +152,6 @@ process SKYLINE_MERGE_RESULTS {
     }
 
     """
-    ${wine_setup_script()}
     unzip ${skyline_zipfile}
 
     cp -v ${skyd_files} /tmp/
@@ -211,6 +205,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
     publishDir params.output_directories.skyline.minimize, failOnError: true, mode: 'copy'
     label 'error_retry'
     label 'process_high'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -224,7 +219,6 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 
     script:
         """
-        ${wine_setup_script()}
         unzip ${skyline_zipfile}
 
         wine SkylineCmd \
@@ -251,6 +245,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 process SKYLINE_ANNOTATE_DOCUMENT {
     publishDir params.output_directories.skyline.import_spectra, failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -266,7 +261,6 @@ process SKYLINE_ANNOTATE_DOCUMENT {
 
     script:
     """
-    ${wine_setup_script()}
     unzip ${skyline_zipfile}
 
     # Create Skyline batch file with annotation definitions
@@ -294,6 +288,7 @@ process SKYLINE_RUN_REPORTS {
     publishDir params.output_directories.skyline.reports, failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -307,7 +302,6 @@ process SKYLINE_RUN_REPORTS {
 
     script:
     """
-    ${wine_setup_script()}
     unzip ${skyline_zipfile}
 
     # generate skyline batch file to export reports
