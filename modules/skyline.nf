@@ -94,6 +94,7 @@ process SKYLINE_IMPORT_MZML {
     label 'error_retry'
     label 'proteowizard'
     container params.images.proteowizard
+    cache 'lenient'
     stageInMode "${params.skyline.use_hardlinks && executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
@@ -109,7 +110,7 @@ process SKYLINE_IMPORT_MZML {
     """
     unzip ${skyline_zipfile}
 
-    cp ${mzml_file} /tmp/${mzml_file}
+    cp -vraL ${mzml_file} /tmp/
 
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" --memstamp \
@@ -130,6 +131,7 @@ process SKYLINE_MERGE_RESULTS {
     label 'error_retry'
     label 'proteowizard'
     container params.images.proteowizard
+    cache 'lenient'
     stageInMode "${params.skyline.use_hardlinks && executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
@@ -154,7 +156,7 @@ process SKYLINE_MERGE_RESULTS {
     """
     unzip ${skyline_zipfile}
 
-    cp -v ${skyd_files} /tmp/
+    cp -vaL ${skyd_files} /tmp/
 
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" --memstamp \
