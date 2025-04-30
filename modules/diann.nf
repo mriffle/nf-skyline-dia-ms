@@ -1,4 +1,16 @@
 
+/**
+ * Join multiple MS files into a single string, skipping Bruker .d directories.
+ *
+ * @param ms_files MS file names. Can either be a single string or List.
+ */
+def join_ms_files(ms_files) {
+    def ms_file_list = ms_files instanceof List ? ms_files : [ms_files]
+    return ms_file_list.findAll { !it.toString().endsWith('.d') }
+                       .collect { "'${it}'" }
+                       .join(' ')
+}
+
 def generate_diann_output_file_stats_script(List ms_files, String report_name) {
     def command = """stat_files=()
 [[ -f ${report_name}.tsv ]] && stat_files+=(${report_name}.tsv)
@@ -7,7 +19,7 @@ def generate_diann_output_file_stats_script(List ms_files, String report_name) {
     { echo "Expected exactly one match for precursor report, found \${#stat_files[@]}" >&2; exit 1; }
 
 shopt -s nullglob
-for f in '${ms_files.join('\' \'')}' ${report_name}*.speclib *.quant ; do
+for f in ${join_ms_files(ms_files)} ${report_name}*.speclib *.quant ; do
     stat_files+=("\$f")
 done
 shopt -u nullglob
@@ -16,10 +28,10 @@ printf "%s\\n" "\${stat_files[@]}" | while IFS= read -r file; do
     md5sum "\$file" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/'
 done | sort > hashes.txt
 printf "%s\\n" "\${stat_files[@]}" | while IFS= read -r file; do
-    stat -L --printf='%n\t%s\n' "\$file"
+    stat -L --printf='%n\\t%s\\n' "\$file"
 done | sort > sizes.txt
 
-join -t\$\'\t\' hashes.txt sizes.txt > output_file_stats.txt
+join -t\\t hashes.txt sizes.txt > output_file_stats.txt
     """
     return command
 }
