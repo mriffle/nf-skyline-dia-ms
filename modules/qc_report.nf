@@ -229,6 +229,7 @@ process RENDER_QC_REPORT {
     publishDir params.output_directories.qc_report, pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stderr', failOnError: true, mode: 'copy'
     label 'process_high_memory'
+    label 'run_as_root'
     container params.images.qc_pipeline
 
     input:
