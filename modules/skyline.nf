@@ -86,7 +86,7 @@ process SKYLINE_ADD_LIB {
     """
 }
 
-process SKYLINE_IMPORT_MZML {
+process SKYLINE_IMPORT_MS_FILE {
     publishDir params.output_directories.skyline.import_spectra, pattern: '*.std[oe][ur][tr]', failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
@@ -99,29 +99,29 @@ process SKYLINE_IMPORT_MZML {
 
     input:
         path skyline_zipfile
-        tuple val(batch_name), path(mzml_file)
+        tuple val(batch_name), path(ms_file)
 
     output:
         tuple val(batch_name), path("*.skyd"), emit: skyd_file
-        path("${mzml_file.baseName}.stdout"), emit: stdout
-        path("${mzml_file.baseName}.stderr"), emit: stderr
+        path("${ms_file.baseName}.stdout"), emit: stdout
+        path("${ms_file.baseName}.stderr"), emit: stderr
 
     script:
     """
     unzip ${skyline_zipfile}
 
-    cp -vraL ${mzml_file} /tmp/
+    cp -vraL ${ms_file} /tmp/
 
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" \
         --import-no-join \
-        --import-file="/tmp/${mzml_file.name}" \
-        > >(tee '${mzml_file.baseName}.stdout') 2> >(tee '${mzml_file.baseName}.stderr' >&2)
+        --import-file="/tmp/${ms_file.name}" \
+        > >(tee '${ms_file.baseName}.stdout') 2> >(tee '${ms_file.baseName}.stderr' >&2)
     """
 
     stub:
     """
-    touch "${mzml_file.baseName}.stdout" "${mzml_file.baseName}.stderr" "${mzml_file.baseName}.skyd"
+    touch "${ms_file.baseName}.stdout" "${ms_file.baseName}.stderr" "${ms_file.baseName}.skyd"
     """
 }
 
@@ -137,7 +137,7 @@ process SKYLINE_MERGE_RESULTS {
     input:
         path skyline_zipfile
         path fasta
-        tuple path(skyd_files), val(mzml_files), val(skyline_document_name)
+        tuple path(skyd_files), val(ms_files), val(skyline_document_name)
 
     output:
         path("*.sky.zip"), emit: final_skyline_zipfile
@@ -147,7 +147,7 @@ process SKYLINE_MERGE_RESULTS {
 
     script:
 
-    import_files_params = "--import-file=\"${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join('\" --import-file=\"')}\""
+    import_files_params = "--import-file=\"${(ms_files as List).collect{ "/tmp/" + file(it).name }.join('\" --import-file=\"')}\""
     protein_parsimony_args = "--import-fasta=${fasta} --associate-proteins-shared-peptides=DuplicatedBetweenProteins --associate-proteins-min-peptides=1 --associate-proteins-remove-subsets --associate-proteins-minimal-protein-list"
     if(params.skyline.group_by_gene) {
         protein_parsimony_args += ' --associate-proteins-gene-level-parsimony'
