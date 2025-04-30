@@ -4,6 +4,7 @@ include { PANORAMA_GET_MS_FILE_LIST } from "../modules/panorama"
 include { PANORAMA_PUBLIC_GET_MS_FILE } from "../modules/panorama"
 include { PANORAMA_PUBLIC_GET_MS_FILE_LIST } from "../modules/panorama"
 include { MSCONVERT_MULTI_BATCH as MSCONVERT } from "../modules/msconvert"
+include { UNZIP_DIRECTORY as UNZIP_BRUKER_D } from "../modules/msconvert"
 
 // useful functions and variables
 include { param_to_list } from "./get_input_files"
@@ -127,20 +128,23 @@ workflow get_ms_files {
             .concat(PANORAMA_PUBLIC_GET_MS_FILE.out.panorama_file)
             .concat(local_file_ch)
             .branch{
-                mzml: it[1].name.endsWith('.mzML')
-                raw: it[1].name.endsWith('.raw')
+                mzml:  it[1].name.endsWith('.mzML')
+                raw:   it[1].name.endsWith('.raw')
+                d_zip: it[1].name.endsWith('.d.zip')
                 other: true
                     error "Unknown file type:" + it[1].name
             }.set{ms_file_ch}
 
+        UNZIP_BRUKER_D(ms_file_ch.d_zip)
+
         // Convert raw files if applicable
         if (params.use_vendor_raw) {
             converted_mzml_ch = Channel.empty()
-            ms_file_ch = ms_file_ch.raw.concat(ms_file_ch.mzml)
+            ms_file_ch = ms_file_ch.raw.concat(ms_file_ch.mzml, UNZIP_BRUKER_D.out)
         } else {
             MSCONVERT(ms_file_ch.raw)
             converted_mzml_ch = MSCONVERT.out
-            ms_file_ch = MSCONVERT.out.concat(ms_file_ch.mzml)
+            ms_file_ch = MSCONVERT.out.concat(ms_file_ch.mzml, UNZIP_BRUKER_D.out)
         }
 
     emit:
