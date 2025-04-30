@@ -27,7 +27,7 @@ process SKYLINE_ADD_LIB {
     unzip ${skyline_template_zipfile}
 
     wine SkylineCmd \
-        --in="${skyline_template_zipfile.baseName}" --memstamp \
+        --in="${skyline_template_zipfile.baseName}" \
         --import-fasta="${fasta}" \
         --add-library-path="${elib}" \
         --out="results.sky" \
@@ -113,7 +113,7 @@ process SKYLINE_IMPORT_MZML {
     cp -vraL ${mzml_file} /tmp/
 
     wine SkylineCmd \
-        --in="${skyline_zipfile.baseName}" --memstamp \
+        --in="${skyline_zipfile.baseName}" \
         --import-no-join \
         --import-file="/tmp/${mzml_file.name}" \
         > >(tee '${mzml_file.baseName}.stdout') 2> >(tee '${mzml_file.baseName}.stderr' >&2)
@@ -159,7 +159,7 @@ process SKYLINE_MERGE_RESULTS {
     cp -vaL ${skyd_files} /tmp/
 
     wine SkylineCmd \
-        --in="${skyline_zipfile.baseName}" --memstamp \
+        --in="${skyline_zipfile.baseName}" \
         ${import_files_params} \
         ${params.skyline.protein_parsimony ? protein_parsimony_args : ''} \
         --out="${skyline_document_name}.sky" \
@@ -224,7 +224,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
         unzip ${skyline_zipfile}
 
         wine SkylineCmd \
-            --in="${skyline_zipfile.baseName}" --memstamp \
+            --in="${skyline_zipfile.baseName}" \
             --chromatograms-discard-unused \
             --chromatograms-limit-noise=1 \
             --out="${sky_basename(skyline_zipfile)}_minimized.sky" \
@@ -266,7 +266,7 @@ process SKYLINE_ANNOTATE_DOCUMENT {
     unzip ${skyline_zipfile}
 
     # Create Skyline batch file with annotation definitions
-    echo '--in="${skyline_zipfile.baseName}" --memstamp' > add_annotations.bat
+    echo '--in="${skyline_zipfile.baseName}"' > add_annotations.bat
     cat ${annotation_definitions} >> add_annotations.bat
     echo '--import-annotations="${annotation_csv}"' >> add_annotations.bat
     echo '--save --out="${sky_basename(skyline_zipfile)}_annotated.sky"' >> add_annotations.bat
@@ -307,7 +307,7 @@ process SKYLINE_RUN_REPORTS {
     unzip ${skyline_zipfile}
 
     # generate skyline batch file to export reports
-    echo "--in=\\"${skyline_zipfile.baseName}\\" --memstamp" > export_reports.bat
+    echo '--in="${skyline_zipfile.baseName}"' > export_reports.bat
 
     for skyrfile in ./*.skyr; do
         # Add report to document
