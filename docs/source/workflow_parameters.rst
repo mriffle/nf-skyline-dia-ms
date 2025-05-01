@@ -78,6 +78,10 @@ The ``params`` Section
      - ``chromatogram_library_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
    * -
+     - ``use_vendor_raw``
+     - If supported by the ``search_engine``, skip the ``MSCONVERT`` step to generate mzMLs and use vendor raw files for the search and to generate the Skyline document.
+       Default is ``false``.
+   * -
      - ``files_per_chrom_lib``
      - Randomly select ``n`` files in ``chromatogram_library_spectra_dir`` to use to build chromatogram library. If ``null`` all the files in ``chromatogram_library_spectra_dir`` are used. Default is ``null``.
    * -
@@ -242,8 +246,12 @@ Then, the resulting subset library containing only those precursors identified i
    * - ``qc_report.skip``
      - If set to ``true``, will skip the creation of a the QC report. Default: ``true``.
    * - ``qc_report.normalization_method``
-     - Normalization method to use for plots in QC report. This option applies to both the QC and batch reports. Available options are ``DirectLFQ`` and ``median``.
+     - Normalization method to use for plots in QC and batch report(s). This option applies to both the QC and batch reports. Available options are ``DirectLFQ`` and ``median``.
        Default is ``median``.
+   * - ``qc_report.imputation_method``
+     - Method to use to impute missing precursor peak areas for plots in QC and batch report(s).
+       This option applies to both the QC and batch reports.
+       Available options are ``KNN``. If set to ``null`` imputation of peaks areas is not performed. Default is ``null``.
    * - ``qc_report.standard_proteins``
      - List of protein names in Skyline document to plot retention times for.
 
