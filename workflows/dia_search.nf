@@ -8,22 +8,35 @@ workflow dia_search{
         search_engine
         fasta
         spectral_library
-        narrow_mzml_ch
-        wide_mzml_ch
+        narrow_ms_file_ch
+        wide_ms_file_ch
+        use_batch_mode
 
     main:
 
-        // Variables which must be defined by earch search engine
+        // Variables which must be defined by each search engine
         search_engine_version = null
         all_search_file_ch = null
         final_speclib = null
         search_file_stats = null
         search_fasta = null
 
+        flat_wide_ms_file_ch = wide_ms_file_ch.map{ it -> it[1] }
+
+        if(narrow_ms_file_ch == null) {
+            flat_narrow_ms_file_ch = null
+        } else {
+            flat_narrow_ms_file_ch = narrow_ms_file_ch.map{ it -> it[1] }
+        }
+
         if(search_engine.toLowerCase() == 'encyclopedia') {
 
+            if (use_batch_mode == true) {
+                error "Batch mode is not supported for EncyclopeDIA!"
+            }
+
             encyclopedia(fasta, spectral_library,
-                         narrow_mzml_ch, wide_mzml_ch)
+                         flat_narrow_ms_file_ch, flat_wide_ms_file_ch)
 
             search_engine_version = encyclopedia.out.encyclopedia_version
             search_file_stats = encyclopedia.out.search_file_stats
@@ -33,7 +46,9 @@ workflow dia_search{
 
         } else if(search_engine.toLowerCase() == 'diann') {
 
-            diann(fasta, spectral_library, wide_mzml_ch)
+            diann(fasta, spectral_library,
+                  flat_wide_ms_file_ch, flat_narrow_ms_file_ch,
+                  use_batch_mode)
 
             search_engine_version = diann.out.diann_version
             search_file_stats = diann.out.search_file_stats
@@ -43,7 +58,11 @@ workflow dia_search{
 
         } else if(search_engine.toLowerCase() == 'cascadia') {
 
-            cascadia(wide_mzml_ch)
+            if (use_batch_mode == true) {
+                error "Batch mode is not supported for Cascadia!"
+            }
+
+            cascadia(flat_wide_ms_file_ch)
 
             search_engine_version = cascadia.out.cascadia_version
             search_file_stats = cascadia.out.search_file_stats

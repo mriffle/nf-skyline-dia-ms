@@ -23,16 +23,44 @@ def msconvert_cache_dir() {
     return str.md5()
 }
 
+process MSCONVERT_MULTI_BATCH {
+    storeDir "${params.mzml_cache_directory}/${msconvert_cache_dir()}"
+    publishDir params.output_directories.msconvert, pattern: "*.mzML", failOnError: true, mode: 'copy', enabled: params.msconvert_only && !params.panorama.upload
+    label 'process_medium'
+    label 'process_high_memory'
+    label 'error_retry'
+    label 'proteowizard'
+    container params.images.proteowizard
+
+    input:
+        tuple val(batch), path(raw_file)
+
+    output:
+        tuple val(batch), path("${raw_file.baseName}.mzML"), emit: mzml_file
+
+    script:
+
+    """
+    ${msconvert_command()} ${raw_file}
+    """
+
+    stub:
+    """
+    touch '${raw_file.baseName}.mzML'
+    """
+}
+
 process MSCONVERT {
     storeDir "${params.mzml_cache_directory}/${msconvert_cache_dir()}"
     publishDir params.output_directories.msconvert, pattern: "*.mzML", failOnError: true, mode: 'copy', enabled: params.msconvert_only && !params.panorama.upload
     label 'process_medium'
     label 'process_high_memory'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
-        path raw_file
+        path(raw_file)
 
     output:
         path("${raw_file.baseName}.mzML"), emit: mzml_file
@@ -47,4 +75,26 @@ process MSCONVERT {
     """
     touch '${raw_file.baseName}.mzML'
     """
+}
+
+process UNZIP_DIRECTORY {
+    label 'process_medium'
+    label 'proteowizard'
+    container params.images.proteowizard
+
+    input:
+        tuple val(batch), path(zip_file)
+
+    output:
+        tuple val(batch), path("${zip_file.baseName}", type: "dir")
+
+    script:
+        """
+        unzip ${zip_file}
+        """
+
+    stub:
+        """
+        mkdir '${zip_file.baseName}'
+        """
 }

@@ -1,6 +1,6 @@
 
 def sky_basename(path) {
-    return path.baseName.replaceAll(/(\.zip)?\.sky$/, '')
+    return path.baseName.replaceAll(/(\.zip)?\.sky$/, '').replaceAll(/_$/, '')
 }
 
 process SKYLINE_ADD_LIB {
@@ -8,6 +8,7 @@ process SKYLINE_ADD_LIB {
     label 'process_medium'
     label 'process_short'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -21,14 +22,14 @@ process SKYLINE_ADD_LIB {
         path("skyline_add_library.stderr"), emit: stderr
         path("pwiz_versions.txt"), emit: version
 
-    shell:
-    '''
-    unzip !{skyline_template_zipfile}
+    script:
+    """
+    unzip ${skyline_template_zipfile}
 
     wine SkylineCmd \
-        --in="!{skyline_template_zipfile.baseName}" --memstamp \
-        --import-fasta="!{fasta}" \
-        --add-library-path="!{elib}" \
+        --in="${skyline_template_zipfile.baseName}" \
+        --import-fasta="${fasta}" \
+        --add-library-path="${elib}" \
         --out="results.sky" \
         --save \
         --share-zip="results.sky.zip" \
@@ -37,28 +38,28 @@ process SKYLINE_ADD_LIB {
 
     # parse Skyline version info
     wine SkylineCmd --version > version.txt
-    vars=($(cat version.txt | \
+    vars=(\$(cat version.txt | \
             tr -cd '\\11\\12\\15\\40-\\176' | \
             egrep -o 'Skyline.*' | \
             sed -E "s/(Skyline[-a-z]*) \\((.*)\\) ([.0-9]+) \\(([A-Za-z0-9]{7})\\)/\\1 \\3 \\4/"))
-    skyline_build="${vars[0]}"
-    skyline_version="${vars[1]}"
-    skyline_commit="${vars[2]}"
+    skyline_build="\${vars[0]}"
+    skyline_version="\${vars[1]}"
+    skyline_commit="\${vars[2]}"
 
     # parse msconvert info
-    msconvert_version=$(cat version.txt | \
+    msconvert_version=\$(cat version.txt | \
                         tr -cd '\\11\\12\\15\\40-\\176' | \
                         egrep -o 'Proteo[a-zA-Z0-9\\. ]+' | \
                         egrep -o [0-9].*)
 
-    echo "skyline_build=${skyline_build}" > pwiz_versions.txt
-    echo "skyline_version=${skyline_version}" >> pwiz_versions.txt
-    echo "skyline_commit=${skyline_commit}" >> pwiz_versions.txt
-    echo "msconvert_version=${msconvert_version}" >> pwiz_versions.txt
-    '''
+    echo "skyline_build=\${skyline_build}" > pwiz_versions.txt
+    echo "skyline_version=\${skyline_version}" >> pwiz_versions.txt
+    echo "skyline_commit=\${skyline_commit}" >> pwiz_versions.txt
+    echo "msconvert_version=\${msconvert_version}" >> pwiz_versions.txt
+    """
 
     stub:
-    '''
+    """
     touch "results.sky.zip"
     touch "skyline_add_library.stderr" "skyline_add_library.stdout"
 
@@ -82,43 +83,45 @@ process SKYLINE_ADD_LIB {
     echo "skyline_version=\${skyline_version}" >> pwiz_versions.txt
     echo "skyline_commit=\${skyline_commit}" >> pwiz_versions.txt
     echo "msconvert_version=\${msconvert_version}" >> pwiz_versions.txt
-    '''
+    """
 }
 
-process SKYLINE_IMPORT_MZML {
+process SKYLINE_IMPORT_MS_FILE {
     publishDir params.output_directories.skyline.import_spectra, pattern: '*.std[oe][ur][tr]', failOnError: true, mode: 'copy'
     label 'process_medium'
     label 'process_high_memory'
-    label 'process_short'
+    label 'process_twohours'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
-    stageInMode "${params.skyline.use_hardlinks && workflow.profile != 'aws' ? 'link' : 'symlink'}"
+    cache 'lenient'
+    stageInMode "${params.skyline.use_hardlinks && executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
         path skyline_zipfile
-        path mzml_file
+        tuple val(batch_name), path(ms_file)
 
     output:
-        path("*.skyd"), emit: skyd_file
-        path("${mzml_file.baseName}.stdout"), emit: stdout
-        path("${mzml_file.baseName}.stderr"), emit: stderr
+        tuple val(batch_name), path("*.skyd"), emit: skyd_file
+        path("${ms_file.baseName}.stdout"), emit: stdout
+        path("${ms_file.baseName}.stderr"), emit: stderr
 
     script:
     """
     unzip ${skyline_zipfile}
 
-    cp ${mzml_file} /tmp/${mzml_file}
+    cp -vraL ${ms_file} /tmp/
 
     wine SkylineCmd \
-        --in="${skyline_zipfile.baseName}" --memstamp \
+        --in="${skyline_zipfile.baseName}" \
         --import-no-join \
-        --import-file="/tmp/${mzml_file.name}" \
-        > >(tee '${mzml_file.baseName}.stdout') 2> >(tee '${mzml_file.baseName}.stderr' >&2)
+        --import-file="/tmp/${ms_file.name}" \
+        > >(tee '${ms_file.baseName}.stdout') 2> >(tee '${ms_file.baseName}.stderr' >&2)
     """
 
     stub:
     """
-    touch "${mzml_file.baseName}.stdout" "${mzml_file.baseName}.stderr" "${mzml_file.baseName}.skyd"
+    touch "${ms_file.baseName}.stdout" "${ms_file.baseName}.stderr" "${ms_file.baseName}.skyd"
     """
 }
 
@@ -126,15 +129,15 @@ process SKYLINE_MERGE_RESULTS {
     publishDir params.output_directories.skyline.import_spectra, enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
-    stageInMode "${params.skyline.use_hardlinks && workflow.profile != 'aws' ? 'link' : 'symlink'}"
+    cache 'lenient'
+    stageInMode "${params.skyline.use_hardlinks && executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
         path skyline_zipfile
-        path skyd_files
-        val mzml_files
         path fasta
-        val skyline_document_name
+        tuple path(skyd_files), val(ms_files), val(skyline_document_name)
 
     output:
         path("*.sky.zip"), emit: final_skyline_zipfile
@@ -144,7 +147,7 @@ process SKYLINE_MERGE_RESULTS {
 
     script:
 
-    import_files_params = "--import-file=\"${(mzml_files as List).collect{ "/tmp/" + file(it).name }.join('\" --import-file=\"')}\""
+    import_files_params = "--import-file=\"${(ms_files as List).collect{ "/tmp/" + file(it).name }.join('\" --import-file=\"')}\""
     protein_parsimony_args = "--import-fasta=${fasta} --associate-proteins-shared-peptides=DuplicatedBetweenProteins --associate-proteins-min-peptides=1 --associate-proteins-remove-subsets --associate-proteins-minimal-protein-list"
     if(params.skyline.group_by_gene) {
         protein_parsimony_args += ' --associate-proteins-gene-level-parsimony'
@@ -153,10 +156,10 @@ process SKYLINE_MERGE_RESULTS {
     """
     unzip ${skyline_zipfile}
 
-    cp -v ${skyd_files} /tmp/
+    cp -vaL ${skyd_files} /tmp/
 
     wine SkylineCmd \
-        --in="${skyline_zipfile.baseName}" --memstamp \
+        --in="${skyline_zipfile.baseName}" \
         ${import_files_params} \
         ${params.skyline.protein_parsimony ? protein_parsimony_args : ''} \
         --out="${skyline_document_name}.sky" \
@@ -204,6 +207,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
     publishDir params.output_directories.skyline.minimize, failOnError: true, mode: 'copy'
     label 'error_retry'
     label 'process_high'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -220,7 +224,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
         unzip ${skyline_zipfile}
 
         wine SkylineCmd \
-            --in="${skyline_zipfile.baseName}" --memstamp \
+            --in="${skyline_zipfile.baseName}" \
             --chromatograms-discard-unused \
             --chromatograms-limit-noise=1 \
             --out="${sky_basename(skyline_zipfile)}_minimized.sky" \
@@ -243,6 +247,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 process SKYLINE_ANNOTATE_DOCUMENT {
     publishDir params.output_directories.skyline.import_spectra, failOnError: true, mode: 'copy'
     label 'process_memory_high_constant'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
@@ -261,7 +266,7 @@ process SKYLINE_ANNOTATE_DOCUMENT {
     unzip ${skyline_zipfile}
 
     # Create Skyline batch file with annotation definitions
-    echo '--in="${skyline_zipfile.baseName}" --memstamp' > add_annotations.bat
+    echo '--in="${skyline_zipfile.baseName}"' > add_annotations.bat
     cat ${annotation_definitions} >> add_annotations.bat
     echo '--import-annotations="${annotation_csv}"' >> add_annotations.bat
     echo '--save --out="${sky_basename(skyline_zipfile)}_annotated.sky"' >> add_annotations.bat
@@ -285,14 +290,15 @@ process SKYLINE_RUN_REPORTS {
     publishDir params.output_directories.skyline.reports, failOnError: true, mode: 'copy'
     label 'process_high'
     label 'error_retry'
+    label 'proteowizard'
     container params.images.proteowizard
 
     input:
-        path skyline_zipfile
+        tuple val(batch), path(skyline_zipfile)
         path skyr_files
 
     output:
-        path("*.report.tsv"), emit: skyline_report_files
+        tuple val(batch), path("*.report.tsv"), emit: skyline_report_files
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
 
@@ -301,7 +307,7 @@ process SKYLINE_RUN_REPORTS {
     unzip ${skyline_zipfile}
 
     # generate skyline batch file to export reports
-    echo "--in=\\"${skyline_zipfile.baseName}\\" --memstamp" > export_reports.bat
+    echo '--in="${skyline_zipfile.baseName}"' > export_reports.bat
 
     for skyrfile in ./*.skyr; do
         # Add report to document
@@ -310,7 +316,7 @@ process SKYLINE_RUN_REPORTS {
         # Export report
         awk -F'"' '/<view name=/ { print \$2 }' "\$skyrfile" | while read reportname; do
             echo "--report-name=\\"\${reportname}\\" \
-                  --report-file=\\"\${reportname}.report.tsv\\" \
+                  --report-file=\\"${batch == null ? '' : batch + '_'}\${reportname}.report.tsv\\" \
                   --report-format=TSV --report-invariant" \
                   >> export_reports.bat
         done
@@ -322,17 +328,17 @@ process SKYLINE_RUN_REPORTS {
     """
 
     stub:
-    '''
+    """
     for skyrfile in ./*.skyr; do
-        awk -F'"' '/<view name=/ { print $2 }' "$skyrfile" | while read reportname; do
-            touch "${reportname}.report.tsv"
+        awk -F'"' '/<view name=/ { print \$2 }' "\$skyrfile" | while read reportname; do
+            touch ${batch == null ? '' : batch + '_'}\${reportname}.report.tsv
         done
     done
 
-    if [ $(ls *.report.tsv|wc -l) -eq 0 ] ; then
+    if [ \$(ls *.report.tsv|wc -l) -eq 0 ] ; then
         touch stub.report.tsv
     fi
 
     touch stub.stdout stub.stderr
-    '''
+    """
 }

@@ -17,7 +17,7 @@ process CALCULATE_MD5 {
 
 process WRITE_FILE_STATS {
     label 'process_low'
-    container params.images.ubuntu
+    executor 'local'
     publishDir "${params.result_dir}", failOnError: true, mode: 'copy'
 
     input:

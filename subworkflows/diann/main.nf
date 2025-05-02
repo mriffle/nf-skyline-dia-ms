@@ -1,74 +1,24 @@
 
+include { diann_search_parallel as diann_full_search } from "./diann_search"
+include { diann_search_parallel as diann_subset_search } from "./diann_search"
+
 // modules
+include { DIANN_BUILD_LIB } from "../../modules/diann"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "../../modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "../../modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "../../modules/diann"
-include { setupPanoramaAPIKeySecret } from '../../modules/panorama.nf'
-include { DIANN_SEARCH } from "../../modules/diann"
-include { DIANN_SEARCH_LIB_FREE } from "../../modules/diann"
-
-workflow diann_search {
-    take:
-        ms_file_ch
-        fasta
-        spectral_library
-
-    main:
-
-        diann_results = null
-        if(params.spectral_library) {
-            diann_results = DIANN_SEARCH (
-                ms_file_ch.collect(),
-                fasta,
-                spectral_library,
-                params.diann.params
-            )
-            diann_version = DIANN_SEARCH.out.version
-            output_file_stats = DIANN_SEARCH.out.output_file_stats
-
-            predicted_speclib = Channel.empty()
-        } else {
-            diann_results = DIANN_SEARCH_LIB_FREE (
-                ms_file_ch.collect(),
-                fasta,
-                params.diann.params
-            )
-
-            diann_version = DIANN_SEARCH_LIB_FREE.out.version
-            predicted_speclib = diann_results.predicted_speclib
-            output_file_stats = DIANN_SEARCH_LIB_FREE.out.output_file_stats
-        }
-
-        quant_files       = diann_results.quant_files
-        speclib           = diann_results.speclib
-        precursor_tsv     = diann_results.precursor_tsv
-        stdout            = diann_results.stdout
-        stderr            = diann_results.stderr
-
-    emit:
-        quant_files
-        speclib
-        precursor_tsv
-        stdout
-        stderr
-        predicted_speclib
-        diann_version
-        output_file_stats
-}
 
 workflow diann {
     take:
         fasta
         spectral_library
-        mzml_ch
+        wide_ms_file_ch
+        narrow_ms_file_ch
+        use_batch_mode
 
     main:
-        if(!params.fasta) {
+        if (!params.fasta) {
             error "The parameter \'fasta\' is required when using diann."
-        }
-
-        if (params.chromatogram_library_spectra_dir != null) {
-            log.warn "The parameter 'chromatogram_library_spectra_dir' is set to a value (${params.chromatogram_library_spectra_dir}) but will be ignored."
         }
 
         if (params.encyclopedia.quant.params != null) {
@@ -79,7 +29,11 @@ workflow diann {
             log.warn "The parameter 'encyclopedia.chromatogram.params' is set to a value (${params.encyclopedia.chromatogram.params}) but will be ignored."
         }
 
-        if(params.spectral_library) {
+        if (params.carafe.spectra_file) {
+            spectral_library_to_use = spectral_library
+            predicted_speclib = Channel.empty()
+        }
+        else if (params.spectral_library) {
 
             // convert spectral library to required format for dia-nn
             if(params.spectral_library.endsWith(".blib")) {
@@ -104,21 +58,38 @@ workflow diann {
             } else {
                 spectral_library_to_use = spectral_library
             }
+            predicted_speclib = Channel.empty()
         } else {
-            // no spectral library
-            spectral_library_to_use = Channel.empty()
+            // create predicted spectral library from fasta
+            DIANN_BUILD_LIB(
+                fasta,
+                params.diann.fasta_digest_params
+            )
+            spectral_library_to_use = DIANN_BUILD_LIB.out.speclib
+            predicted_speclib = DIANN_BUILD_LIB.out.speclib
         }
 
-        diann_search(
-            mzml_ch,
+        if (params.chromatogram_library_spectra_dir) {
+            diann_subset_search(
+                fasta,
+                spectral_library_to_use,
+                narrow_ms_file_ch,
+                true
+            )
+            spectral_library_to_use = diann_subset_search.out.speclib
+        }
+
+        diann_full_search(
             fasta,
-            spectral_library_to_use
+            spectral_library_to_use,
+            wide_ms_file_ch,
+            false
         )
 
         // create compatible spectral library for Skyline, if needed
         if(!params.skyline.skip) {
-            BLIB_BUILD_LIBRARY(diann_search.out.speclib,
-                            diann_search.out.precursor_tsv)
+            BLIB_BUILD_LIBRARY(diann_full_search.out.speclib,
+                               diann_full_search.out.precursor_report)
 
             final_speclib = BLIB_BUILD_LIBRARY.out.blib
         } else {
@@ -126,23 +97,23 @@ workflow diann {
         }
 
         // all files to upload to panoramaweb (if requested)
-        search_file_ch = diann_search.out.speclib.concat(
-            diann_search.out.precursor_tsv
+        search_file_ch = diann_full_search.out.speclib.concat(
+            diann_full_search.out.precursor_report
         ).concat(
-            diann_search.out.quant_files.flatten()
+            diann_full_search.out.quant_files.flatten()
         ).concat(
             final_speclib
         ).concat(
-            diann_search.out.stdout
+            diann_full_search.out.stdout
         ).concat(
-            diann_search.out.stderr
+            diann_full_search.out.stderr
         ).concat(
-            diann_search.out.predicted_speclib
+            predicted_speclib
         )
 
     emit:
         final_speclib
-        diann_version = diann_search.out.diann_version
-        search_file_stats = diann_search.out.output_file_stats
+        diann_version = diann_full_search.out.diann_version
+        search_file_stats = diann_full_search.out.output_file_stats
         search_files = search_file_ch
 }

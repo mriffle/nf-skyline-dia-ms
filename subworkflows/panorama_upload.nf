@@ -19,6 +19,7 @@ workflow panorama_upload_results {
         output_file_hashes
         skyr_file_ch
         skyline_report_ch
+        use_batch_mode
         aws_secret_id
 
     main:
@@ -29,8 +30,9 @@ workflow panorama_upload_results {
 
         upload_webdav_url = webdav_url + getUploadDirectory()
 
-        mzml_file_ch.map { path -> tuple(path, upload_webdav_url + "/results/msconvert") }
-            .concat(nextflow_run_details.map { path -> tuple(path, upload_webdav_url) })
+        mzml_file_ch.map { batch, path ->
+                tuple(path, upload_webdav_url + "/results/msconvert${use_batch_mode == true ? '/' + batch : ''}")
+            }.concat(nextflow_run_details.map { path -> tuple(path, upload_webdav_url) })
             .concat(output_file_hashes.map { path -> tuple(path, upload_webdav_url) })
             .concat(Channel.fromPath(nextflow_config_file).map { path -> tuple(path, upload_webdav_url) })
             .concat(fasta_file.map { path -> tuple(path, upload_webdav_url + "/input-files") })
