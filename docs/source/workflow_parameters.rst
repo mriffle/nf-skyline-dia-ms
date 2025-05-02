@@ -301,8 +301,8 @@ Then, the resulting subset library containing only those precursors identified i
      - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the named used for the ``skyline_document_name`` parameter. Default: ``false``. Note: ``panorama_upload`` must be set to ``true`` and ``skip_skyline`` must be set to ``false`` to use this feature.
 
 
-Running the workflow in multi-bath mode
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Running the workflow in multi-batch mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The workflow can be run in multi-batch mode if the ``params.search_engine`` supports it.
 Currently the only search engine option that supports multi batch mode is ``'diann'``.
