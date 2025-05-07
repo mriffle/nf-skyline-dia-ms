@@ -115,6 +115,10 @@ The ``params`` Section
      - If this option is set, only ``n`` raw files are downloaded. This is useful for testing but otherwise should be ``null``.
    * - ``pdc.client_args``
      - Additional command line arguments passed to ``PDC_client``. Default is ``null``.
+   * - ``pdc.s3_download``
+     - If set to ``true`` download raw files through an S3 transfer instead of over https.
+       This option will only work if the workflow execution enviroment is configured to directly access PDC AWS infrastructure.
+       Default is ``faise``.
 
 
 ``params.carafe``
