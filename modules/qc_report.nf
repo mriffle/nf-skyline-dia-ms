@@ -181,7 +181,7 @@ process GENERATE_BATCH_REPORT {
             ${format_flags(params.batch_report.control_values, "--addControlValue")} \
             ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
             ${format_flag(params.batch_report.plot_ext, "--savePlots")} \
-            --precursorTables 70 --proteinTables 70 \
+            --interactive 2 --precursorTables 70 --proteinTables 70 \
             ${normalized_db} \
         > >(tee "generate_batch_rmd.stdout") 2> >(tee "generate_batch_rmd.stderr" >&2)
 
