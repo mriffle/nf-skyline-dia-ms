@@ -186,8 +186,11 @@ process GENERATE_BATCH_REPORT {
         > >(tee "generate_batch_rmd.stdout") 2> >(tee "generate_batch_rmd.stderr" >&2)
 
         mkdir plots
-        Rscript -e "rmarkdown::render('bc_report.rmd')" \
-            > >(tee -a "render_batch_rmd.stdout") 2> >(tee -a "render_batch_rmd.stderr" >&2)
+        Rscript -e "rmarkdown::render('bc_report.rmd', output_format=c('html_document'))" \
+            > >(tee -a "render_batch_rmd_html.stdout") 2> >(tee -a "render_batch_rmd_html.stderr" >&2)
+
+        Rscript -e "rmarkdown::render('bc_report.rmd', output_format=c('pdf_document'), params=list(save_plots=FALSE, write_tables=FALSE))" \
+            > >(tee -a "render_batch_rmd_html.stdout") 2> >(tee -a "render_batch_rmd_html.stderr" >&2)
         """
 
     stub:
