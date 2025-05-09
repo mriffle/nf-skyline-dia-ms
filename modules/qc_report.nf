@@ -153,10 +153,12 @@ process GENERATE_QC_QMD {
 
 process GENERATE_BATCH_REPORT {
     publishDir params.output_directories.batch_report, pattern: '*.rmd', failOnError: true, mode: 'copy'
+    publishDir params.output_directories.batch_report, pattern: '*.{pdf,html}', failOnError: true, mode: 'copy'
     publishDir params.output_directories.batch_report_tables, pattern: '*.tsv', failOnError: true, mode: 'copy'
     publishDir params.output_directories.batch_report_plots, pattern: "plots/*.${params.batch_report.plot_ext}", failOnError: true, mode: 'copy'
     publishDir params.output_directories.batch_report, pattern: '*.std{err,out}', failOnError: true, mode: 'copy'
     label 'process_high_memory'
+    label 'run_as_root'
     container params.images.qc_pipeline
 
     input:
@@ -165,6 +167,7 @@ process GENERATE_BATCH_REPORT {
     output:
         path("bc_report.rmd"), emit: bc_rmd
         path("bc_report.html"), emit: bc_html
+        path("bc_report.pdf"), emit: bc_pdf
         path("*.tsv"), emit: tsv_reports, optional: true
         path("plots/*"), emit: bc_plots, optional: true
         path("*.stdout"), emit: stdout
@@ -186,8 +189,11 @@ process GENERATE_BATCH_REPORT {
         > >(tee "generate_batch_rmd.stdout") 2> >(tee "generate_batch_rmd.stderr" >&2)
 
         mkdir plots
-        Rscript -e "rmarkdown::render('bc_report.rmd')" \
-            > >(tee -a "render_batch_rmd.stdout") 2> >(tee -a "render_batch_rmd.stderr" >&2)
+        Rscript -e "rmarkdown::render('bc_report.rmd', output_format=c('html_document'))" \
+            > >(tee -a "render_batch_rmd_html.stdout") 2> >(tee -a "render_batch_rmd_html.stderr" >&2)
+
+        Rscript -e "rmarkdown::render('bc_report.rmd', output_format=c('pdf_document'), params=list(save_plots=FALSE, write_tables=FALSE))" \
+            > >(tee -a "render_batch_rmd_pdf.stdout") 2> >(tee -a "render_batch_rmd_pdf.stderr" >&2)
         """
 
     stub:
