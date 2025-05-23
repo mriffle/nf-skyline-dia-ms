@@ -1,0 +1,535 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nf-skyline-dia-ms//nextflow_schema.json",
+  "title": "nf-skyline-dia-ms pipeline parameters",
+  "description": "DIA workflows for TEI-REX project",
+  "type": "object",
+  "properties": {
+    "quant_spectra_dir": {
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "quant_spectra_glob": {
+      "type": "string",
+      "default": "*.raw"
+    },
+    "chromatogram_library_spectra_dir": {
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "chromatogram_library_spectra_glob": {
+      "type": "string",
+      "default": "*.raw"
+    },
+    "spectral_library": {
+      "type": "string"
+    },
+    "fasta": {
+      "type": "string"
+    },
+    "files_per_quant_batch": {
+      "type": "integer"
+    },
+    "files_per_chrom_lib": {
+      "type": "integer"
+    },
+    "random_file_seed": {
+      "type": "integer",
+      "default": 12
+    },
+    "use_vendor_raw": {
+      "type": "boolean"
+    },
+    "skyline_document_name": {
+      "type": "string",
+      "hidden": true
+    },
+    "skyline_template_file": {
+      "type": "string",
+      "hidden": true
+    },
+    "skip_skyline": {
+      "type": "boolean",
+      "hidden": true
+    },
+    "skyline_skyr_file": {
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ],
+      "hidden": true
+    },
+    "search_engine": {
+      "type": "string",
+      "default": "encyclopedia",
+      "enum": [
+        "diann",
+        "encyclopedia",
+        "cascadia",
+        "DiaNN",
+        "EncyclopeDIA",
+        "CascaDIA",
+        "Cascadia"
+      ]
+    },
+    "email": {
+      "type": "string"
+    },
+    "panorama_upload": {
+      "type": "boolean"
+    },
+    "msconvert_only": {
+      "type": "boolean"
+    },
+    "replicate_metadata": {
+      "type": "string"
+    },
+    "pdc": {
+      "type": "object",
+      "properties": {
+        "client_args": {
+          "type": "string",
+          "default": ""
+        },
+        "study_id": {
+          "type": "string"
+        },
+        "n_raw_files": {
+          "type": "integer"
+        },
+        "metadata_tsv": {
+          "type": "string"
+        },
+        "gene_level_data": {
+          "type": "string"
+        },
+        "s3_download": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "carafe": {
+      "type": "object",
+      "properties": {
+        "spectra_file": {
+          "type": "string"
+        },
+        "peptide_results_file": {
+          "type": "string"
+        },
+        "carafe_fasta": {
+          "type": "string"
+        },
+        "diann_fasta": {
+          "type": "string"
+        },
+        "cli_options": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    },
+    "msconvert": {
+      "type": "object",
+      "properties": {
+        "do_demultiplex": {
+          "type": "boolean",
+          "default": true
+        },
+        "do_simasspectra": {
+          "type": "boolean",
+          "default": true
+        },
+        "mz_shift_ppm": {
+          "type": "number"
+        }
+      }
+    },
+    "qc_report": {
+      "type": "object",
+      "properties": {
+        "skip": {
+          "type": "boolean",
+          "default": true
+        },
+        "exclude_replicates": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "exclude_projects": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "imputation_method": {
+          "type": "string",
+          "enum": [
+            "knn"
+          ]
+        },
+        "normalization_method": {
+          "type": "string",
+          "default": "median",
+          "enum": [
+            "median",
+            "DirectLFQ",
+            "directlfq"
+          ]
+        },
+        "standard_proteins": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "color_vars": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "export_tables": {
+          "type": "boolean",
+          "default": false
+        },
+        "precursor_report_template": {
+          "type": "string",
+          "default": "https://raw.githubusercontent.com/ajmaurais/DIA_QC_report/master/resources/precursor_quality.skyr"
+        },
+        "replicate_report_template": {
+          "type": "string",
+          "default": "https://raw.githubusercontent.com/ajmaurais/DIA_QC_report/master/resources/replicate_quality.skyr"
+        }
+      }
+    },
+    "batch_report": {
+      "type": "object",
+      "properties": {
+        "skip": {
+          "type": "boolean",
+          "default": true
+        },
+        "batch1": {
+          "type": "string"
+        },
+        "batch2": {
+          "type": "string"
+        },
+        "covariate_vars": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "control_key": {
+          "type": "string"
+        },
+        "control_values": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "plot_ext": {
+          "type": "string"
+        }
+      }
+    },
+    "aws": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "default": "us-west-2"
+        },
+        "batch": {
+          "type": "object",
+          "properties": {
+            "cliPath": {
+              "type": "string",
+              "default": "/usr/local/aws-cli/v2/current/bin/aws"
+            },
+            "logsGroup": {
+              "type": "string",
+              "default": "/batch/tei-nextflow-batch"
+            },
+            "maxConnections": {
+              "type": "integer",
+              "default": 20
+            },
+            "connectionTimeout": {
+              "type": "integer",
+              "default": 10000
+            },
+            "uploadStorageClass": {
+              "type": "string",
+              "default": "INTELLIGENT_TIERING"
+            },
+            "storageEncryption": {
+              "type": "string",
+              "default": "AES256"
+            },
+            "retryMode": {
+              "type": "string",
+              "default": "standard"
+            }
+          }
+        }
+      }
+    },
+    "diann": {
+      "type": "object",
+      "properties": {
+        "search_params": {
+          "type": "string",
+          "default": "--qvalue 0.01"
+        },
+        "fasta_digest_params": {
+          "type": "string",
+          "default": "--cut 'K*,R*,!*P' --unimod4 --missed-cleavages 1 --min-pep-len 8 --min-pr-charge 2 --max-pep-len 30"
+        }
+      }
+    },
+    "encyclopedia": {
+      "type": "object",
+      "properties": {
+        "quant": {
+          "type": "object",
+          "properties": {
+            "params": {
+              "type": "string",
+              "default": "-enableAdvancedOptions -v2scoring"
+            }
+          }
+        },
+        "chromatogram": {
+          "type": "object",
+          "properties": {
+            "params": {
+              "type": "string",
+              "default": "-enableAdvancedOptions -v2scoring"
+            }
+          }
+        },
+        "save_output": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "cascadia": {
+      "type": "object",
+      "properties": {
+        "use_gpu": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "panorama": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "default": "https://panoramaweb.org"
+        },
+        "public": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "default": "7d503a4147133c448c6eaf83bc9b8bc22ace4b7f6d36ca61c9d1ca836c510d10"
+            }
+          }
+        },
+        "upload": {
+          "type": "boolean",
+          "default": false
+        },
+        "upload_url": {
+          "type": "string"
+        },
+        "import_skyline": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "skyline": {
+      "type": "object",
+      "properties": {
+        "document_name": {
+          "type": "string",
+          "default": "final"
+        },
+        "template_file": {
+          "type": "string"
+        },
+        "skip": {
+          "type": "boolean",
+          "default": false
+        },
+        "skyr_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "minimize": {
+          "type": "boolean",
+          "default": false
+        },
+        "group_by_gene": {
+          "type": "boolean",
+          "default": false
+        },
+        "protein_parsimony": {
+          "type": "boolean",
+          "default": false
+        },
+        "fasta": {
+          "type": "string"
+        },
+        "use_hardlinks": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "result_dir": {
+      "type": "string",
+      "default": "results/nf-skyline-dia-ms"
+    },
+    "report_dir": {
+      "type": "string",
+      "default": "reports/nf-skyline-dia-ms"
+    },
+    "default_skyline_template_file": {
+      "type": "string",
+      "default": "https://github.com/mriffle/nf-skyline-dia-ms/raw/main/resources/template.sky.zip"
+    },
+    "max_memory": {
+      "type": "string",
+      "default": "12.GB"
+    },
+    "max_cpus": {
+      "type": "integer",
+      "default": 8
+    },
+    "max_time": {
+      "type": "string",
+      "default": "240.h"
+    },
+    "mzml_cache_directory": {
+      "type": "string",
+      "default": "/data/mass_spec/nextflow/nf-skyline-dia-ms/mzml_cache"
+    },
+    "panorama_cache_directory": {
+      "type": "string",
+      "default": "/data/mass_spec/nextflow/panorama/raw_cache"
+    },
+    "images": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "hidden": true
+    },
+    "output_directories": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "hidden": true
+    }
+  },
+  "required": ["images", "output_directories"]
+}

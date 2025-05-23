@@ -2,6 +2,9 @@
 
 nextflow.enable.dsl = 2
 
+// functions for parameter validation
+include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
+
 // Sub workflows
 include { get_input_files } from "./subworkflows/get_input_files"
 include { get_ms_files as get_narrow_ms_files } from "./subworkflows/get_ms_files"
@@ -54,6 +57,9 @@ workflow {
 
     all_ms_file_ch = null       // hold all mzml files generated
     all_mzml_ch = null
+
+    // Validate input parameters
+    validateParameters()
 
     // version file channels
     search_engine_version = null
