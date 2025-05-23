@@ -31,7 +31,7 @@ printf "%s\\n" "\${stat_files[@]}" | while IFS= read -r file; do
     stat -L --printf='%n\\t%s\\n' "\$file"
 done | sort > sizes.txt
 
-join -t\\t hashes.txt sizes.txt > output_file_stats.txt
+join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
     """
     return command
 }

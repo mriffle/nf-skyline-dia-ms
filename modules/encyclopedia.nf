@@ -43,7 +43,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
 
     md5sum *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
     stat -L --printf='%n\\t%s\\n' *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sort > sizes.txt
-    join -t'\\t' hashes.txt sizes.txt > output_file_stats.txt
+    join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
     """
 
     stub:
@@ -57,7 +57,7 @@ process ENCYCLOPEDIA_SEARCH_FILE {
 
     md5sum *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
     stat -L --printf='%n\\t%s\\n' *.elib *.features.txt *.encyclopedia.txt *.encyclopedia.decoy.txt *.mzML | sort > sizes.txt
-    join -t'\\t' hashes.txt sizes.txt > output_file_stats.txt
+    join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
     """
 }
 
