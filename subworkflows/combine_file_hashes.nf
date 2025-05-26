@@ -72,11 +72,16 @@ workflow combine_file_hashes {
         md5_input = file_stat_files.map{ it -> it[1] }
         CALCULATE_MD5(md5_input)
 
+        calc_md5_hashes = CALCULATE_MD5.out
+            .splitText()
+            .map{ it -> tuple(it.split(/\s+/)) }
+            .map{ it -> tuple(it[1], it[0]) }
+
         // Combine all file hashes into a single channel
         output_file_hash_ch = search_file_data.mzml_files
             .concat(
                 file_stat_files
-                    .join(CALCULATE_MD5.out, failOnMismatch: true, failOnDuplicate: true)
+                    .join(calc_md5_hashes, failOnMismatch: true, failOnDuplicate: true)
                     .map{ it -> tuple(it[0], it[2], it[4], it[3]) }
             )
             .concat(search_file_data.search_files, skyline_doc_data)

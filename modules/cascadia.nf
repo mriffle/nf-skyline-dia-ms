@@ -41,7 +41,7 @@ process CASCADIA_SEARCH {
 
         md5sum '${ms_file.join('\' \'')}' ${ms_file.baseName}.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' ${ms_file.baseName}.ssl | sort > sizes.txt
-        join -t'\t' hashes.txt sizes.txt > output_file_stats_${ms_file.baseName}.txt
+        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats_${ms_file.baseName}.txt
         """
 
     stub:
@@ -52,7 +52,7 @@ process CASCADIA_SEARCH {
 
         md5sum '${ms_file.join('\' \'')}' "${ms_file.baseName}.ssl" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' "${ms_file.baseName}.ssl" | sort > sizes.txt
-        join -t'\t' hashes.txt sizes.txt > output_file_stats_${ms_file.baseName}.txt
+        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats_${ms_file.baseName}.txt
         """
 }
 
@@ -81,7 +81,7 @@ process CASCADIA_FIX_SCAN_NUMBERS {
 
         md5sum ${ms_file} ${ssl_file} ${ssl_file.baseName}.fixed.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' ${ms_file} ${ssl_file} ${ssl_file.baseName}.fixed.ssl | sort > sizes.txt
-        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
+        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 
     stub:
@@ -91,7 +91,7 @@ process CASCADIA_FIX_SCAN_NUMBERS {
 
         md5sum ${ms_file} ${ssl_file} "${ssl_file.baseName}.fixed.ssl" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' ${ms_file} ${ssl_file} "${ssl_file.baseName}.fixed.ssl" | sort > sizes.txt
-        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
+        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 }
 
@@ -120,7 +120,7 @@ process CASCADIA_CREATE_FASTA {
 
         md5sum ${ssl_file} ${ssl_file.baseName}.fasta | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' ${ssl_file} ${ssl_file.baseName}.fasta | sort > sizes.txt
-        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
+        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 
     stub:
@@ -130,7 +130,7 @@ process CASCADIA_CREATE_FASTA {
 
         md5sum "${ssl_file.baseName}.fasta" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' "${ssl_file.baseName}.fasta" | sort > sizes.txt
-        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
+        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 }
 
@@ -153,7 +153,7 @@ process CASCADIA_COMBINE_SSL_FILES {
 
         md5sum '${ssl_files.join('\' \'')}' combined.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' '${ssl_files.join('\' \'')}' combined.ssl | sort > sizes.txt
-        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
+        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 
     stub:
@@ -162,7 +162,7 @@ process CASCADIA_COMBINE_SSL_FILES {
 
         md5sum '${ssl_files.join('\' \'')}' combined.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' '${ssl_files.join('\' \'')}' combined.ssl | sort > sizes.txt
-        join -t'\t' hashes.txt sizes.txt > output_file_stats.txt
+        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 }
 

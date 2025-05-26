@@ -31,7 +31,7 @@ printf "%s\\n" "\${stat_files[@]}" | while IFS= read -r file; do
     stat -L --printf='%n\\t%s\\n' "\$file"
 done | sort > sizes.txt
 
-join -t\\t hashes.txt sizes.txt > output_file_stats.txt
+join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
     """
     return command
 }
@@ -295,7 +295,7 @@ process DIANN_MBR {
 
 process BLIB_BUILD_LIBRARY {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_medium'
+    label 'process_high_memory'
     label 'proteowizard'
     container params.images.proteowizard
 

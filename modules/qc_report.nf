@@ -198,7 +198,7 @@ process GENERATE_BATCH_REPORT {
 
     stub:
         """
-        touch bc_report.rmd bc_report.html
+        touch bc_report.rmd bc_report.html bc_report.pdf
         touch generate_batch_rmd.stdout generate_batch_rmd.stderr
         """
 }

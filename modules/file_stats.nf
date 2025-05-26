@@ -7,11 +7,11 @@ process CALCULATE_MD5 {
         path(file_to_check)
 
     output:
-        tuple val("${file_to_check.name}"), env("md5_sum")
+        path('hash.txt')
 
     script:
         """
-        md5_sum=\$( md5sum ${file_to_check} |awk '{print \$1}' )
+        md5sum ${file_to_check} > 'hash.txt'
         """
 }
 
