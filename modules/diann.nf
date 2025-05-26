@@ -295,7 +295,7 @@ process DIANN_MBR {
 
 process BLIB_BUILD_LIBRARY {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_medium'
+    label 'process_high_memory'
     label 'proteowizard'
     container params.images.proteowizard
 
