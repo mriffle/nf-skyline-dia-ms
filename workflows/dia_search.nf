@@ -29,7 +29,15 @@ workflow dia_search{
             flat_narrow_ms_file_ch = narrow_ms_file_ch.map{ it -> it[1] }
         }
 
-        if(search_engine.toLowerCase() == 'encyclopedia') {
+        if(search_engine == null) {
+
+            search_engine_version = Channel.empty()
+            search_file_stats = Channel.empty()
+            final_speclib = spectral_library
+            all_search_file_ch = Channel.empty()
+            search_fasta = Channel.empty()
+
+        } else if(search_engine.toLowerCase() == 'encyclopedia') {
 
             if (use_batch_mode == true) {
                 error "Batch mode is not supported for EncyclopeDIA!"
