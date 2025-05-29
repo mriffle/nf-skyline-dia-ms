@@ -89,7 +89,10 @@ The ``params`` Section
      - The seed used to randomly select files for the ``files_per_chrom_lib`` and ``files_per_quant_batch`` parameters. A seed is used so that if the workflow is re-run the same sequence of files will be randomly selected each time. Default is ``12``.
    * -
      - ``search_engine``
-     - Must be set to either ``'encyclopedia'``, ``'diann'``, or ``'cascadia'``. If set to ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored. Default: ``'encyclopedia'``.
+     - Must be set to either ``'encyclopedia'``, ``'diann'``, ``'cascadia'``, or ``null``.
+       If set to ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored.
+       If set to ``null``, the workflow will skip the search step and generate Skyline document(s) using ``spectral_library``, ``fasta``, and files in ``quant_spectra_dir``.
+       Default: ``'encyclopedia'``.
    * -
      - ``replicate_metadata``
      - Metadata annotations for each ``raw`` or ``mzML`` file. Can be in ``tsv`` or ``csv`` format. See the :ref:`replicate_metadata` section for details of how the file should be formatted. If a metadata file is specified it will be used to add annotations to the final Skyline document and can be used to color PCA plots in the QC report by specifying the ``qc_report.color_vars`` parameter. If this parameter is set to ``null`` the skyline document annotation step is skipped.
