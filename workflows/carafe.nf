@@ -84,11 +84,12 @@ workflow carafe {
             carafe_psm_file = DIANN_SEARCH.out.precursor_report
         }
 
+        search_engine = params.search_engine == null ? 'diann' : params.search_engine.toLowerCase()
         run_carafe(spectra_file,
                    carafe_fasta,
                    carafe_psm_file,
                    params.carafe.cli_options,
-                   params.search_engine)
+                   search_engine)
 
         // We need to make sure speclib_tsv is a value channel
         // because Nextflow thinks it should be a queue channel
