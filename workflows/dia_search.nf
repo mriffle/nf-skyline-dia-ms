@@ -31,11 +31,18 @@ workflow dia_search{
 
         if(search_engine == null) {
 
+            if (params.skyline.skip == true) {
+                error "Cannot skip DIA search when params.skyline.skip is true!"
+            }
+            spectral_library.ifEmpty {
+                error "Spectral library is not defined!"
+            }
+
             search_engine_version = Channel.empty()
             search_file_stats = Channel.empty()
             final_speclib = spectral_library
             all_search_file_ch = Channel.empty()
-            search_fasta = Channel.empty()
+            search_fasta = fasta
 
         } else if(search_engine.toLowerCase() == 'encyclopedia') {
 
