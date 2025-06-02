@@ -99,8 +99,11 @@ workflow {
             skyline_document_name = Channel.value(params.skyline.document_name)
          }
     } else {
+        String quant_spectra_regex = get_file_regex(
+            params.quant_spectra_glob, params.quant_spectra_regex, 'quant_spectra'
+        )
         get_wide_ms_files(params.quant_spectra_dir,
-                          params.quant_spectra_glob,
+                          quant_spectra_regex,
                           params.files_per_quant_batch,
                           aws_secret_id)
         wide_ms_file_ch = get_wide_ms_files.out.ms_file_ch
@@ -110,8 +113,12 @@ workflow {
     }
     narrow_ms_file_ch = null
     if(params.chromatogram_library_spectra_dir != null) {
+        String chrom_lib_spectra_regex = get_file_regex(
+            params.chromatogram_library_spectra_glob, params.chromatogram_library_spectra_regex,
+            'chromatogram_library_spectra'
+        )
         get_narrow_ms_files(params.chromatogram_library_spectra_dir,
-                            params.chromatogram_library_spectra_glob,
+                            chrom_lib_spectra_regex,
                             params.files_per_chrom_lib,
                             aws_secret_id)
 
@@ -256,6 +263,26 @@ workflow {
             use_batch_mode,
             aws_secret_id
         )
+    }
+}
+
+// Convert a Nextflow-style glob (only * is a wildcard) into a regex string
+def escape_regex(String str) {
+    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { _, group -> '\\' + group }
+}
+
+// Return a regex string for matching files based on glob or regex parameters
+// Also check that only one of the two parameters is set
+def get_file_regex(String file_glob_param, String file_regex_param, String name) {
+    if (file_glob_param != null && file_regex_param != null) {
+        error "Either params.${name}_glob or params.${name}_regex can be set, but not both."
+    }
+    if (file_regex_param != null) {
+        return file_regex_param
+    } else if (file_glob_param != null) {
+        return '^' + escape_regex(file_glob_param).replaceAll('\\*', '.*') + '$'
+    } else {
+        error "Neither params.${name}_glob nor params.${name}_regex is set."
     }
 }
 

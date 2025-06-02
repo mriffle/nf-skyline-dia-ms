@@ -8,7 +8,6 @@ include { UNZIP_DIRECTORY as UNZIP_BRUKER_D } from "../modules/msconvert"
 
 // useful functions and variables
 include { param_to_list } from "./get_input_files"
-include { escapeRegex } from "../modules/panorama"
 
 /**
  * Randomly sample a list and return a list with n elements.
@@ -26,7 +25,7 @@ def sample_list(list, n, long seed) {
 workflow get_ms_files {
     take:
         spectra_dir
-        spectra_glob
+        spectra_regex
         n_files
         aws_secret_id
 
@@ -41,14 +40,13 @@ workflow get_ms_files {
         // Parse spectra_dir parameter and split local and panorama directories
         spectra_dirs_ch = Channel.fromList(spectra_dirs)
             .transpose()
-            .branch{ batch, dir ->
+            .branch{ _, dir ->
                 panorama_public_dirs: is_panorama_url(dir) && !panorama_auth_required_for_url(dir)
                 panorama_dirs: panorama_auth_required_for_url(dir)
                 local_dirs: true
             }
 
-        // Find files in local directories matching spectra_glob
-        String spectra_regex = '^' + escapeRegex(spectra_glob).replaceAll('\\*', '.*') + '$'
+        // Find files in local directories matching spectra_regex
         local_file_ch = spectra_dirs_ch.local_dirs
             .map{ batch, dir ->
                 [batch, file(dir, checkIfExists: true)
@@ -61,8 +59,8 @@ workflow get_ms_files {
             }
             .transpose()
 
-        // List files matching spectra_glob in panorama directories
-        PANORAMA_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_dirs, spectra_glob, aws_secret_id)
+        // List files matching spectra_regex in panorama directories
+        PANORAMA_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_dirs, spectra_regex, aws_secret_id)
         PANORAMA_GET_MS_FILE_LIST.out.ms_files
             .map{batch, file_list -> [batch, file_list.readLines().collect{ line -> line.strip() }]}
             .transpose()
@@ -73,8 +71,8 @@ workflow get_ms_files {
             .transpose()
             .set{panorama_url_ch}
 
-        // List files matching spectra_glob in panorama public directories
-        PANORAMA_PUBLIC_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_public_dirs, spectra_glob)
+        // List files matching spectra_regex in panorama public directories
+        PANORAMA_PUBLIC_GET_MS_FILE_LIST(spectra_dirs_ch.panorama_public_dirs, spectra_regex)
         PANORAMA_PUBLIC_GET_MS_FILE_LIST.out.ms_files
             .map{batch, file_list -> [batch, file_list.readLines().collect{ line -> line.strip() }]}
             .transpose()
@@ -97,7 +95,7 @@ workflow get_ms_files {
         all_paths_ch.collect().subscribe{ fileList ->
             def directories = spectra_dirs.collect{
                 it -> it[1].collect{
-                        dir -> "${dir}${dir[-1] == '/' ? '' : '/' }${spectra_glob}"
+                        dir -> "${dir}${dir[-1] == '/' ? '' : '/' }${spectra_regex}"
                     }.join('\n')
                 }.join('\n')
 

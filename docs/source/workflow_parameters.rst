@@ -67,7 +67,11 @@ The ``params`` Section
      - The path to the directory containing the raw data to be quantified. If using narrow window DIA and GPF to generated a chromatogram library this is the location of the wide-window data to be searched using the chromatogram library.
    * -
      - ``quant_spectra_glob``
-     - Which files in this directory to use. Default: ``*.raw``
+     - Which files in this directory to use.
+       Must be ``null`` if ``quant_spectra_regex`` is set. Default: ``*.raw``
+   * - ``quant_spectra_regex``
+     - Use this regex instead of ``quant_spectra_glob`` to select files in ``quant_spectra_dir``.
+       If set, ``quant_spectra_glob`` must be set to ``null``. Default: ``null``.
    * -
      - ``files_per_quant_batch``
      - Randomly select ``n`` files per batch in ``quant_spectra_dir``. If ``null`` all the files in ``quant_spectra_dir`` are used. Default is ``null``.
@@ -76,7 +80,11 @@ The ``params`` Section
      - If you are creating a chromatogram library using GPF and narrow window DIA, this is the path to the directory containing the narrow-window raw data.
    * -
      - ``chromatogram_library_spectra_glob``
-     - Which files in this directory to use. Default: ``*.raw``
+     - Which files in this directory to use.
+       Must be ``null`` if ``chromatogram_library_spectra_regex`` is set. Default: ``*.raw``
+   * - ``chromatogram_library_spectra_regex``
+     - Use this regex instead of ``chromatogram_library_spectra_glob`` to select files in ``chromatogram_library_spectra_dir``.
+       If set, ``chromatogram_library_spectra_glob`` must be set to ``null``. Default: ``null``.
    * -
      - ``use_vendor_raw``
      - If supported by the ``search_engine``, skip the ``MSCONVERT`` step to generate mzMLs and use vendor raw files for the search and to generate the Skyline document.
