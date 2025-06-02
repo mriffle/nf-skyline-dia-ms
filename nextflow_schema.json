@@ -7,7 +7,9 @@
   "properties": {
     "quant_spectra_dir": {
       "anyOf": [
-        { "type": "string" },
+        {
+          "type": "string"
+        },
         {
           "type": "array",
           "items": {
@@ -26,9 +28,14 @@
       "type": "string",
       "default": "*.raw"
     },
+    "quant_spectra_regex": {
+      "type": "string"
+    },
     "chromatogram_library_spectra_dir": {
       "anyOf": [
-        { "type": "string" },
+        {
+          "type": "string"
+        },
         {
           "type": "array",
           "items": {
@@ -40,6 +47,9 @@
     "chromatogram_library_spectra_glob": {
       "type": "string",
       "default": "*.raw"
+    },
+    "chromatogram_library_spectra_regex": {
+      "type": "string"
     },
     "spectral_library": {
       "type": "string"
@@ -74,7 +84,9 @@
     },
     "skyline_skyr_file": {
       "anyOf": [
-        { "type": "string" },
+        {
+          "type": "string"
+        },
         {
           "type": "array",
           "items": {
@@ -206,18 +218,12 @@
         },
         "imputation_method": {
           "type": "string",
-          "enum": [
-            "knn"
-          ]
+          "enum": ["knn"]
         },
         "normalization_method": {
           "type": "string",
           "default": "median",
-          "enum": [
-            "median",
-            "DirectLFQ",
-            "directlfq"
-          ]
+          "enum": ["median", "DirectLFQ", "directlfq"]
         },
         "standard_proteins": {
           "anyOf": [
