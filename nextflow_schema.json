@@ -536,6 +536,5 @@
       },
       "hidden": true
     }
-  },
-  "required": ["images", "output_directories"]
+  }
 }
