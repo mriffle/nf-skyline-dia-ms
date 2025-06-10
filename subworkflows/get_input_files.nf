@@ -3,8 +3,6 @@ include { PANORAMA_GET_FILE as PANORAMA_GET_FASTA } from "../modules/panorama"
 include { PANORAMA_GET_FILE as PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
 include { PANORAMA_GET_FILE as PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
 include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
-include { PANORAMA_GET_FILE as PANORAMA_GET_METADATA } from "../modules/panorama"
-include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
 /**
 * Process a parameter variable which is specified as either a single value or List.
@@ -95,27 +93,12 @@ workflow get_input_files {
             skyr_files = Channel.empty()
         }
 
-        if(params.replicate_metadata != null) {
-            if(panorama_auth_required_for_url(params.replicate_metadata.trim())) {
-                PANORAMA_GET_METADATA(params.replicate_metadata, aws_secret_id)
-                replicate_metadata = PANORAMA_GET_METADATA.out.panorama_file
-            } else {
-                replicate_metadata = params.replicate_metadata
-            }
-        } else if(params.pdc.study_id != null) {
-            replicate_metadata = null
-        } else {
-            METADATA_PLACEHOLDER('EMPTY')
-            replicate_metadata = METADATA_PLACEHOLDER.out
-        }
-
    emit:
        fasta
        skyline_fasta
        spectral_library
        skyline_template_zipfile
        skyr_files
-       replicate_metadata
 }
 
 // return true if the URL requires panorama authentication (panorama public does not)

@@ -1,4 +1,6 @@
 
+include { setupPanoramaAPIKeySecret } from "./panorama"
+
 def format_flag(var, flag) {
     def ret = (var == null ? "" : "${flag} ${var}")
     return ret
@@ -25,6 +27,108 @@ process MAKE_EMPTY_FILE {
     """
     touch ${file_name}
     """
+}
+
+process VALIDATE_LOCAL_METADATA {
+    label 'process_low'
+    container params.images.qc_pipeline
+
+    input:
+        val quant_files
+        val chrom_lib_files
+        path replicate_metadata
+
+    output:
+        path replicate_metadata, emit: replicate_metadata
+
+    script:
+        """
+        echo '${quant_files}' > quant_files.json
+        echo '${chrom_lib_files}' > chrom_lib_files.json
+
+        dia_qc validate params
+            --quant-spectra-files quant_files.json \
+            --chrom-lib-files chrom_lib_files.json \
+            --metadata ${replicate_metadata} \
+            ${format_flag(params.batch_report.batch1, "--batch1")} \
+            ${format_flag(params.batch_report.batch2, "--batch2")} \
+            ${format_flags(params.qc_report.color_vars, "--addColorVar")} \
+            ${format_flag(params.batch_report.control_key, "--controlKey")} \
+            ${format_flags(params.batch_report.control_values, "--addControlValue")} \
+            ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
+            > >(tee "validate_metadata.stdout") 2> >(tee "validate_metadata.stderr" >&2)
+        """
+}
+
+process VALIDATE_PANORAMA_METADATA {
+    label 'process_low'
+    container params.images.qc_pipeline
+    secret 'PANORAMA_API_KEY'
+
+    input:
+        val quant_files
+        val chrom_lib_files
+        val metadata_webdav_url
+        val aws_secret_id
+
+    output:
+        path("${file(metadata_webdav_url).name}") , emit: replicate_metadata
+
+    script:
+        metadata_ext = file(metadata_webdav_url).extension
+        """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
+        echo '${quant_files}' > quant_files.json
+        echo '${chrom_lib_files}' > chrom_lib_files.json
+
+        dia_qc validate params
+            --quant-spectra-files quant_files.json \
+            --chrom-lib-files chrom_lib_files.json \
+            --metadata ${metadata_webdav_url} --metadata-output-path metadata.${metadata_ext} \
+            ${format_flag(params.batch_report.batch1, "--batch1")} \
+            ${format_flag(params.batch_report.batch2, "--batch2")} \
+            ${format_flags(params.qc_report.color_vars, "--addColorVar")} \
+            ${format_flag(params.batch_report.control_key, "--controlKey")} \
+            ${format_flags(params.batch_report.control_values, "--addControlValue")} \
+            ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
+            --api-key \$PANORAMA_API_KEY \
+            > >(tee "validate_metadata.stdout") 2> >(tee "validate_metadata.stderr" >&2)
+        """
+}
+
+process VALIDATE_PANORAMA_PUBLIC_METADATA {
+    label 'process_low'
+    container params.images.qc_pipeline
+
+    input:
+        val quant_files
+        val chrom_lib_files
+        val metadata_webdav_url
+
+    output:
+        path("${file(metadata_webdav_url).name}") , emit: replicate_metadata
+
+    script:
+        metadata_ext = file(metadata_webdav_url).extension
+        """
+        echo '${quant_files}' > quant_files.json
+        echo '${chrom_lib_files}' > chrom_lib_files.json
+
+        dia_qc validate params
+            --quant-spectra-files quant_files.json \
+            --chrom-lib-files chrom_lib_files.json \
+            --metadata ${metadata_webdav_url} \
+            --metadata ${metadata_webdav_url} --metadata-output-path metadata.${metadata_ext} \
+            ${format_flag(params.batch_report.batch1, "--batch1")} \
+            ${format_flag(params.batch_report.batch2, "--batch2")} \
+            ${format_flags(params.qc_report.color_vars, "--addColorVar")} \
+            ${format_flag(params.batch_report.control_key, "--controlKey")} \
+            ${format_flags(params.batch_report.control_values, "--addControlValue")} \
+            ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
+            --api-key "${params.panorama.api_key}" \
+            > >(tee "validate_metadata.stdout") 2> >(tee "validate_metadata.stderr" >&2)
+        """
 }
 
 process MERGE_REPORTS {

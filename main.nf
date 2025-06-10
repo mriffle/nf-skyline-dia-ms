@@ -7,6 +7,7 @@ include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
 
 // Sub workflows
 include { get_input_files } from "./subworkflows/get_input_files"
+include { get_replicate_metadata } from "./subworkflows/get_replicate_metadata"
 include { get_ms_files as get_narrow_ms_files } from "./subworkflows/get_ms_files"
 include { get_ms_files as get_wide_ms_files } from "./subworkflows/get_ms_files"
 include { carafe } from "./workflows/carafe"
@@ -92,8 +93,9 @@ workflow {
         aws_secret_id = Channel.of('none').collect()    // ensure this is a value channel
     }
 
-    // get mzML files
+    // get raw/mzML files
     use_batch_mode = params.quant_spectra_dir instanceof Map
+    quant_spectra_file_json = Channel.empty()
     if(params.pdc.study_id) {
         get_pdc_files()
         wide_ms_file_ch = get_pdc_files.out.wide_ms_file_ch
@@ -114,10 +116,13 @@ workflow {
                           aws_secret_id)
         wide_ms_file_ch = get_wide_ms_files.out.ms_file_ch
         wide_mzml_ch = get_wide_ms_files.out.converted_mzml_ch
+        quant_spectra_file_json = get_wide_ms_files.out.file_json
         pdc_study_name = null
         skyline_document_name = Channel.value(params.skyline.document_name)
     }
+
     narrow_ms_file_ch = null
+    chrom_lib_file_json = Channel.empty()
     if(params.chromatogram_library_spectra_dir != null) {
         String chrom_lib_spectra_regex = get_file_regex(
             params.chromatogram_library_spectra_glob, params.chromatogram_library_spectra_regex,
@@ -129,6 +134,7 @@ workflow {
                             aws_secret_id)
 
         narrow_ms_file_ch = get_narrow_ms_files.out.ms_file_ch
+        chrom_lib_file_json = get_narrow_ms_files.out.file_json
         all_ms_file_ch = wide_ms_file_ch.concat(narrow_ms_file_ch).map{ it -> it[1] }
         all_mzml_ch = wide_mzml_ch.concat(get_narrow_ms_files.out.converted_mzml_ch)
     } else {
@@ -168,7 +174,12 @@ workflow {
         }
         replicate_metadata = get_pdc_files.out.annotations_csv
     } else {
-        replicate_metadata = get_input_files.out.replicate_metadata
+        get_replicate_metadata(
+            quant_spectra_file_json,
+            chrom_lib_file_json,
+            aws_secret_id
+        )
+        replicate_metadata = get_replicate_metadata.out.validated_metadata
     }
     fasta = get_input_files.out.fasta
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile

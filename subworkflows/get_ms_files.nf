@@ -33,8 +33,10 @@ workflow get_ms_files {
 
         if (spectra_dir instanceof Map) {
             spectra_dirs = spectra_dir.collect{ k, v -> tuple(k, param_to_list(v))}
+            multi_batch = true
         } else {
             spectra_dirs = [tuple(null, param_to_list(spectra_dir))]
+            multi_batch = false
         }
 
         // Parse spectra_dir parameter and split local and panorama directories
@@ -83,15 +85,31 @@ workflow get_ms_files {
             .transpose()
             .set{panorama_public_url_ch}
 
-        // make sure that all files have the same extension
-        all_paths_ch = panorama_url_ch.map{ it -> it[1] }
-            .concat(
-                panorama_public_url_ch.map{ it -> it[1] },
-                local_file_ch.map{
-                    it -> it[1].name
-                }
-            )
+        panorama_url_ch
+            .concat(panorama_public_url_ch, local_file_ch)
+            .tap{ batched_paths_ch }
+            .map{ _, path -> path }
+            .set{ all_paths_ch }
 
+        // Collapse list of files into a JSON string
+        if (multi_batch) {
+            file_json = batched_paths_ch
+                .groupTuple()
+                .map{ batch, file_list ->
+                    "\"${batch}\":[${ file_list.collect{ file -> "\"${new File(file).name}\"" }.join(",") }]"
+                }
+                .reduce{ acc, entry -> acc + ", ${entry}" }
+                .map{ all -> "{${all}}" }
+        } else {
+            file_json = batched_paths_ch
+                .map{ _, path ->
+                    "\"${new File(path).name}\""
+                }
+                .reduce{ acc, line -> acc + ", ${line}" }
+                .map{ it -> "[${it}]" }
+        }
+
+        // make sure that all files have the same extension
         all_paths_ch.collect().subscribe{ fileList ->
             def directories = spectra_dirs.collect{
                 it -> it[1].collect{
@@ -148,6 +166,7 @@ workflow get_ms_files {
     emit:
         ms_file_ch
         converted_mzml_ch
+        file_json
 }
 
 def is_panorama_url(url) {
