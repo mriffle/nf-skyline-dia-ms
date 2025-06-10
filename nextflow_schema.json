@@ -512,13 +512,6 @@
       "type": "string",
       "default": "/data/mass_spec/nextflow/panorama/raw_cache"
     },
-    "images": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "hidden": true
-    },
     "output_directories": {
       "type": "object",
       "additionalProperties": {
@@ -534,6 +527,63 @@
           }
         ]
       },
+      "hidden": true
+    },
+    "images": {
+      "type": "object",
+      "properties": {
+        "ubuntu": {
+          "type": "string"
+        },
+        "diann": {
+          "type": "string"
+        },
+        "bibliospec": {
+          "type": "string"
+        },
+        "panorama_client": {
+          "type": "string"
+        },
+        "pdc_client": {
+          "type": "string"
+        },
+        "encyclopedia": {
+          "type": "string"
+        },
+        "encyclopedia3_mriffle": {
+          "type": "string"
+        },
+        "qc_pipeline": {
+          "type": "string"
+        },
+        "proteowizard": {
+          "type": "string"
+        },
+        "cascadia": {
+          "type": "string"
+        },
+        "cascadia_utils": {
+          "type": "string"
+        },
+        "carafe": {
+          "type": "string"
+        }
+      },
+      "default": {
+        "ubuntu": "ubuntu:22.04",
+        "diann": "quay.io/protio/diann:1.8.1",
+        "bibliospec": "quay.io/protio/bibliospec-linux:3.0",
+        "panorama_client": "quay.io/protio/panorama-client:1.1.0",
+        "pdc_client": "quay.io/mauraisa/pdc_client:2.2.0",
+        "encyclopedia": "quay.io/protio/encyclopedia:2.12.30-2",
+        "encyclopedia3_mriffle": "quay.io/protio/encyclopedia:3.0.0-MRIFFLE",
+        "qc_pipeline": "quay.io/mauraisa/dia_qc_report:2.4.3",
+        "proteowizard": "quay.io/mauraisa/pwiz-skyline-i-agree-to-the-vendor-licenses:skyline_daily_25.0.9.97-ae4c997",
+        "cascadia": "quay.io/protio/cascadia:0.0.7",
+        "cascadia_utils": "quay.io/protio/cascadia-utils:0.0.4",
+        "carafe": "quay.io/mauraisa/carafe:0.0.1-beta"
+      },
+      "additionalProperties": false,
       "hidden": true
     }
   }
