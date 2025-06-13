@@ -29,7 +29,10 @@ process MAKE_EMPTY_FILE {
 
 process MERGE_REPORTS {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(16.0, (precursor_reports*.size().sum() / (1024 ** 3))).GB }
+    time   { 8.h * task.attempt }
+    label 'MERGE_REPORTS'
     container params.images.qc_pipeline
 
     input:
@@ -83,7 +86,10 @@ process MERGE_REPORTS {
 process FILTER_IMPUTE_NORMALIZE {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
     stageInMode 'copy' // The input file is modified in place. Copying is necissary to avoid problems with caching.
-    label 'process_high_memory'
+    cpus   8
+    memory { Math.max(16.0, (database.size() / (1024 ** 3)) * 1.5 ).GB }
+    time   { 4.h * task.attempt }
+    label 'FILTER_IMPUTE_NORMALIZE'
     container params.images.qc_pipeline
 
     input:
@@ -123,11 +129,14 @@ process FILTER_IMPUTE_NORMALIZE {
 
 process GENERATE_QC_QMD {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(16.0, (database.size() / (1024 ** 3)) * 1.5 ).GB }
+    time   { 1.h * task.attempt }
+    label 'GENERATE_QC_QMD'
     container params.images.qc_pipeline
 
     input:
-        val batch
+        val  batch
         path database
 
     output:
@@ -157,8 +166,11 @@ process GENERATE_BATCH_REPORT {
     publishDir params.output_directories.batch_report_tables, pattern: '*.tsv', failOnError: true, mode: 'copy'
     publishDir params.output_directories.batch_report_plots, pattern: "plots/*.${params.batch_report.plot_ext}", failOnError: true, mode: 'copy'
     publishDir params.output_directories.batch_report, pattern: '*.std{err,out}', failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(16.0, (normalized_db.size() / (1024 ** 3)) * 4.0 ).GB }
+    time   { 4.h * task.attempt }
     label 'run_as_root'
+    label 'GENERATE_BATCH_REPORT'
     container params.images.qc_pipeline
 
     input:
@@ -207,7 +219,10 @@ process EXPORT_TABLES {
     publishDir params.output_directories.qc_report_tables, pattern: '*.tsv', failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stderr', failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(16.0, (precursor_db.size() / (1024 ** 3)) * 2.0 ).GB }
+    time   { 2.h * task.attempt }
+    label 'GENERATE_BATCH_REPORT'
     container params.images.qc_pipeline
 
     input:
@@ -234,8 +249,11 @@ process RENDER_QC_REPORT {
     publishDir params.output_directories.qc_report, pattern: "*.${report_format}", failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stderr', failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(16.0, (database.size() / (1024 ** 3)) * 2.0 ).GB }
+    time   { 2.h * task.attempt }
     label 'run_as_root'
+    label 'RENDER_QC_REPORT'
     container params.images.qc_pipeline
 
     input:
@@ -263,7 +281,10 @@ process RENDER_QC_REPORT {
 
 process EXPORT_GENE_REPORTS {
     publishDir params.output_directories.gene_reports, failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(16.0, (batch_db.size() / (1024 ** 3)) * 2.0 ).GB }
+    time   { 2.h * task.attempt }
+    label 'EXPORT_GENE_REPORTS'
     container params.images.qc_pipeline
 
     input:

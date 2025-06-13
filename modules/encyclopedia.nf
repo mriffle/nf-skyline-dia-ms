@@ -10,7 +10,10 @@ process ENCYCLOPEDIA_SEARCH_FILE {
     publishDir params.output_directories.encyclopedia.search_file, pattern: "*.features.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     publishDir params.output_directories.encyclopedia.search_file, pattern: "*.encyclopedia.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
     publishDir params.output_directories.encyclopedia.search_file, pattern: "*.encyclopedia.decoy.txt", failOnError: true, mode: 'copy', enabled: params.encyclopedia.save_output
-    label 'process_high_constant'
+    cpus   8
+    memory { 16.GB * task.attempt }
+    time   { 4.h  * task.attempt }
+    label 'ENCYCLOPEDIA_SEARCH_FILE'
     container params.images.encyclopedia
 
     input:
@@ -63,7 +66,10 @@ process ENCYCLOPEDIA_SEARCH_FILE {
 
 process ENCYCLOPEDIA_CREATE_ELIB {
     publishDir params.output_directories.encyclopedia.create_elib, failOnError: true, mode: 'copy'
-    label 'process_memory_high_constant'
+    cpus  32
+    memory { Math.max(32, search_elib_files.size() * 4).GB }
+    time   { 24.h  * task.attempt }
+    label 'ENCYCLOPEDIA_CREATE_ELIB'
     container params.images.encyclopedia
 
     input:

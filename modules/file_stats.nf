@@ -1,6 +1,11 @@
 
 process CALCULATE_MD5 {
-    label 'process_low'
+    cpus   1
+    /* 8 GB or 1.5 times the file size, whichever is larger
+     md5sum does not load the eitire file at once,
+     but the aws s3 copy process will run out or memory for large files */
+    memory { Math.max(8.0, (file_to_check.size() / (1024 ** 3)) * 1.5).GB }
+    time   { 15.m * task.attempt }
     container params.images.ubuntu
 
     input:

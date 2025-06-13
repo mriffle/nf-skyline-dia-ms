@@ -134,7 +134,7 @@ process DIANN_SEARCH {
 
 process CARAFE_DIANN_SEARCH {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_high_constant'
+    label 'process_high'
     container params.images.diann
 
     input:
@@ -194,7 +194,11 @@ process CARAFE_DIANN_SEARCH {
 
 process DIANN_QUANT {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_high'
+    cpus   8
+    // 8 GB or 1.5 time the ms_file and spectral_library size, whichever is larger
+    memory { Math.max(8.0, ((ms_file.size() + spectral_library.size()) / (1024 ** 3)) * 1.5).GB }
+    time   { 2.h * task.attempt }
+    label 'DIANN_QUANT'
     container params.images.diann
     stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
@@ -228,7 +232,13 @@ process DIANN_QUANT {
 
 process DIANN_MBR {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_high_constant'
+    cpus   32
+    // 16 GB or 1.5 times the total size of all MS files, whichever is larger
+    memory { Math.max(16.0, (ms_files*.size().sum() / (1024 ** 3)) * 1.5).GB }
+    /* 10 minutes per file.
+      The run time will scale linearly with the number of files. */
+    time   { 10.m * ms_files.size() }
+    label 'DIANN_MBR'
     container params.images.diann
     stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
@@ -258,6 +268,8 @@ process DIANN_MBR {
         ms_file_args = "--f '${sorted_ms_files.join('\' --f \'')}'"
 
         """
+        echo "There are ${ms_files.size()} files!"
+
         diann ${ms_file_args} \
             --threads ${task.cpus} \
             --fasta ${fasta_file} \
@@ -295,8 +307,11 @@ process DIANN_MBR {
 
 process BLIB_BUILD_LIBRARY {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(8.0, (precursor_report.size() / (1024 ** 3)) * 1.5 ).GB }
+    time   { 2.h * task.attempt }
     label 'proteowizard'
+    label 'BLIB_BUILD_LIBRARY'
     container params.images.proteowizard
 
     input:
