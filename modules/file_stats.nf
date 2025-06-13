@@ -1,6 +1,8 @@
 
 process CALCULATE_MD5 {
-    label 'process_low'
+    cpus   1
+    memory { Math.max(8.0, (file_to_check.size() / (1024 ** 3)) * 1.5).GB }
+    time   { 15.m * task.attempt }
     container params.images.ubuntu
 
     input:
