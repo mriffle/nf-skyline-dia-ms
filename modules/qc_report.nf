@@ -46,9 +46,9 @@ process VALIDATE_LOCAL_METADATA {
         echo '${quant_files}' > quant_files.json
         echo '${chrom_lib_files}' > chrom_lib_files.json
 
-        dia_qc validate params
-            --quant-spectra-files quant_files.json \
-            --chrom-lib-files chrom_lib_files.json \
+        dia_qc validate params \
+            --quant-spectra-json quant_files.json \
+            --chrom-lib-spectra-json chrom_lib_files.json \
             --metadata ${replicate_metadata} \
             ${format_flag(params.batch_report.batch1, "--batch1")} \
             ${format_flag(params.batch_report.batch2, "--batch2")} \
@@ -82,9 +82,9 @@ process VALIDATE_PANORAMA_METADATA {
         echo '${quant_files}' > quant_files.json
         echo '${chrom_lib_files}' > chrom_lib_files.json
 
-        dia_qc validate params
-            --quant-spectra-files quant_files.json \
-            --chrom-lib-files chrom_lib_files.json \
+        dia_qc validate params \
+            --quant-spectra-json quant_files.json \
+            --chrom-lib-spectra-json chrom_lib_files.json \
             --metadata ${metadata_webdav_url} --metadata-output-path metadata.${metadata_ext} \
             ${format_flag(params.batch_report.batch1, "--batch1")} \
             ${format_flag(params.batch_report.batch2, "--batch2")} \
@@ -115,9 +115,9 @@ process VALIDATE_PANORAMA_PUBLIC_METADATA {
         echo '${quant_files}' > quant_files.json
         echo '${chrom_lib_files}' > chrom_lib_files.json
 
-        dia_qc validate params
-            --quant-spectra-files quant_files.json \
-            --chrom-lib-files chrom_lib_files.json \
+        dia_qc validate params \
+            --quant-spectra-json quant_files.json \
+            --chrom-lib-spectra-json chrom_lib_files.json \
             --metadata ${metadata_webdav_url} \
             --metadata ${metadata_webdav_url} --metadata-output-path metadata.${metadata_ext} \
             ${format_flag(params.batch_report.batch1, "--batch1")} \
