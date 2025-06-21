@@ -110,10 +110,12 @@ workflow {
         String quant_spectra_regex = get_file_regex(
             params.quant_spectra_glob, params.quant_spectra_regex, 'quant_spectra'
         )
-        get_wide_ms_files(params.quant_spectra_dir,
-                          quant_spectra_regex,
-                          params.files_per_quant_batch,
-                          aws_secret_id)
+        get_wide_ms_files(
+            params.quant_spectra_dir,
+            quant_spectra_regex,
+            params.files_per_quant_batch,
+            aws_secret_id
+        )
         wide_ms_file_ch = get_wide_ms_files.out.ms_file_ch
         wide_mzml_ch = get_wide_ms_files.out.converted_mzml_ch
         quant_spectra_file_json = get_wide_ms_files.out.file_json
@@ -122,22 +124,24 @@ workflow {
     }
 
     narrow_ms_file_ch = null
-    chrom_lib_file_json = Channel.empty()
+    chrom_lib_file_json = null
     if(params.chromatogram_library_spectra_dir != null) {
         String chrom_lib_spectra_regex = get_file_regex(
             params.chromatogram_library_spectra_glob, params.chromatogram_library_spectra_regex,
             'chromatogram_library_spectra'
         )
-        get_narrow_ms_files(params.chromatogram_library_spectra_dir,
-                            chrom_lib_spectra_regex,
-                            params.files_per_chrom_lib,
-                            aws_secret_id)
-
+        get_narrow_ms_files(
+            params.chromatogram_library_spectra_dir,
+            chrom_lib_spectra_regex,
+            params.files_per_chrom_lib,
+            aws_secret_id
+        )
         narrow_ms_file_ch = get_narrow_ms_files.out.ms_file_ch
         chrom_lib_file_json = get_narrow_ms_files.out.file_json
         all_ms_file_ch = wide_ms_file_ch.concat(narrow_ms_file_ch).map{ it -> it[1] }
         all_mzml_ch = wide_mzml_ch.concat(get_narrow_ms_files.out.converted_mzml_ch)
     } else {
+        chrom_lib_file_json = Channel.value("[]")
         all_ms_file_ch = wide_ms_file_ch.map{ it -> it[1] }
         all_mzml_ch = wide_mzml_ch
     }

@@ -86,7 +86,8 @@ workflow get_ms_files {
             .set{panorama_public_url_ch}
 
         panorama_url_ch
-            .concat(panorama_public_url_ch, local_file_ch)
+            .concat(panorama_public_url_ch)
+            .concat(local_file_ch.map{ batch, file -> [batch, file.name] })
             .tap{ batched_paths_ch }
             .map{ _, path -> path }
             .set{ all_paths_ch }

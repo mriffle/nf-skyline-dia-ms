@@ -25,7 +25,6 @@ workflow encyclopedia_search {
             encyclopedia_params
         )
 
-
         // aggregate results into single elib
         ENCYCLOPEDIA_CREATE_ELIB(
             ENCYCLOPEDIA_SEARCH_FILE.out.elib.collect(),
