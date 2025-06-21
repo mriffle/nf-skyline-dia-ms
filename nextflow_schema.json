@@ -218,7 +218,7 @@
         },
         "imputation_method": {
           "type": "string",
-          "enum": ["knn"]
+          "enum": ["KNN", "knn"]
         },
         "normalization_method": {
           "type": "string",
@@ -533,55 +533,53 @@
       "type": "object",
       "properties": {
         "ubuntu": {
-          "type": "string"
+          "type": "string",
+          "default": "ubuntu:22.04"
         },
         "diann": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/protio/diann:1.8.1"
         },
         "bibliospec": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/protio/bibliospec-linux:3.0"
         },
         "panorama_client": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/protio/panorama-client:1.1.0"
         },
         "pdc_client": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/mauraisa/pdc_client:2.2.0"
         },
         "encyclopedia": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/protio/encyclopedia:2.12.30-2"
         },
         "encyclopedia3_mriffle": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/protio/encyclopedia:3.0.0-MRIFFLE"
         },
         "qc_pipeline": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/mauraisa/dia_qc_report:2.4.3"
         },
         "proteowizard": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/mauraisa/pwiz-skyline-i-agree-to-the-vendor-licenses:skyline_daily_25.0.9.97-ae4c997"
         },
         "cascadia": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/protio/cascadia:0.0.7"
         },
         "cascadia_utils": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/protio/cascadia-utils:0.0.4"
         },
         "carafe": {
-          "type": "string"
+          "type": "string",
+          "default": "quay.io/mauraisa/carafe:0.0.1-beta"
         }
-      },
-      "default": {
-        "ubuntu": "ubuntu:22.04",
-        "diann": "quay.io/protio/diann:1.8.1",
-        "bibliospec": "quay.io/protio/bibliospec-linux:3.0",
-        "panorama_client": "quay.io/protio/panorama-client:1.1.0",
-        "pdc_client": "quay.io/mauraisa/pdc_client:2.2.0",
-        "encyclopedia": "quay.io/protio/encyclopedia:2.12.30-2",
-        "encyclopedia3_mriffle": "quay.io/protio/encyclopedia:3.0.0-MRIFFLE",
-        "qc_pipeline": "quay.io/mauraisa/dia_qc_report:2.4.3",
-        "proteowizard": "quay.io/mauraisa/pwiz-skyline-i-agree-to-the-vendor-licenses:skyline_daily_25.0.9.97-ae4c997",
-        "cascadia": "quay.io/protio/cascadia:0.0.7",
-        "cascadia_utils": "quay.io/protio/cascadia-utils:0.0.4",
-        "carafe": "quay.io/mauraisa/carafe:0.0.1-beta"
       },
       "additionalProperties": false,
       "hidden": true
