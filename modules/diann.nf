@@ -233,7 +233,7 @@ process DIANN_MBR {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     cpus   32
     memory { Math.max(16.0, (ms_files*.size().sum() / (1024 ** 3)) * 1.5).GB }
-    time   { 6.m * ms_files.size() }
+    time   { 10.m * ms_files.size() }
     label 'DIANN_MBR'
     container params.images.diann
     stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
