@@ -562,7 +562,7 @@
         },
         "qc_pipeline": {
           "type": "string",
-          "default": "quay.io/mauraisa/dia_qc_report:2.4.3"
+          "default": "quay.io/mauraisa/dia_qc_report:2.5.2"
         },
         "proteowizard": {
           "type": "string",

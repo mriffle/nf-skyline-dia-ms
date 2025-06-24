@@ -75,7 +75,7 @@ process VALIDATE_PANORAMA_METADATA {
         path("${file(metadata_webdav_url).name}") , emit: replicate_metadata
 
     script:
-        metadata_ext = file(metadata_webdav_url).extension
+        metadata_name = file(metadata_webdav_url).name
         """
         ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
 
@@ -85,7 +85,8 @@ process VALIDATE_PANORAMA_METADATA {
         dia_qc validate params \
             --quant-spectra-json quant_files.json \
             --chrom-lib-spectra-json chrom_lib_files.json \
-            --metadata ${metadata_webdav_url} --metadata-output-path metadata.${metadata_ext} \
+            --metadata '${metadata_webdav_url}' \
+            --metadata-output-path '${metadata_name}' \
             ${format_flag(params.batch_report.batch1, "--batch1")} \
             ${format_flag(params.batch_report.batch2, "--batch2")} \
             ${format_flags(params.qc_report.color_vars, "--addColorVar")} \
@@ -110,7 +111,7 @@ process VALIDATE_PANORAMA_PUBLIC_METADATA {
         path("${file(metadata_webdav_url).name}") , emit: replicate_metadata
 
     script:
-        metadata_ext = file(metadata_webdav_url).extension
+        metadata_name = file(metadata_webdav_url).name
         """
         echo '${quant_files}' > quant_files.json
         echo '${chrom_lib_files}' > chrom_lib_files.json
@@ -118,8 +119,8 @@ process VALIDATE_PANORAMA_PUBLIC_METADATA {
         dia_qc validate params \
             --quant-spectra-json quant_files.json \
             --chrom-lib-spectra-json chrom_lib_files.json \
-            --metadata ${metadata_webdav_url} \
-            --metadata ${metadata_webdav_url} --metadata-output-path metadata.${metadata_ext} \
+            --metadata '${metadata_webdav_url}' \
+            --metadata-output-path '${metadata_name}' \
             ${format_flag(params.batch_report.batch1, "--batch1")} \
             ${format_flag(params.batch_report.batch2, "--batch2")} \
             ${format_flags(params.qc_report.color_vars, "--addColorVar")} \
