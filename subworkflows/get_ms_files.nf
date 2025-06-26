@@ -93,21 +93,28 @@ workflow get_ms_files {
             .set{ all_paths_ch }
 
         // Collapse list of files into a JSON string
+        // The string is passed to qc_report.VALIDATE_METADATA
         if (multi_batch) {
             file_json = batched_paths_ch
                 .groupTuple()
-                .map{ batch, file_list ->
-                    "\"${batch}\":[${ file_list.collect{ file -> "\"${new File(file).name}\"" }.join(",") }]"
+                .map{ batch, file_list -> [ batch, file_list.sort() ] }
+                .toList()
+                .map{ items ->
+                    def sorted = items.sort()
+                    def parts = sorted.collect{ batch, files ->
+                        def names = files.collect{ f -> "\"${new File(f).name}\"" }.join(", ")
+                        "\"${batch}\":[${names}]"
+                    }
+                    return "{${ parts.join(", ") }}"
                 }
-                .reduce{ acc, entry -> acc + ", ${entry}" }
-                .map{ all -> "{${all}}" }
         } else {
             file_json = batched_paths_ch
-                .map{ _, path ->
-                    "\"${new File(path).name}\""
+                .map{ _, path -> new File(path).name }
+                .toSortedList()
+                .map{ list ->
+                    def quoted = list.collect{ "\"${it}\"" }.join(", ")
+                    "[${quoted}]"
                 }
-                .reduce{ acc, line -> acc + ", ${line}" }
-                .map{ it -> "[${it}]" }
         }
 
         // make sure that all files have the same extension
