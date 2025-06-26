@@ -67,9 +67,9 @@ The ``params`` Section
      - The path to the directory containing the raw data to be quantified. If using narrow window DIA and GPF to generated a chromatogram library this is the location of the wide-window data to be searched using the chromatogram library.
    * -
      - ``quant_spectra_glob``
-     - Which files in this directory to use.
-       Must be ``null`` if ``quant_spectra_regex`` is set. Default: ``*.raw``
-   * - ``quant_spectra_regex``
+     - Which files in this directory to use. Default: ``*.raw``
+   * -
+     - ``quant_spectra_regex``
      - Use this regex instead of ``quant_spectra_glob`` to select files in ``quant_spectra_dir``.
        If set, ``quant_spectra_glob`` must be set to ``null``. Default: ``null``.
    * -
@@ -80,9 +80,9 @@ The ``params`` Section
      - If you are creating a chromatogram library using GPF and narrow window DIA, this is the path to the directory containing the narrow-window raw data.
    * -
      - ``chromatogram_library_spectra_glob``
-     - Which files in this directory to use.
-       Must be ``null`` if ``chromatogram_library_spectra_regex`` is set. Default: ``*.raw``
-   * - ``chromatogram_library_spectra_regex``
+     - Which files in this directory to use. Default: ``*.raw``
+   * -
+     - ``chromatogram_library_spectra_regex``
      - Use this regex instead of ``chromatogram_library_spectra_glob`` to select files in ``chromatogram_library_spectra_dir``.
        If set, ``chromatogram_library_spectra_glob`` must be set to ``null``. Default: ``null``.
    * -
@@ -128,7 +128,7 @@ The ``params`` Section
      - Additional command line arguments passed to ``PDC_client``. Default is ``null``.
    * - ``pdc.s3_download``
      - If set to ``true`` download raw files through an S3 transfer instead of over https.
-       This option will only work if the workflow execution enviroment is configured to directly access PDC AWS infrastructure.
+       This option will only work if the workflow execution environment is configured to directly access PDC AWS infrastructure.
        Default is ``faise``.
 
 
@@ -148,7 +148,8 @@ The ``params`` Section
    * - ``carafe.carafe_fasta``
      - FASTA file used by Carafe to generate final spectral library. If ``null``, ``params.fasta`` is used.
    * - ``carafe_cli_options``
-     - Command line options to pass to Carafe. Note: Do not set the ``se``, ``lf_type``, ``-db``, ``-i``, ``-o`` parameters, these are handled by the workflow. The default is to not pass any command line option and use Carafe's defaults, see https://github.com/Noble-Lab/Carafe for more details.
+     - Command line options to pass to Carafe. Note: Do not set the ``se``, ``lf_type``, ``-db``, ``-i``, ``-o`` parameters, these are handled by the workflow. The default is ``-min_pep_charge 2 -max_pep_charge 3``
+       See the `Carafe GitHub page <https://github.com/Noble-Lab/Carafe>`_ for details on available parameters.
    * - ``carafe.diann_fasta``
      - The FASTA file used by the DIA-NN search in the Carafe subworkflow. If not set either ``params.carafe_fasta`` or ``params.fasta`` will be used. Default: ``null``.
 
@@ -420,6 +421,117 @@ These parameters describe the capability of your local computer for running the 
    * - ✓
      - ``params.panorama_cache_directory``
      - If the RAW files to be processed are in PanoramaWeb, the RAW files will be downloaded to and cached in this directory for future use.
+
+
+The ``process`` Section
+^^^^^^^^^^^^^^^^^^^^^^^
+
+In Nextflow process labels can be used to adjust the compute resources that are allocated to a given process.
+By default these processes will dynamically adjust the requested memory and run time to fit the number and size of the files being processed.
+
+.. list-table:: Default resources for processes with custom labels
+   :widths: 15 5 50 30
+   :header-rows: 1
+
+   * - Process
+     - CPUs
+     - Memory
+     - Walltime
+   * - ``DIANN_QUANT``
+     - 8
+     - Maximum of 8 GB and 1.5 times the sum of the sizes of the MS and spectral library files
+     - 2 hours
+   * - ``DIANN_MBR``
+     - 32
+     - Maximum of 16 GB and 1.5 times the sum of the MS file sizes
+     - 10 minutes times the number of MS files
+   * - ``BLIB_BUILD_LIBRARY``
+     - 2
+     - Maximum of 8 GB and 1.5 times the size of the precursor report file
+     - 2 hours
+   * - ``ENCYCLOPEDIA_SEARCH_FILE``
+     - 8
+     - 16 GB
+     - 4 hours
+   * - ``ENCYCLOPEDIA_CREATE_ELIB``
+     - 32
+     - Maximum of 32 GB and 4 times the number of individual MS files
+     - 24 hours
+   * - ``SKYLINE_ADD_LIB``
+     - 4
+     - Maximum of 8 GB and 1.5 times the spectral library size
+     - 2 hours
+   * - ``SKYLINE_IMPORT_MS_FILE``
+     - 8
+     - Maximum of 8 GB and the sum of the MS file and skyline template with spectral library.
+     - 2 hours
+   * - ``SKYLINE_MERGE_RESULTS``
+     - 32
+     - Maximum of 8 GB and 1.5 times the size of all .skyd files
+     - 8 hours
+   * - ``SKYLINE_ANNOTATE_DOCUMENT``
+     - 8
+     - Maximum of 8 GB and 1.5 time the size of the skyline zip file
+     - 4 hours
+   * - ``SKYLINE_RUN_REPORTS``
+     - 8
+     - Maximum of 8 GB and 1.5 time the size of the skyline zip file
+     - 4 hours
+   * - ``MERGE_REPORTS``
+     - 2
+     - Maximum of 8 GB and the sum of the sizes of the precursor reports.
+     - 8 hours
+   * - ``FILTER_IMPUTE_NORMALIZE``
+     - 8
+     - Maximum of 8 GB and 2 times the size of the batch database
+     - 4 hours
+   * - ``GENERATE_QC_QMD``
+     - 2
+     - Maximum of 8 GB and 2 times the size of the batch database
+     - 1 hour
+   * - ``GENERATE_BATCH_REPORT``
+     - 2
+     - Maximum of 8 GB and 2 times the size of the batch database
+     - 4 hours
+   * - ``EXPORT_TABLES``
+     - 2
+     - Maximum of 8 GB and 2 times the size of the batch database
+     - 2 hours
+   * - ``RENDER_QC_REPORT``
+     - 2
+     - Maximum of 8 GB and 2 times the size of the batch database
+     - 2 hours
+   * - ``EXPORT_GENE_REPORTS``
+     - 2
+     - Maximum of 8 GB and 2 times the size of the batch database
+     - 2 hours
+
+In most cases there is no need for users to adjust the default values.
+One application where adjusting these parameters could be useful is to select the AWS batch queue to be used for a specific process.
+The ``DIANN_MBR`` process downloads all MS files to a single EC2 instance.
+In cases where large numbers of files are being processed the available disk space on the default EC2 instance might not be sufficient to hold all the MS files.
+The ``DIANN_MBR`` process can be set to run in a queue with more disk space by adding the following to the pipeline config.
+
+.. code-block:: groovy
+
+    process {
+       withLabel:DIANN_MBR {
+           queue = "nextflow_basic_ec2_1tb"
+       }
+   }
+
+The resource requierments for each of the processes listed above can be fully customized by adding a ``withLabel`` block to the ``process`` section of the pipeline config file.
+For example, to use a constant memory and wall time request to ``DIANN_MBR`` you could add the following to the pipeline config file:
+
+.. code-block:: groovy
+
+    process {
+        withLabel:DIANN_MBR {
+            memory = 248.GB
+            time = 48.h
+        }
+    }
+
 
 The ``mail`` Section
 ^^^^^^^^^^^^^^^^^^^^^^^
