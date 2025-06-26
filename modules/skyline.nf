@@ -6,7 +6,7 @@ def sky_basename(path) {
 process SKYLINE_ADD_LIB {
     publishDir params.output_directories.skyline.add_lib, failOnError: true, mode: 'copy'
     cpus   4
-    memory { Math.max(15.0, ( elib.size() / (1024 ** 3)) * 1.5 ).GB }
+    memory { Math.max(8.0, ( elib.size() / (1024 ** 3)) * 1.5 ).GB }
     time   { 2.h * task.attempt }
     label 'error_retry'
     label 'proteowizard'
