@@ -1,5 +1,5 @@
 
-include { format_flag } from "./qc_report.nf"
+include { format_flag } from "./utils.nf"
 
 process GET_STUDY_METADATA {
     publishDir "${params.result_dir}/pdc", failOnError: true, mode: 'copy'

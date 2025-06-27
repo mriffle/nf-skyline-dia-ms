@@ -1,17 +1,8 @@
 
 include { setupPanoramaAPIKeySecret } from "./panorama"
-
-def format_flag(var, flag) {
-    def ret = (var == null ? "" : "${flag} ${var}")
-    return ret
-}
-
-def format_flags(vars, flag) {
-    if(vars instanceof List) {
-        return (vars == null ? "" : "${flag} \'${vars.join('\' ' + flag + ' \'')}\'")
-    }
-    return format_flag(vars, flag)
-}
+include { format_flag } from "./utils"
+include { format_flags } from "./utils"
+include { get_total_file_sizes } from "./utils"
 
 process MAKE_EMPTY_FILE {
     label 'process_low'

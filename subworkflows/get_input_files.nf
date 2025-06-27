@@ -4,24 +4,7 @@ include { PANORAMA_GET_FILE as PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/
 include { PANORAMA_GET_FILE as PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
 include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
 
-/**
-* Process a parameter variable which is specified as either a single value or List.
-* If param_variable has multiple lines, each line with text is returned as an
-* element in a List.
-*
-* @param param_variable A parameter variable which can either be a single value or List.
-* @return param_variable as a List with 1 or more values.
-*/
-def param_to_list(param_variable) {
-    if(param_variable instanceof List) {
-        return param_variable
-    }
-    if(param_variable instanceof String) {
-        // Split string by new line, remove whitespace, and skip empty lines
-        return param_variable.split('\n').collect{ it.trim() }.findAll{ it }
-    }
-    return [param_variable]
-}
+include { param_to_list } from "../modules/utils.nf"
 
 workflow get_input_files {
 

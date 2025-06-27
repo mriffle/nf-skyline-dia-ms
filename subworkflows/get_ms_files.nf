@@ -7,7 +7,7 @@ include { MSCONVERT_MULTI_BATCH as MSCONVERT } from "../modules/msconvert"
 include { UNZIP_DIRECTORY as UNZIP_BRUKER_D } from "../modules/msconvert"
 
 // useful functions and variables
-include { param_to_list } from "./get_input_files"
+include { param_to_list } from "../modules/utils.nf"
 
 /**
  * Randomly sample a list and return a list with n elements.

@@ -24,7 +24,7 @@ include { GET_AWS_USER_ID } from "./modules/aws"
 include { BUILD_AWS_SECRETS } from "./modules/aws"
 
 // useful functions and variables
-include { param_to_list } from "./subworkflows/get_input_files"
+include { param_to_list } from "./modules/utils.nf"
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
