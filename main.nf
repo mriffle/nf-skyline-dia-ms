@@ -3,7 +3,7 @@
 nextflow.enable.dsl = 2
 
 // functions for parameter validation
-include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
+include { validateParameters } from 'plugin/nf-schema'
 
 // Sub workflows
 include { get_input_files } from "./subworkflows/get_input_files"
