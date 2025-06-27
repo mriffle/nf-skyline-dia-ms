@@ -2,8 +2,12 @@
 
 nextflow.enable.dsl = 2
 
+// functions for parameter validation
+include { validateParameters } from 'plugin/nf-schema'
+
 // Sub workflows
 include { get_input_files } from "./subworkflows/get_input_files"
+include { get_replicate_metadata } from "./subworkflows/get_replicate_metadata"
 include { get_ms_files as get_narrow_ms_files } from "./subworkflows/get_ms_files"
 include { get_ms_files as get_wide_ms_files } from "./subworkflows/get_ms_files"
 include { carafe } from "./workflows/carafe"
@@ -20,7 +24,7 @@ include { GET_AWS_USER_ID } from "./modules/aws"
 include { BUILD_AWS_SECRETS } from "./modules/aws"
 
 // useful functions and variables
-include { param_to_list } from "./subworkflows/get_input_files"
+include { param_to_list } from "./modules/utils.nf"
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
@@ -55,6 +59,9 @@ workflow {
     all_ms_file_ch = null       // hold all mzml files generated
     all_mzml_ch = null
 
+    // Validate input parameters
+    validateParameters()
+
     // version file channels
     search_engine_version = null
     proteowizard_version = null
@@ -86,8 +93,9 @@ workflow {
         aws_secret_id = Channel.of('none').collect()    // ensure this is a value channel
     }
 
-    // get mzML files
+    // get raw/mzML files
     use_batch_mode = params.quant_spectra_dir instanceof Map
+    quant_spectra_file_json = Channel.empty()
     if(params.pdc.study_id) {
         get_pdc_files()
         wide_ms_file_ch = get_pdc_files.out.wide_ms_file_ch
@@ -99,26 +107,41 @@ workflow {
             skyline_document_name = Channel.value(params.skyline.document_name)
          }
     } else {
-        get_wide_ms_files(params.quant_spectra_dir,
-                          params.quant_spectra_glob,
-                          params.files_per_quant_batch,
-                          aws_secret_id)
+        String quant_spectra_regex = get_file_regex(
+            params.quant_spectra_glob, params.quant_spectra_regex, 'quant_spectra'
+        )
+        get_wide_ms_files(
+            params.quant_spectra_dir,
+            quant_spectra_regex,
+            params.files_per_quant_batch,
+            aws_secret_id
+        )
         wide_ms_file_ch = get_wide_ms_files.out.ms_file_ch
         wide_mzml_ch = get_wide_ms_files.out.converted_mzml_ch
+        quant_spectra_file_json = get_wide_ms_files.out.file_json
         pdc_study_name = null
         skyline_document_name = Channel.value(params.skyline.document_name)
     }
-    narrow_ms_file_ch = null
-    if(params.chromatogram_library_spectra_dir != null) {
-        get_narrow_ms_files(params.chromatogram_library_spectra_dir,
-                            params.chromatogram_library_spectra_glob,
-                            params.files_per_chrom_lib,
-                            aws_secret_id)
 
+    narrow_ms_file_ch = null
+    chrom_lib_file_json = null
+    if(params.chromatogram_library_spectra_dir != null) {
+        String chrom_lib_spectra_regex = get_file_regex(
+            params.chromatogram_library_spectra_glob, params.chromatogram_library_spectra_regex,
+            'chromatogram_library_spectra'
+        )
+        get_narrow_ms_files(
+            params.chromatogram_library_spectra_dir,
+            chrom_lib_spectra_regex,
+            params.files_per_chrom_lib,
+            aws_secret_id
+        )
         narrow_ms_file_ch = get_narrow_ms_files.out.ms_file_ch
+        chrom_lib_file_json = get_narrow_ms_files.out.file_json
         all_ms_file_ch = wide_ms_file_ch.concat(narrow_ms_file_ch).map{ it -> it[1] }
         all_mzml_ch = wide_mzml_ch.concat(get_narrow_ms_files.out.converted_mzml_ch)
     } else {
+        chrom_lib_file_json = Channel.value("[]")
         all_ms_file_ch = wide_ms_file_ch.map{ it -> it[1] }
         all_mzml_ch = wide_mzml_ch
     }
@@ -155,7 +178,12 @@ workflow {
         }
         replicate_metadata = get_pdc_files.out.annotations_csv
     } else {
-        replicate_metadata = get_input_files.out.replicate_metadata
+        get_replicate_metadata(
+            quant_spectra_file_json,
+            chrom_lib_file_json,
+            aws_secret_id
+        )
+        replicate_metadata = get_replicate_metadata.out.validated_metadata
     }
     fasta = get_input_files.out.fasta
     skyline_template_zipfile = get_input_files.out.skyline_template_zipfile
@@ -256,6 +284,26 @@ workflow {
             use_batch_mode,
             aws_secret_id
         )
+    }
+}
+
+// Convert a Nextflow-style glob (only * is a wildcard) into a regex string
+def escape_regex(String str) {
+    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { _, group -> '\\' + group }
+}
+
+// Return a regex string for matching files based on glob or regex parameters
+// Also check that only one of the two parameters is set
+def get_file_regex(String file_glob_param, String file_regex_param, String name) {
+    if (file_glob_param != null && file_regex_param != null) {
+        error "Either params.${name}_glob or params.${name}_regex can be set, but not both."
+    }
+    if (file_regex_param != null) {
+        return file_regex_param
+    } else if (file_glob_param != null) {
+        return '^' + escape_regex(file_glob_param).replaceAll('\\*', '.*') + '$'
+    } else {
+        error "Neither params.${name}_glob nor params.${name}_regex is set."
     }
 }
 

@@ -1,4 +1,7 @@
 
+include { get_total_file_sizes } from './utils.nf'
+include { get_n_files } from './utils.nf'
+
 /**
  * Join multiple MS files into a single string, skipping Bruker .d directories.
  *
@@ -134,7 +137,7 @@ process DIANN_SEARCH {
 
 process CARAFE_DIANN_SEARCH {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_high_constant'
+    label 'process_high'
     container params.images.diann
 
     input:
@@ -194,7 +197,10 @@ process CARAFE_DIANN_SEARCH {
 
 process DIANN_QUANT {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_high'
+    cpus   8
+    memory { Math.max(16.0, ((ms_file.size() + spectral_library.size()) / (1024 ** 3)) * 2.0).GB }
+    time   { 2.h * task.attempt }
+    label 'DIANN_QUANT'
     container params.images.diann
     stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
@@ -228,7 +234,10 @@ process DIANN_QUANT {
 
 process DIANN_MBR {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_high_constant'
+    cpus   32
+    memory { Math.max(32.0, (get_total_file_sizes(ms_files) / (1024 ** 3)) * 2.0).GB }
+    time   { 10.m * get_n_files(ms_files) }
+    label 'DIANN_MBR'
     container params.images.diann
     stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
@@ -295,8 +304,11 @@ process DIANN_MBR {
 
 process BLIB_BUILD_LIBRARY {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(8.0, (precursor_report.size() / (1024 ** 3)) * 1.5 ).GB }
+    time   { 2.h * task.attempt }
     label 'proteowizard'
+    label 'BLIB_BUILD_LIBRARY'
     container params.images.proteowizard
 
     input:

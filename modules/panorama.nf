@@ -5,10 +5,6 @@ def exec_java_command(mem) {
     return "java -Djava.aws.headless=true ${xmx} -jar /usr/local/bin/PanoramaClient.jar"
 }
 
-String escapeRegex(String str) {
-    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { _, group -> '\\' + group }
-}
-
 String setupPanoramaAPIKeySecret(secret_id, executor_type) {
 
     if(executor_type != 'awsbatch') {
@@ -60,7 +56,7 @@ process PANORAMA_GET_MS_FILE_LIST {
 
     input:
         tuple val(batch_name), val(web_dav_url)
-        val file_glob
+        val file_regex
         val aws_secret_id
 
     output:
@@ -69,9 +65,6 @@ process PANORAMA_GET_MS_FILE_LIST {
         path("*.stderr"), emit: stderr
 
     script:
-    // convert glob to regex that we can use to grep lines from a file of filenames
-    String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
-
     """
     ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
 
@@ -84,7 +77,7 @@ process PANORAMA_GET_MS_FILE_LIST {
         > >(tee "panorama-get-files.stdout") 2> >(tee "panorama-get-files.stderr" >&2) && \
 
     # Filter raw files by file_glob and prepend web_dav_url to file names
-    grep -P '${regex}' all_files.txt | xargs -d'\\n' printf '${web_dav_url.replaceAll("%", "%%")}/%s\\n' > download_files.txt
+    grep -P '${file_regex}' all_files.txt | xargs -d'\\n' printf '${web_dav_url.replaceAll("%", "%%")}/%s\\n' > download_files.txt
     """
 }
 
@@ -97,7 +90,7 @@ process PANORAMA_PUBLIC_GET_MS_FILE_LIST {
 
     input:
         tuple val(batch_name), val(web_dav_url)
-        val file_glob
+        val file_regex
 
     output:
         tuple val(batch_name), path('download_files.txt'), emit: ms_files
@@ -105,9 +98,6 @@ process PANORAMA_PUBLIC_GET_MS_FILE_LIST {
         path("*.stderr"), emit: stderr
 
     script:
-    // convert glob to regex that we can use to grep lines from a file of filenames
-    String regex = '^' + escapeRegex(file_glob).replaceAll("\\*", ".*") + '$'
-
     """
     echo "Running file list from Panorama Public..."
         ${exec_java_command(task.memory)} \
@@ -118,7 +108,7 @@ process PANORAMA_PUBLIC_GET_MS_FILE_LIST {
         > >(tee "panorama-get-files.stdout") 2> >(tee "panorama-get-files.stderr" >&2) && \
 
     # Filter raw files by file_glob and prepend web_dav_url to file names
-    grep -P '${regex}' all_files.txt | xargs -d'\\n' printf '${web_dav_url.replaceAll("%", "%%")}/%s\\n' > download_files.txt
+    grep -P '${file_regex}' all_files.txt | xargs -d'\\n' printf '${web_dav_url.replaceAll("%", "%%")}/%s\\n' > download_files.txt
     """
 }
 

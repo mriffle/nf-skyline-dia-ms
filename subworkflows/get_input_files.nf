@@ -3,27 +3,8 @@ include { PANORAMA_GET_FILE as PANORAMA_GET_FASTA } from "../modules/panorama"
 include { PANORAMA_GET_FILE as PANORAMA_GET_SPECTRAL_LIBRARY } from "../modules/panorama"
 include { PANORAMA_GET_FILE as PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/panorama"
 include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
-include { PANORAMA_GET_FILE as PANORAMA_GET_METADATA } from "../modules/panorama"
-include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
-/**
-* Process a parameter variable which is specified as either a single value or List.
-* If param_variable has multiple lines, each line with text is returned as an
-* element in a List.
-*
-* @param param_variable A parameter variable which can either be a single value or List.
-* @return param_variable as a List with 1 or more values.
-*/
-def param_to_list(param_variable) {
-    if(param_variable instanceof List) {
-        return param_variable
-    }
-    if(param_variable instanceof String) {
-        // Split string by new line, remove whitespace, and skip empty lines
-        return param_variable.split('\n').collect{ it.trim() }.findAll{ it }
-    }
-    return [param_variable]
-}
+include { param_to_list } from "../modules/utils.nf"
 
 workflow get_input_files {
 
@@ -95,27 +76,12 @@ workflow get_input_files {
             skyr_files = Channel.empty()
         }
 
-        if(params.replicate_metadata != null) {
-            if(panorama_auth_required_for_url(params.replicate_metadata.trim())) {
-                PANORAMA_GET_METADATA(params.replicate_metadata, aws_secret_id)
-                replicate_metadata = PANORAMA_GET_METADATA.out.panorama_file
-            } else {
-                replicate_metadata = params.replicate_metadata
-            }
-        } else if(params.pdc.study_id != null) {
-            replicate_metadata = null
-        } else {
-            METADATA_PLACEHOLDER('EMPTY')
-            replicate_metadata = METADATA_PLACEHOLDER.out
-        }
-
    emit:
        fasta
        skyline_fasta
        spectral_library
        skyline_template_zipfile
        skyr_files
-       replicate_metadata
 }
 
 // return true if the URL requires panorama authentication (panorama public does not)

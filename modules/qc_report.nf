@@ -1,15 +1,8 @@
 
-def format_flag(var, flag) {
-    def ret = (var == null ? "" : "${flag} ${var}")
-    return ret
-}
-
-def format_flags(vars, flag) {
-    if(vars instanceof List) {
-        return (vars == null ? "" : "${flag} \'${vars.join('\' ' + flag + ' \'')}\'")
-    }
-    return format_flag(vars, flag)
-}
+include { setupPanoramaAPIKeySecret } from "./panorama"
+include { format_flag } from "./utils"
+include { format_flags } from "./utils"
+include { get_total_file_sizes } from "./utils"
 
 process MAKE_EMPTY_FILE {
     label 'process_low'
@@ -27,9 +20,115 @@ process MAKE_EMPTY_FILE {
     """
 }
 
+process VALIDATE_LOCAL_METADATA {
+    label 'process_low'
+    container params.images.qc_pipeline
+
+    input:
+        val quant_files
+        val chrom_lib_files
+        path replicate_metadata
+
+    output:
+        path replicate_metadata, emit: replicate_metadata
+
+    script:
+        """
+        echo '${quant_files}' > quant_files.json
+        echo '${chrom_lib_files}' > chrom_lib_files.json
+
+        dia_qc validate params \
+            --quant-spectra-json quant_files.json \
+            --chrom-lib-spectra-json chrom_lib_files.json \
+            --metadata ${replicate_metadata} \
+            ${format_flag(params.batch_report.batch1, "--batch1")} \
+            ${format_flag(params.batch_report.batch2, "--batch2")} \
+            ${format_flags(params.qc_report.color_vars, "--addColorVar")} \
+            ${format_flag(params.batch_report.control_key, "--controlKey")} \
+            ${format_flags(params.batch_report.control_values, "--addControlValue")} \
+            ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
+            > >(tee "validate_metadata.stdout") 2> >(tee "validate_metadata.stderr" >&2)
+        """
+}
+
+process VALIDATE_PANORAMA_METADATA {
+    label 'process_low'
+    container params.images.qc_pipeline
+    secret 'PANORAMA_API_KEY'
+
+    input:
+        val quant_files
+        val chrom_lib_files
+        val metadata_webdav_url
+        val aws_secret_id
+
+    output:
+        path("${file(metadata_webdav_url).name}") , emit: replicate_metadata
+
+    script:
+        metadata_name = file(metadata_webdav_url).name
+        """
+        ${setupPanoramaAPIKeySecret(aws_secret_id, task.executor)}
+
+        echo '${quant_files}' > quant_files.json
+        echo '${chrom_lib_files}' > chrom_lib_files.json
+
+        dia_qc validate params \
+            --quant-spectra-json quant_files.json \
+            --chrom-lib-spectra-json chrom_lib_files.json \
+            --metadata '${metadata_webdav_url}' \
+            --metadata-output-path '${metadata_name}' \
+            ${format_flag(params.batch_report.batch1, "--batch1")} \
+            ${format_flag(params.batch_report.batch2, "--batch2")} \
+            ${format_flags(params.qc_report.color_vars, "--addColorVar")} \
+            ${format_flag(params.batch_report.control_key, "--controlKey")} \
+            ${format_flags(params.batch_report.control_values, "--addControlValue")} \
+            ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
+            --api-key \$PANORAMA_API_KEY \
+            > >(tee "validate_metadata.stdout") 2> >(tee "validate_metadata.stderr" >&2)
+        """
+}
+
+process VALIDATE_PANORAMA_PUBLIC_METADATA {
+    label 'process_low'
+    container params.images.qc_pipeline
+
+    input:
+        val quant_files
+        val chrom_lib_files
+        val metadata_webdav_url
+
+    output:
+        path("${file(metadata_webdav_url).name}") , emit: replicate_metadata
+
+    script:
+        metadata_name = file(metadata_webdav_url).name
+        """
+        echo '${quant_files}' > quant_files.json
+        echo '${chrom_lib_files}' > chrom_lib_files.json
+
+        dia_qc validate params \
+            --quant-spectra-json quant_files.json \
+            --chrom-lib-spectra-json chrom_lib_files.json \
+            --metadata '${metadata_webdav_url}' \
+            --metadata-output-path '${metadata_name}' \
+            ${format_flag(params.batch_report.batch1, "--batch1")} \
+            ${format_flag(params.batch_report.batch2, "--batch2")} \
+            ${format_flags(params.qc_report.color_vars, "--addColorVar")} \
+            ${format_flag(params.batch_report.control_key, "--controlKey")} \
+            ${format_flags(params.batch_report.control_values, "--addControlValue")} \
+            ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
+            --api-key "${params.panorama.api_key}" \
+            > >(tee "validate_metadata.stdout") 2> >(tee "validate_metadata.stderr" >&2)
+        """
+}
+
 process MERGE_REPORTS {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(8.0, (get_total_file_sizes(precursor_reports) / (1024 ** 3))).GB }
+    time   { 8.h * task.attempt }
+    label 'MERGE_REPORTS'
     container params.images.qc_pipeline
 
     input:
@@ -83,7 +182,10 @@ process MERGE_REPORTS {
 process FILTER_IMPUTE_NORMALIZE {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
     stageInMode 'copy' // The input file is modified in place. Copying is necissary to avoid problems with caching.
-    label 'process_high_memory'
+    cpus   8
+    memory { Math.max(8.0, (database.size() / (1024 ** 3)) * 1.5 ).GB }
+    time   { 4.h * task.attempt }
+    label 'FILTER_IMPUTE_NORMALIZE'
     container params.images.qc_pipeline
 
     input:
@@ -123,11 +225,14 @@ process FILTER_IMPUTE_NORMALIZE {
 
 process GENERATE_QC_QMD {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(8.0, (database.size() / (1024 ** 3)) * 1.5 ).GB }
+    time   { 2.h * task.attempt }
+    label 'GENERATE_QC_QMD'
     container params.images.qc_pipeline
 
     input:
-        val batch
+        val  batch
         path database
 
     output:
@@ -157,8 +262,11 @@ process GENERATE_BATCH_REPORT {
     publishDir params.output_directories.batch_report_tables, pattern: '*.tsv', failOnError: true, mode: 'copy'
     publishDir params.output_directories.batch_report_plots, pattern: "plots/*.${params.batch_report.plot_ext}", failOnError: true, mode: 'copy'
     publishDir params.output_directories.batch_report, pattern: '*.std{err,out}', failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(8.0, (normalized_db.size() / (1024 ** 3)) * 4.0 ).GB }
+    time   { 4.h * task.attempt }
     label 'run_as_root'
+    label 'GENERATE_BATCH_REPORT'
     container params.images.qc_pipeline
 
     input:
@@ -207,7 +315,10 @@ process EXPORT_TABLES {
     publishDir params.output_directories.qc_report_tables, pattern: '*.tsv', failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stderr', failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(8.0, (precursor_db.size() / (1024 ** 3)) * 2.0 ).GB }
+    time   { 2.h * task.attempt }
+    label 'EXPORT_TABLES'
     container params.images.qc_pipeline
 
     input:
@@ -234,8 +345,11 @@ process RENDER_QC_REPORT {
     publishDir params.output_directories.qc_report, pattern: "*.${report_format}", failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stderr', failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(8.0, (database.size() / (1024 ** 3)) * 2.0 ).GB }
+    time   { 2.h * task.attempt }
     label 'run_as_root'
+    label 'RENDER_QC_REPORT'
     container params.images.qc_pipeline
 
     input:
@@ -263,7 +377,10 @@ process RENDER_QC_REPORT {
 
 process EXPORT_GENE_REPORTS {
     publishDir params.output_directories.gene_reports, failOnError: true, mode: 'copy'
-    label 'process_high_memory'
+    cpus   2
+    memory { Math.max(8.0, (batch_db.size() / (1024 ** 3)) * 2.0 ).GB }
+    time   { 2.h * task.attempt }
+    label 'EXPORT_GENE_REPORTS'
     container params.images.qc_pipeline
 
     input:
