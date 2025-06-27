@@ -126,7 +126,7 @@ process VALIDATE_PANORAMA_PUBLIC_METADATA {
 process MERGE_REPORTS {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
     cpus   2
-    memory { Math.max(8, (precursor_reports*.size().sum() / (1024 ** 3))).GB }
+    memory { Math.max(8.0, (get_total_file_sizes(precursor_reports) / (1024 ** 3))).GB }
     time   { 8.h * task.attempt }
     label 'MERGE_REPORTS'
     container params.images.qc_pipeline
@@ -183,7 +183,7 @@ process FILTER_IMPUTE_NORMALIZE {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
     stageInMode 'copy' // The input file is modified in place. Copying is necissary to avoid problems with caching.
     cpus   8
-    memory { Math.max(8, (database.size() / (1024 ** 3)) * 1.5 ).GB }
+    memory { Math.max(8.0, (database.size() / (1024 ** 3)) * 1.5 ).GB }
     time   { 4.h * task.attempt }
     label 'FILTER_IMPUTE_NORMALIZE'
     container params.images.qc_pipeline

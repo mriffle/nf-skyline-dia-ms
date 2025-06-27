@@ -1,4 +1,6 @@
 
+include { get_total_file_sizes } from './utils.nf'
+
 def sky_basename(path) {
     return path.baseName.replaceAll(/(\.zip)?\.sky$/, '').replaceAll(/_$/, '')
 }
@@ -98,7 +100,7 @@ process SKYLINE_IMPORT_MS_FILE {
     cache 'lenient'
     label 'SKYLINE_IMPORT_MS_FILE'
     container params.images.proteowizard
-    stageInMode "${params.skyline.use_hardlinks && executor != 'awsbatch' ? 'link' : 'symlink'}"
+    stageInMode "${params.skyline.use_hardlinks && task.executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
         path skyline_zipfile
@@ -131,14 +133,14 @@ process SKYLINE_IMPORT_MS_FILE {
 process SKYLINE_MERGE_RESULTS {
     publishDir params.output_directories.skyline.import_spectra, enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
     cpus   32
-    memory { Math.max(8.0, ((skyd_files*.size().sum()) / (1024 ** 3)) * 1.5).GB }
+    memory { Math.max(8.0, (get_total_file_sizes(skyd_files) / (1024 ** 3)) * 1.5).GB }
     time   { 8.h * task.attempt }
     label 'error_retry'
     label 'proteowizard'
     cache 'lenient'
     label 'SKYLINE_MERGE_RESULTS'
     container params.images.proteowizard
-    stageInMode "${params.skyline.use_hardlinks && executor != 'awsbatch' ? 'link' : 'symlink'}"
+    stageInMode "${params.skyline.use_hardlinks && task.executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
         path skyline_zipfile

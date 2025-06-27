@@ -54,13 +54,13 @@ def format_flags(vars, flag) {
 /**
  * Get the total size of files in the files variable.
  *
- * If the collect() opperator is called on a Channel of paths,
- * it will emit a List of Paths if there is more than one file,
+ * If the collect() opperator is called on a Channel of Paths,
+ * it will emit a List<Path> if there is more than one file,
  * but a single Path object if there is only one file in the channel.
- * This function handles both cases.
+ * This function handles both variable types.
  *
- * @param files A List of Paths or a single Path.
- * @return The number of files as an integer.
+ * @param files A List<Path> or a single Path.
+ * @return The total size of the files as an integer.
  */
 def get_total_file_sizes(files) {
     if(files instanceof List<Path>) {
@@ -75,7 +75,7 @@ def get_total_file_sizes(files) {
 /**
  * Get the number of files in the files variable.
  *
- * @param files A List of Paths or a single Path.
+ * @param files A List<Path> or a single Path.
  * @return The number of files as an integer.
  */
 def get_n_files(files) {

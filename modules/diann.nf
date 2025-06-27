@@ -1,4 +1,7 @@
 
+include { get_total_file_sizes } from './utils.nf'
+include { get_n_files } from './utils.nf'
+
 /**
  * Join multiple MS files into a single string, skipping Bruker .d directories.
  *
@@ -232,8 +235,8 @@ process DIANN_QUANT {
 process DIANN_MBR {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     cpus   32
-    memory { Math.max(16.0, (ms_files*.size().sum() / (1024 ** 3)) * 1.5).GB }
-    time   { 10.m * ms_files.size() }
+    memory { Math.max(16.0, (get_total_file_sizes(ms_files) / (1024 ** 3)) * 1.5).GB }
+    time   { 10.m * get_n_files(ms_files) }
     label 'DIANN_MBR'
     container params.images.diann
     stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
@@ -264,8 +267,6 @@ process DIANN_MBR {
         ms_file_args = "--f '${sorted_ms_files.join('\' --f \'')}'"
 
         """
-        echo "There are ${ms_files.size()} files!"
-
         diann ${ms_file_args} \
             --threads ${task.cpus} \
             --fasta ${fasta_file} \
