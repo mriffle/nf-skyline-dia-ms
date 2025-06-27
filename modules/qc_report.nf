@@ -227,7 +227,7 @@ process GENERATE_QC_QMD {
     publishDir params.output_directories.qc_report, failOnError: true, mode: 'copy'
     cpus   2
     memory { Math.max(8.0, (database.size() / (1024 ** 3)) * 1.5 ).GB }
-    time   { 1.h * task.attempt }
+    time   { 2.h * task.attempt }
     label 'GENERATE_QC_QMD'
     container params.images.qc_pipeline
 

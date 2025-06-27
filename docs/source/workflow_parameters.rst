@@ -428,6 +428,7 @@ The ``process`` Section
 
 In Nextflow process labels can be used to adjust the compute resources that are allocated to a given process.
 By default these processes will dynamically adjust the requested memory and run time to fit the number and size of the files being processed.
+Nextflow will try to allocate resources using the formulas below up to the maximum values specified by ``params.max_memory``, ``params.max_time`` and ``params.max_cpus``.
 
 .. list-table:: Default resources for processes with custom labels
    :widths: 15 5 50 30
@@ -455,7 +456,7 @@ By default these processes will dynamically adjust the requested memory and run 
      - 4 hours
    * - ``ENCYCLOPEDIA_CREATE_ELIB``
      - 32
-     - Maximum of 32 GB and 4 times the number of individual MS files
+     - Maximum of 32 GB and 4 times the number of MS files
      - 24 hours
    * - ``SKYLINE_ADD_LIB``
      - 4
@@ -463,23 +464,23 @@ By default these processes will dynamically adjust the requested memory and run 
      - 2 hours
    * - ``SKYLINE_IMPORT_MS_FILE``
      - 8
-     - Maximum of 8 GB and the sum of the MS file and skyline template with spectral library.
+     - Maximum of 8 GB and the sum of the MS file and skyline template with spectral library
      - 2 hours
    * - ``SKYLINE_MERGE_RESULTS``
      - 32
-     - Maximum of 8 GB and 1.5 times the size of all .skyd files
+     - Maximum of 8 GB and 1.5 times the sum of the sizes of the .skyd files
      - 8 hours
    * - ``SKYLINE_ANNOTATE_DOCUMENT``
      - 8
-     - Maximum of 8 GB and 1.5 time the size of the skyline zip file
+     - Maximum of 8 GB and 1.5 times the size of the skyline zip file
      - 4 hours
    * - ``SKYLINE_RUN_REPORTS``
      - 8
-     - Maximum of 8 GB and 1.5 time the size of the skyline zip file
+     - Maximum of 8 GB and 1.5 times the size of the skyline zip file
      - 4 hours
    * - ``MERGE_REPORTS``
      - 2
-     - Maximum of 8 GB and the sum of the sizes of the precursor reports.
+     - Maximum of 8 GB and the sum of the sizes of the precursor reports
      - 8 hours
    * - ``FILTER_IMPUTE_NORMALIZE``
      - 8
@@ -488,7 +489,7 @@ By default these processes will dynamically adjust the requested memory and run 
    * - ``GENERATE_QC_QMD``
      - 2
      - Maximum of 8 GB and 2 times the size of the batch database
-     - 1 hour
+     - 2 hours
    * - ``GENERATE_BATCH_REPORT``
      - 2
      - Maximum of 8 GB and 2 times the size of the batch database
