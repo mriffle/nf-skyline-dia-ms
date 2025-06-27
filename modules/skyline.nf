@@ -30,8 +30,18 @@ process SKYLINE_ADD_LIB {
     """
     unzip ${skyline_template_zipfile}
 
+    # Handle case where the skyline_template_zipfile basename does not match the .sky file inside.
+    # This can happen when a .sky.zip file shared to Panorama from the Skyline GUI
+    mapfile -t sky_files < <(unzip -Z1 "${skyline_template_zipfile}" | grep -E '\\.sky\$')
+    if [ "\${#sky_files[@]}" -ne 1 ]; then
+        echo "Error: expected exactly one .sky in ${skyline_template_zipfile.name}, found \${#sky_files[@]}" >&2
+        printf '%s\n' "\${sky_files[@]}" >&2
+        exit 1
+    fi
+    skyfile="\${sky_files[0]}"
+
     wine SkylineCmd \
-        --in="${skyline_template_zipfile.baseName}" \
+        --in="\$skyfile" \
         --import-fasta="${fasta}" \
         --add-library-path="${elib}" \
         --out="results.sky" \
