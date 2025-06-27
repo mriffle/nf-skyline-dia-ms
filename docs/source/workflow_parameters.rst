@@ -439,11 +439,11 @@ By default these processes will dynamically adjust the requested memory and run 
      - Walltime
    * - ``DIANN_QUANT``
      - 8
-     - Maximum of 8 GB and 1.5 times the sum of the sizes of the MS and spectral library files
+     - Maximum of 16 GB and 2 times the sum of the sizes of the MS and spectral library files
      - 2 hours
    * - ``DIANN_MBR``
      - 32
-     - Maximum of 16 GB and 1.5 times the sum of the MS file sizes
+     - Maximum of 32 GB and 2 times the sum of the MS file sizes
      - 10 minutes times the number of MS files
    * - ``BLIB_BUILD_LIBRARY``
      - 2
