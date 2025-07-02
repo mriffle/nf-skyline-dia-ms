@@ -21,6 +21,7 @@ process MAKE_EMPTY_FILE {
 }
 
 process VALIDATE_LOCAL_METADATA {
+    publishDir params.output_directories.qc_report, mode: 'copy'
     label 'process_low'
     container params.images.qc_pipeline
 
@@ -31,6 +32,8 @@ process VALIDATE_LOCAL_METADATA {
 
     output:
         path replicate_metadata, emit: replicate_metadata
+        path("*.stdout"), emit: stdout
+        path("*.stderr"), emit: stderr
 
     script:
         """
@@ -52,6 +55,7 @@ process VALIDATE_LOCAL_METADATA {
 }
 
 process VALIDATE_PANORAMA_METADATA {
+    publishDir params.output_directories.qc_report, mode: 'copy'
     label 'process_low'
     container params.images.qc_pipeline
     secret 'PANORAMA_API_KEY'
@@ -64,6 +68,8 @@ process VALIDATE_PANORAMA_METADATA {
 
     output:
         path("${file(metadata_webdav_url).name}") , emit: replicate_metadata
+        path("*.stdout"), emit: stdout
+        path("*.stderr"), emit: stderr
 
     script:
         metadata_name = file(metadata_webdav_url).name
@@ -90,6 +96,7 @@ process VALIDATE_PANORAMA_METADATA {
 }
 
 process VALIDATE_PANORAMA_PUBLIC_METADATA {
+    publishDir params.output_directories.qc_report, mode: 'copy'
     label 'process_low'
     container params.images.qc_pipeline
 
@@ -100,6 +107,8 @@ process VALIDATE_PANORAMA_PUBLIC_METADATA {
 
     output:
         path("${file(metadata_webdav_url).name}") , emit: replicate_metadata
+        path("*.stdout"), emit: stdout
+        path("*.stderr"), emit: stderr
 
     script:
         metadata_name = file(metadata_webdav_url).name
