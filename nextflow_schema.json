@@ -550,7 +550,7 @@
         },
         "pdc_client": {
           "type": "string",
-          "default": "quay.io/mauraisa/pdc_client:2.2.0"
+          "default": "quay.io/mauraisa/pdc_client:2.3.0"
         },
         "encyclopedia": {
           "type": "string",
@@ -562,7 +562,7 @@
         },
         "qc_pipeline": {
           "type": "string",
-          "default": "quay.io/mauraisa/dia_qc_report:2.5.2"
+          "default": "quay.io/mauraisa/dia_qc_report:2.6.0"
         },
         "proteowizard": {
           "type": "string",
