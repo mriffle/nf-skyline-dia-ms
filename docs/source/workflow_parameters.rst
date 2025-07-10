@@ -426,8 +426,8 @@ These parameters describe the capability of your local computer for running the 
 The ``process`` Section
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-In Nextflow process labels can be used to adjust the compute resources that are allocated to a given process.
-By default these processes will dynamically adjust the requested memory and run time to fit the number and size of the files being processed.
+In Nextflow the default compute resources allocated to a process can be adjusted in the ``process`` section using the ``withName`` selector.
+The following processes will dynamically adjust the requested memory and run time to fit the number and size of the files being processed.
 Nextflow will try to allocate resources using the formulas below up to the maximum values specified by ``params.max_memory``, ``params.max_time`` and ``params.max_cpus``.
 
 .. list-table:: Default resources for processes with custom labels
@@ -508,7 +508,7 @@ Nextflow will try to allocate resources using the formulas below up to the maxim
      - 2 hours
 
 In most cases there is no need for users to adjust the default values.
-One application where adjusting these parameters could be useful is to select the AWS batch queue to be used for a specific process.
+One instance where adjusting these parameters could be useful is to select the AWS batch queue to be used for a specific process.
 The ``DIANN_MBR`` process downloads all MS files to a single EC2 instance.
 In cases where large numbers of files are being processed the available disk space on the default EC2 instance might not be sufficient to hold all the MS files.
 The ``DIANN_MBR`` process can be set to run in a queue with more disk space by adding the following to the pipeline config.
@@ -516,18 +516,18 @@ The ``DIANN_MBR`` process can be set to run in a queue with more disk space by a
 .. code-block:: groovy
 
     process {
-       withLabel:DIANN_MBR {
+       withName:DIANN_MBR {
            queue = "nextflow_basic_ec2_1tb"
        }
    }
 
-The resource requierments for each of the processes listed above can be fully customized by adding a ``withLabel`` block to the ``process`` section of the pipeline config file.
-For example, to use a constant memory and wall time request to ``DIANN_MBR`` you could add the following to the pipeline config file:
+The resource requirements allocated to a process can be fully customized by adding a ``withName`` selector to the ``process`` section of the pipeline config file.
+For example, to override the default memory and wall time for ``DIANN_MBR`` you could add the following to the pipeline config:
 
 .. code-block:: groovy
 
     process {
-        withLabel:DIANN_MBR {
+        withName:DIANN_MBR {
             memory = 248.GB
             time = 48.h
         }

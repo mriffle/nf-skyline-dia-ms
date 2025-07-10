@@ -137,7 +137,6 @@ process MERGE_REPORTS {
     cpus   2
     memory { Math.max(8.0, (get_total_file_sizes(precursor_reports) / (1024 ** 3))).GB }
     time   { 8.h * task.attempt }
-    label 'MERGE_REPORTS'
     container params.images.qc_pipeline
 
     input:
@@ -194,7 +193,6 @@ process FILTER_IMPUTE_NORMALIZE {
     cpus   8
     memory { Math.max(8.0, (database.size() / (1024 ** 3)) * 1.5 ).GB }
     time   { 4.h * task.attempt }
-    label 'FILTER_IMPUTE_NORMALIZE'
     container params.images.qc_pipeline
 
     input:
@@ -237,7 +235,6 @@ process GENERATE_QC_QMD {
     cpus   2
     memory { Math.max(8.0, (database.size() / (1024 ** 3)) * 1.5 ).GB }
     time   { 2.h * task.attempt }
-    label 'GENERATE_QC_QMD'
     container params.images.qc_pipeline
 
     input:
@@ -275,7 +272,6 @@ process GENERATE_BATCH_REPORT {
     memory { Math.max(8.0, (normalized_db.size() / (1024 ** 3)) * 4.0 ).GB }
     time   { 4.h * task.attempt }
     label 'run_as_root'
-    label 'GENERATE_BATCH_REPORT'
     container params.images.qc_pipeline
 
     input:
@@ -327,7 +323,6 @@ process EXPORT_TABLES {
     cpus   2
     memory { Math.max(8.0, (precursor_db.size() / (1024 ** 3)) * 2.0 ).GB }
     time   { 2.h * task.attempt }
-    label 'EXPORT_TABLES'
     container params.images.qc_pipeline
 
     input:
@@ -358,7 +353,6 @@ process RENDER_QC_REPORT {
     memory { Math.max(8.0, (database.size() / (1024 ** 3)) * 2.0 ).GB }
     time   { 2.h * task.attempt }
     label 'run_as_root'
-    label 'RENDER_QC_REPORT'
     container params.images.qc_pipeline
 
     input:
@@ -389,7 +383,6 @@ process EXPORT_GENE_REPORTS {
     cpus   2
     memory { Math.max(8.0, (batch_db.size() / (1024 ** 3)) * 2.0 ).GB }
     time   { 2.h * task.attempt }
-    label 'EXPORT_GENE_REPORTS'
     container params.images.qc_pipeline
 
     input:

@@ -13,7 +13,6 @@ process ENCYCLOPEDIA_SEARCH_FILE {
     cpus   8
     memory { 16.GB * task.attempt }
     time   { 4.h  * task.attempt }
-    label 'ENCYCLOPEDIA_SEARCH_FILE'
     container params.images.encyclopedia
 
     input:
@@ -69,7 +68,6 @@ process ENCYCLOPEDIA_CREATE_ELIB {
     cpus  32
     memory { Math.max(32, search_elib_files.size() * 4).GB }
     time   { 24.h  * task.attempt }
-    label 'ENCYCLOPEDIA_CREATE_ELIB'
     container params.images.encyclopedia
 
     input:
