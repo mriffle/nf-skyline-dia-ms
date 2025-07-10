@@ -12,7 +12,6 @@ process SKYLINE_ADD_LIB {
     time   { 2.h * task.attempt }
     label 'error_retry'
     label 'proteowizard'
-    label 'SKYLINE_ADD_LIB'
     container params.images.proteowizard
 
     input:
@@ -108,7 +107,6 @@ process SKYLINE_IMPORT_MS_FILE {
     label 'error_retry'
     label 'proteowizard'
     cache 'lenient'
-    label 'SKYLINE_IMPORT_MS_FILE'
     container params.images.proteowizard
     stageInMode "${params.skyline.use_hardlinks && task.executor != 'awsbatch' ? 'link' : 'symlink'}"
 
@@ -148,7 +146,6 @@ process SKYLINE_MERGE_RESULTS {
     label 'error_retry'
     label 'proteowizard'
     cache 'lenient'
-    label 'SKYLINE_MERGE_RESULTS'
     container params.images.proteowizard
     stageInMode "${params.skyline.use_hardlinks && task.executor != 'awsbatch' ? 'link' : 'symlink'}"
 
@@ -267,7 +264,6 @@ process SKYLINE_ANNOTATE_DOCUMENT {
     memory { Math.max(8.0, (skyline_zipfile.size() / (1024 ** 3)) * 1.5).GB }
     time   { 4.h * task.attempt }
     label 'proteowizard'
-    label 'SKYLINE_ANNOTATE_DOCUMENT'
     container params.images.proteowizard
 
     input:
@@ -314,7 +310,6 @@ process SKYLINE_RUN_REPORTS {
     label 'process_high'
     label 'error_retry'
     label 'proteowizard'
-    label 'SKYLINE_RUN_REPORTS'
     container params.images.proteowizard
 
     input:

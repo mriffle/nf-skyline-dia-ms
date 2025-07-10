@@ -200,7 +200,6 @@ process DIANN_QUANT {
     cpus   8
     memory { Math.max(16.0, ((ms_file.size() + spectral_library.size()) / (1024 ** 3)) * 2.0).GB }
     time   { 2.h * task.attempt }
-    label 'DIANN_QUANT'
     container params.images.diann
     stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
@@ -237,7 +236,6 @@ process DIANN_MBR {
     cpus   32
     memory { Math.max(32.0, (get_total_file_sizes(ms_files) / (1024 ** 3)) * 2.0).GB }
     time   { 10.m * get_n_files(ms_files) }
-    label 'DIANN_MBR'
     container params.images.diann
     stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
 
@@ -308,7 +306,6 @@ process BLIB_BUILD_LIBRARY {
     memory { Math.max(8.0, (precursor_report.size() / (1024 ** 3)) * 1.5 ).GB }
     time   { 2.h * task.attempt }
     label 'proteowizard'
-    label 'BLIB_BUILD_LIBRARY'
     container params.images.proteowizard
 
     input:
