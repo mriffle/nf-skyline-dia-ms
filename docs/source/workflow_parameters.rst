@@ -459,9 +459,9 @@ Nextflow will try to allocate resources using the formulas below up to the maxim
      - Maximum of 32 GB and 4 times the number of MS files
      - 24 hours
    * - ``SKYLINE_ADD_LIB``
-     - 4
-     - Maximum of 8 GB and 1.5 times the spectral library size
-     - 2 hours
+     - 8
+     - Maximum of 8 GB and 10 times the spectral library size
+     - 4 hours
    * - ``SKYLINE_IMPORT_MS_FILE``
      - 8
      - Maximum of 8 GB and the sum of the MS file and skyline template with spectral library
