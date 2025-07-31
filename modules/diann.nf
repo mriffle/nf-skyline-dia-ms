@@ -300,6 +300,13 @@ process DIANN_MBR {
         """
 }
 
+def get_blib_name() {
+    if( params.skyline.document_name != null ){
+        return "${params.skyline.document_name}_diann_lib.blib"
+    }
+    return 'lib.blib'
+}
+
 process BLIB_BUILD_LIBRARY {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     cpus   2
@@ -313,15 +320,15 @@ process BLIB_BUILD_LIBRARY {
         path precursor_report
 
     output:
-        path('lib.blib'), emit: blib
+        path("${get_blib_name()}"), emit: blib
 
     script:
         """
-        wine BlibBuild "${speclib}" lib.blib
+        wine BlibBuild "${speclib}" "${get_blib_name()}"
         """
 
     stub:
         """
-        touch lib.blib
+        touch "${get_blib_name()}"
         """
 }
