@@ -310,7 +310,7 @@ def get_blib_name() {
 process BLIB_BUILD_LIBRARY {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     cpus   2
-    memory { Math.max(8.0, (precursor_report.size() / (1024 ** 3)) * 1.5 ).GB }
+    memory { Math.max(32.0, (precursor_report.size() / (1024 ** 3)) * 5 ).GB }
     time   { 2.h * task.attempt }
     label 'proteowizard'
     container params.images.proteowizard
