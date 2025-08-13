@@ -16,7 +16,7 @@ workflow get_pdc_study_metadata {
             metadata = Channel.fromPath(file(params.pdc.metadata_tsv, checkIfExists: true))
             METADATA_TO_SKY_ANNOTATIONS(metadata)
             annotations_csv = METADATA_TO_SKY_ANNOTATIONS.out
-            study_name = params.pdc.study_name
+            study_name = params.pdc.study_name == null ? params.pdc.study_id : params.pdc.study_name
         }
 
     emit:
