@@ -3,7 +3,7 @@ include { format_flag } from "./utils.nf"
 
 process GET_STUDY_METADATA {
     publishDir "${params.result_dir}/pdc", failOnError: true, mode: 'copy'
-    errorStrategy 'retry'
+    errorStrategy { sleep(Math.pow(2, task.attempt) * 15 as long); return 'retry' }
     maxRetries 5
     label 'process_low_constant'
     container params.images.pdc_client
@@ -23,7 +23,17 @@ process GET_STUDY_METADATA {
 
         """
         export study_id=\$(PDC_client studyID ${pdc_client_args} ${pdc_study_id} | tee study_id.txt)
+        if [ -z "\$study_id" ]; then
+            echo "Failed to retrieve study_id"
+            exit 1
+        fi
+
         export study_name=\$(PDC_client studyName --normalize ${pdc_client_args} \$study_id | tee study_name.txt)
+        if [ -z "\$study_name" ]; then
+            echo "Failed to retrieve study_name"
+            exit 1
+        fi
+
         PDC_client metadata ${pdc_client_args} \
             --flatten -f json --skylineAnnotations \$study_id \
             ${format_flag(params.pdc.n_raw_files, "--nFiles")} ${params.pdc.s3_download ? "--s3Path" : ""}
