@@ -29,20 +29,11 @@ workflow get_pdc_files {
     main:
         get_pdc_study_metadata()
         metadata = get_pdc_study_metadata.out.metadata
-
-		if(params.pdc.s3_download) {
-            metadata
-                .splitJson()
-                .map{ row -> file(row['url']) }
-                .set{ all_paths_ch }
-        } else {
-            metadata
-                .splitJson()
-                .map{ row -> tuple(row['url'], row['file_name'], row['md5sum'], row['file_size']) } \
-                | GET_FILE
-
-            all_paths_ch = GET_FILE.out.downloaded_file
-        }
+        metadata
+            .splitJson()
+            .map{ row -> tuple(row['url'], row['file_name'], row['md5sum'], row['file_size']) } \
+            | GET_FILE
+        all_paths_ch = GET_FILE.out.downloaded_file
 
         all_paths_ch
             .map{ file -> [null, file] }

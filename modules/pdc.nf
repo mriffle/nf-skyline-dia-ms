@@ -76,7 +76,9 @@ process GET_FILE {
 
     script:
         """
-        PDC_client file -o '${file_name}' --size '${file_size}' --md5sum '${md5}' --url '${url}'
+        PDC_client file -o '${file_name}' \
+            --size '${file_size}' --md5sum '${md5}' --url '${url}' \
+            ${ params.pdc.s3_download ? format_flag(params.aws.batch.cliPath, '--aws-cli') : '' }
         """
 
     stub:
