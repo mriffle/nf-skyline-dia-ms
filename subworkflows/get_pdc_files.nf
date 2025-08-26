@@ -1,4 +1,3 @@
-
 include { GET_STUDY_METADATA } from "../modules/pdc.nf"
 include { METADATA_TO_SKY_ANNOTATIONS } from "../modules/pdc.nf"
 include { GET_FILE } from "../modules/pdc.nf"
@@ -29,10 +28,27 @@ workflow get_pdc_files {
     main:
         get_pdc_study_metadata()
         metadata = get_pdc_study_metadata.out.metadata
-        metadata
+
+        // Handle both tsv and json metadata files
+        def meta_split = metadata.branch {
+            tsv:   it.name.toLowerCase().endsWith('.tsv')
+            json:  it.name.toLowerCase().endsWith('.json')
+            other: true
+                error "Unsupported metadata file type: ${it.name} (must be .tsv or .json)"
+        }
+        tsv_entries = meta_split.tsv
+            .splitCsv(header:true, sep:'\t')
+            .map { row ->
+                tuple(row.url, row.file_name, row.md5sum, row.file_size)
+            }
+        json_entries = meta_split.json
             .splitJson()
-            .map{ row -> tuple(row['url'], row['file_name'], row['md5sum'], row['file_size']) } \
-            | GET_FILE
+            .map { row ->
+               tuple(row['url'], row['file_name'], row['md5sum'], row['file_size'])
+            }
+        file_entries = tsv_entries.mix(json_entries)
+
+        GET_FILE(file_entries)
         all_paths_ch = GET_FILE.out.downloaded_file
 
         all_paths_ch
