@@ -24,7 +24,7 @@ workflow carafe {
         if (params.carafe.carafe_fasta == null){
             carafe_fasta = input_fasta
         } else {
-            get_carafe_fasta(params.carafe.fasta, aws_secret_id)
+            get_carafe_fasta(params.carafe.carafe_fasta, aws_secret_id)
             carafe_fasta = get_carafe_fasta.out.file
         }
         if (params.carafe.diann_fasta == null){
