@@ -87,7 +87,7 @@ workflow generate_dia_qc_report {
 
         if(params.qc_report.export_tables) {
             EXPORT_TABLES(qc_report_db)
-            qc_tables = EXPORT_TABLES.out.tables
+            qc_tables = EXPORT_TABLES.out.tables.flatten()
         } else {
             qc_tables = Channel.empty()
         }
