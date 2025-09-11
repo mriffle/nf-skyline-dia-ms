@@ -281,7 +281,7 @@ process GENERATE_BATCH_REPORT {
         path("bc_report.rmd"), emit: bc_rmd
         path("bc_report.html"), emit: bc_html
         path("bc_report.pdf"), emit: bc_pdf
-        path("*.tsv"), emit: tsv_reports, optional: true
+        path("*.tsv"), emit: tsv_reports
         path("plots/*"), emit: bc_plots, optional: true
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
@@ -301,7 +301,7 @@ process GENERATE_BATCH_REPORT {
             ${normalized_db} \
         > >(tee "generate_batch_rmd.stdout") 2> >(tee "generate_batch_rmd.stderr" >&2)
 
-        mkdir plots
+        ${params.batch_report.plot_ext == null ? '' : 'mkdir plots'}
         Rscript -e "rmarkdown::render('bc_report.rmd', output_format=c('html_document'))" \
             > >(tee -a "render_batch_rmd_html.stdout") 2> >(tee -a "render_batch_rmd_html.stderr" >&2)
 
@@ -313,6 +313,9 @@ process GENERATE_BATCH_REPORT {
         """
         touch bc_report.rmd bc_report.html bc_report.pdf
         touch generate_batch_rmd.stdout generate_batch_rmd.stderr
+        touch metadata_wide.tsv
+        touch precursors_batch_corrected_wide.tsv precursors_normalized_wide.tsv precursors_unnormalized_wide.tsv
+        touch proteins_batch_corrected_wide.tsv proteins_normalized_wide.tsv proteins_unnormalized_wide.tsv
         """
 }
 
@@ -341,7 +344,9 @@ process EXPORT_TABLES {
 
     stub:
     """
-    touch export_tables.stdout export_tables.stderr stub.tsv
+    touch export_tables.stdout export_tables.stderr
+    touch precursors_wide_normalized.tsv  precursors_wide_unnormalized.tsv
+    touch proteins_wide_normalized.tsv  proteins_wide_unnormalized.tsv
     """
 }
 
