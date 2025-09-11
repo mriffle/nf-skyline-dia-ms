@@ -42,6 +42,8 @@ workflow combine_file_hashes {
             .branch{
                 mzml_files: it[0].endsWith("mzML")
                     tuple(it[0], "${params.mzml_cache_directory}", it[1], it[2])
+                raw_files: it[0].endsWith("raw")
+                    tuple(it[0], "${params.panorama_cache_directory}", it[1], it[2])
                 search_files: true
                     tuple(it[0], get_search_file_dir(), it[1], it[2])
             }
@@ -79,6 +81,7 @@ workflow combine_file_hashes {
 
         // Combine all file hashes into a single channel
         output_file_hash_ch = search_file_data.mzml_files
+            .concat(search_file_data.raw_files)
             .concat(
                 file_stat_files
                     .join(calc_md5_hashes, failOnMismatch: true, failOnDuplicate: true)
