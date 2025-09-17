@@ -70,6 +70,9 @@
     "use_vendor_raw": {
       "type": "boolean"
     },
+    "vendor_raw_copy": {
+      "type": "boolean"
+    },
     "skyline_document_name": {
       "type": "string",
       "hidden": true
