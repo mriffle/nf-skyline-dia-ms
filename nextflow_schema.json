@@ -131,6 +131,9 @@
         "study_id": {
           "type": "string"
         },
+        "study_name": {
+          "type": "string"
+        },
         "n_raw_files": {
           "type": "integer"
         },

@@ -183,14 +183,14 @@ process SKYLINE_MERGE_RESULTS {
         --share-type="complete" \
         > >(tee 'skyline-merge.stdout') 2> >(tee 'skyline-merge.stderr' >&2)
 
-    md5sum ${skyline_document_name}.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum "${skyline_document_name}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 
     stub:
     """
     touch "${skyline_document_name}.sky.zip"
     touch "skyline-merge.stderr" "skyline-merge.stdout"
-    md5sum ${skyline_document_name}.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum "${skyline_document_name}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 
@@ -247,14 +247,14 @@ process SKYLINE_MINIMIZE_DOCUMENT {
             --share-type="minimal" \
         > >(tee 'minimize_skyline.stdout') 2> >(tee 'minimize_skyline.stderr' >&2)
 
-        md5sum ${sky_basename(skyline_zipfile)}_minimized.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+        md5sum "${sky_basename(skyline_zipfile)}_minimized.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
         """
 
     stub:
     """
-    touch ${sky_basename(skyline_zipfile)}_minimized.sky.zip
+    touch "${sky_basename(skyline_zipfile)}_minimized.sky.zip"
     touch stub.stdout stub.stderr
-    md5sum ${sky_basename(skyline_zipfile)}_minimized.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum "${sky_basename(skyline_zipfile)}_minimized.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 
@@ -291,14 +291,14 @@ process SKYLINE_ANNOTATE_DOCUMENT {
     wine SkylineCmd --batch-commands=add_annotations.bat \
         > >(tee 'annotate_doc.stdout') 2> >(tee 'annotate_doc.stderr' >&2)
 
-    md5sum ${sky_basename(skyline_zipfile)}_annotated.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum "${sky_basename(skyline_zipfile)}_annotated.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 
     stub:
     """
     touch "${sky_basename(skyline_zipfile)}_annotated.sky.zip"
     touch stub.stdout stub.stderr
-    md5sum ${sky_basename(skyline_zipfile)}_annotated.sky.zip | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum "${sky_basename(skyline_zipfile)}_annotated.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 

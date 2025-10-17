@@ -1,4 +1,3 @@
-
 include { GET_STUDY_METADATA } from "../modules/pdc.nf"
 include { METADATA_TO_SKY_ANNOTATIONS } from "../modules/pdc.nf"
 include { GET_FILE } from "../modules/pdc.nf"
@@ -16,7 +15,7 @@ workflow get_pdc_study_metadata {
             metadata = Channel.fromPath(file(params.pdc.metadata_tsv, checkIfExists: true))
             METADATA_TO_SKY_ANNOTATIONS(metadata)
             annotations_csv = METADATA_TO_SKY_ANNOTATIONS.out
-            study_name = params.pdc.study_name
+            study_name = params.pdc.study_name == null ? params.pdc.study_id : params.pdc.study_name
         }
 
     emit:
@@ -30,19 +29,27 @@ workflow get_pdc_files {
         get_pdc_study_metadata()
         metadata = get_pdc_study_metadata.out.metadata
 
-		if(params.pdc.s3_download) {
-            metadata
-                .splitJson()
-                .map{ row -> file(row['url']) }
-                .set{ all_paths_ch }
-        } else {
-            metadata
-                .splitJson()
-                .map{ row -> tuple(row['url'], row['file_name'], row['md5sum'], row['file_size']) } \
-                | GET_FILE
-
-            all_paths_ch = GET_FILE.out.downloaded_file
+        // Handle both tsv and json metadata files
+        def meta_split = metadata.branch {
+            tsv:   it.name.toLowerCase().endsWith('.tsv')
+            json:  it.name.toLowerCase().endsWith('.json')
+            other: true
+                error "Unsupported metadata file type: ${it.name} (must be .tsv or .json)"
         }
+        tsv_entries = meta_split.tsv
+            .splitCsv(header:true, sep:'\t')
+            .map { row ->
+                tuple(row.url, row.file_name, row.md5sum, row.file_size)
+            }
+        json_entries = meta_split.json
+            .splitJson()
+            .map { row ->
+               tuple(row['url'], row['file_name'], row['md5sum'], row['file_size'])
+            }
+        file_entries = tsv_entries.mix(json_entries)
+
+        GET_FILE(file_entries)
+        all_paths_ch = GET_FILE.out.downloaded_file
 
         all_paths_ch
             .map{ file -> [null, file] }
