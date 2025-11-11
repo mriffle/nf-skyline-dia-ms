@@ -38,7 +38,7 @@ process CASCADIA_SEARCH {
 
         """
         ${extra_command}
-        cascadia sequence ${ms_file} /usr/local/bin/cascadia.ckpt --out ${ms_file.baseName}
+        cascadia sequence ${ms_file} /usr/local/bin/cascadia.ckpt --score_threshold ${params.cascadia.score_threshold} --out ${ms_file.baseName}
             > >(tee "${ms_file.baseName}.stdout") 2> >(tee "${ms_file.baseName}.stderr" >&2)
 
         echo "${params.images.cascadia}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia_version=%s\n" > cascadia_version.txt
