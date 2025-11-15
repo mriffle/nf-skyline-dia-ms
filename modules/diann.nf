@@ -71,7 +71,7 @@ process DIANN_SEARCH {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high_constant'
     container params.images.diann
-    stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
+    stageInMode { !params.use_vendor_raw ? 'symlink' : (params.vendor_raw_copy ? 'copy' : 'link') }
 
     input:
         path ms_files
@@ -201,7 +201,7 @@ process DIANN_QUANT {
     memory { Math.max(16.0, ((ms_file.size() + spectral_library.size()) / (1024 ** 3)) * 2.0).GB }
     time   { 2.h * task.attempt }
     container params.images.diann
-    stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
+    stageInMode { !params.use_vendor_raw ? 'symlink' : (params.vendor_raw_copy ? 'copy' : 'link') }
 
     input:
         path ms_file
@@ -237,7 +237,7 @@ process DIANN_MBR {
     memory { Math.max(32.0, (get_total_file_sizes(ms_files) / (1024 ** 3)) * 2.0).GB }
     time   { 10.m * get_n_files(ms_files) }
     container params.images.diann
-    stageInMode { params.use_vendor_raw ? 'link' : 'symlink' }
+    stageInMode { !params.use_vendor_raw ? 'symlink' : (params.vendor_raw_copy ? 'copy' : 'link') }
 
     input:
         path ms_files
