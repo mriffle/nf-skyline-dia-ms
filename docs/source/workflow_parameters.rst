@@ -90,6 +90,10 @@ The ``params`` Section
      - If supported by the ``search_engine``, skip the ``MSCONVERT`` step to generate mzMLs and use vendor raw files for the search and to generate the Skyline document.
        Default is ``false``.
    * -
+     - ``vendor_raw_copy``
+     - If `use_vendor_raw` is set to true, Nextflow will attempt to use hard links to the raw file, which is required by vendor libraries. However, this is not supported in all environment. If hard links are not supported, set this to true to create physical copies of the files instead of hard links. This will use extra space.
+       Default is ``false``.
+   * -
      - ``files_per_chrom_lib``
      - Randomly select ``n`` files in ``chromatogram_library_spectra_dir`` to use to build chromatogram library. If ``null`` all the files in ``chromatogram_library_spectra_dir`` are used. Default is ``null``.
    * -
