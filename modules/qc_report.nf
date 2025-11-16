@@ -372,7 +372,7 @@ process RENDER_QC_REPORT {
     script:
         def batch_str = (batch == null ? '' : "${batch}_")
         """
-        export HOME=$PWD;
+        export HOME=\$PWD;
         quarto render ${qmd} --to '${report_format}' \
             > >(tee "render_${batch_str}${report_format}_qc_report.stdout") 2> >(tee "render_${batch_str}${report_format}_report.stderr")
         """
