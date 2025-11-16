@@ -20,6 +20,9 @@ process CASCADIA_SEARCH {
     // don't melt the GPU
     maxForks params.cascadia.use_gpu ? 1 : null
 
+    // add extra command for apptainer
+    def extra_command = workflow.containerEngine in ['apptainer','singularity'] ? 'source /usr/local/bin/entrypoint.sh' : ''
+
     input:
         path ms_file
 
@@ -34,6 +37,8 @@ process CASCADIA_SEARCH {
     script:
 
         """
+        ${extra_command}
+
         cascadia sequence ${ms_file} /usr/local/bin/cascadia.ckpt --score_threshold ${params.cascadia.score_threshold} --out ${ms_file.baseName}
             > >(tee "${ms_file.baseName}.stdout") 2> >(tee "${ms_file.baseName}.stderr" >&2)
 
