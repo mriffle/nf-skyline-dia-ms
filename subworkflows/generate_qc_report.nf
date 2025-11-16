@@ -61,7 +61,7 @@ workflow generate_dia_qc_report {
             GENERATE_QC_QMD(study_names, qc_report_db)
 
             GENERATE_QC_QMD.out.qc_report_qmd
-                .combine(Channel.fromList(['html', 'pdf']))
+                .combine(Channel.fromList(params.qc_report.report_format))
                 .set{ render_qc_report_input }
 
             RENDER_QC_REPORT(render_qc_report_input, qc_report_db)
