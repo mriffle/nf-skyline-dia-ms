@@ -587,7 +587,7 @@
         },
         "cascadia": {
           "type": "string",
-          "default": "quay.io/protio/cascadia:0.0.7"
+          "default": "quay.io/protio/cascadia:0.0.8"
         },
         "cascadia_utils": {
           "type": "string",
