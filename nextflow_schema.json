@@ -413,6 +413,10 @@
         "use_gpu": {
           "type": "boolean",
           "default": false
+        },
+        "score_threshold ": {
+          "type": "number",
+          "default": false
         }
       }
     },
