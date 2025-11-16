@@ -416,6 +416,8 @@
         },
         "score_threshold ": {
           "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
           "default": 0.8
         }
       }
