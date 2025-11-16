@@ -231,6 +231,13 @@
           "default": "median",
           "enum": ["median", "DirectLFQ", "directlfq"]
         },
+        "report_format": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["html", "pdf"]
+          }
+        },
         "standard_proteins": {
           "anyOf": [
             {
