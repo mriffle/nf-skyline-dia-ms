@@ -38,6 +38,8 @@ process CARAFE {
         """
         ${apptainer_cmds}
 
+        export HOME=\$PWD
+
         ${exec_java_command(task.memory)} \\
             -ms "${mzml_file}" \\
             -db "${fasta_file}" \\
