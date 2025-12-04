@@ -265,7 +265,7 @@ process DIANN_MBR {
         ms_file_args = "--f '${sorted_ms_files.join('\' --f \'')}'"
 
         """
-        rm ${sorted_ms_files.join('\' --f \'')}
+        rm *.raw
 
         diann ${ms_file_args} \
             --threads ${task.cpus} \
