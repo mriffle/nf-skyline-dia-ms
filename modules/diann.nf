@@ -43,6 +43,7 @@ process DIANN_BUILD_LIB {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high'
     container params.images.diann
+    cache 'deep' // base this on file content
 
     input:
         path fasta_file
@@ -72,7 +73,8 @@ process DIANN_SEARCH {
     label 'process_high_constant'
     container params.images.diann
     stageInMode { !params.use_vendor_raw ? 'symlink' : (params.vendor_raw_copy ? 'copy' : 'link') }
-
+    cache 'lenient'
+    
     input:
         path ms_files
         path fasta_file
@@ -139,6 +141,7 @@ process CARAFE_DIANN_SEARCH {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high'
     container params.images.diann
+    cache 'lenient'
 
     input:
         path ms_files
@@ -202,6 +205,7 @@ process DIANN_QUANT {
     time   { 2.h * task.attempt }
     container params.images.diann
     stageInMode { !params.use_vendor_raw ? 'symlink' : (params.vendor_raw_copy ? 'copy' : 'link') }
+    cache 'lenient'
 
     input:
         path ms_file
@@ -238,6 +242,7 @@ process DIANN_MBR {
     time   { 10.m * get_n_files(ms_files) }
     container params.images.diann
     stageInMode { !params.use_vendor_raw ? 'symlink' : (params.vendor_raw_copy ? 'copy' : 'link') }
+    cache 'lenient'
 
     input:
         path ms_files
