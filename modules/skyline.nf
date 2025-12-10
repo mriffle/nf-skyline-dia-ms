@@ -143,7 +143,7 @@ process SKYLINE_MERGE_RESULTS {
     cpus   32
     memory {
         def bytes   = get_total_file_sizes(skyd_files)
-        def gib     = bytes / (1024d ** 3)       // GiB from file sizes
+        def gib     = bytes / (1024 ** 3)       // GiB from file sizes
         def scaled  = gib * 1.5                  // scaling factor
         def wineOh  = 8                          // 4 GiB overhead for Wine
 
