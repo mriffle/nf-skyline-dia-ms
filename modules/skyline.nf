@@ -143,11 +143,15 @@ process SKYLINE_MERGE_RESULTS {
     cpus   32
     memory {
         def bytes   = get_total_file_sizes(skyd_files)
+        println "DEBUG: bytes = ${bytes}"
+
         def gib     = bytes / (1024 ** 3)
         def scaled  = gib * 2
         def wineOh  = 8
 
         def totalGb = (scaled + wineOh).toInteger()
+        println "DEBUG: gib=${gib}, scaled=${scaled}, totalGb=${totalGb}"
+
         Math.max(16, totalGb).GB
     }
     time   { 8.h * task.attempt }
