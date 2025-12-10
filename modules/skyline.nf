@@ -144,7 +144,7 @@ process SKYLINE_MERGE_RESULTS {
     memory {
         def bytes   = get_total_file_sizes(skyd_files)
         def gib     = bytes / (1024 ** 3)
-        def scaled  = gib * 1.5
+        def scaled  = gib * 2
         def wineOh  = 8
 
         def totalGb = (scaled + wineOh).toInteger()
