@@ -143,11 +143,12 @@ process SKYLINE_MERGE_RESULTS {
     cpus   32
     memory {
         def bytes   = get_total_file_sizes(skyd_files)
-        def gib     = bytes / (1024 ** 3)       // GiB from file sizes
-        def scaled  = gib * 1.5                  // scaling factor
-        def wineOh  = 8                          // 4 GiB overhead for Wine
+        def gib     = bytes / (1024 ** 3)
+        def scaled  = gib * 1.5
+        def wineOh  = 8
 
-        Math.max(16, scaled + wineOh).GB         // at least 16 GiB, plus Wine margin
+        def totalGb = (scaled + wineOh).toInteger()
+        Math.max(16, totalGb).GB
     }
     time   { 8.h * task.attempt }
     label 'error_retry'
