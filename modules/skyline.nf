@@ -146,7 +146,7 @@ process SKYLINE_MERGE_RESULTS {
         println "DEBUG: bytes = ${bytes}"
 
         def gib     = bytes / (1024 ** 3)
-        def scaled  = gib * 2
+        def scaled  = gib * 6
         def wineOh  = 8
 
         def totalGb = (scaled + wineOh).toInteger()
