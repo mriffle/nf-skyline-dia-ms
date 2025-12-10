@@ -141,7 +141,14 @@ process SKYLINE_IMPORT_MS_FILE {
 process SKYLINE_MERGE_RESULTS {
     publishDir params.output_directories.skyline.import_spectra, enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
     cpus   32
-    memory { Math.max(8.0, (get_total_file_sizes(skyd_files) / (1024 ** 3)) * 1.5).GB }
+    memory {
+        def bytes   = get_total_file_sizes(skyd_files)
+        def gib     = bytes / (1024d ** 3)       // GiB from file sizes
+        def scaled  = gib * 1.5                  // scaling factor
+        def wineOh  = 8                          // 4 GiB overhead for Wine
+
+        Math.max(16, scaled + wineOh).GB         // at least 16 GiB, plus Wine margin
+    }
     time   { 8.h * task.attempt }
     label 'error_retry'
     label 'proteowizard'
