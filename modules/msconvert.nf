@@ -32,6 +32,8 @@ process MSCONVERT_MULTI_BATCH {
     label 'proteowizard'
     container params.images.proteowizard
 
+    tag "${raw_file.baseName}"
+
     input:
         tuple val(batch), path(raw_file)
 
