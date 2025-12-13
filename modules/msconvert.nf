@@ -59,6 +59,8 @@ process MSCONVERT {
     label 'proteowizard'
     container params.images.proteowizard
 
+    tag "${raw_file.baseName}"
+
     input:
         path(raw_file)
 
