@@ -273,7 +273,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 process SKYLINE_ANNOTATE_DOCUMENT {
     publishDir params.output_directories.skyline.import_spectra, failOnError: true, mode: 'copy'
     cpus   8
-    memory { Math.max(8.0, (skyline_zipfile.size() / (1024 ** 3)) * 1.5).GB }
+    memory { Math.max(12.0, (skyline_zipfile.size() / (1024 ** 3)) * 2).GB }
     time   { 4.h * task.attempt }
     label 'proteowizard'
     container params.images.proteowizard
