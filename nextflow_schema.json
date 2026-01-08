@@ -482,6 +482,10 @@
           "type": "boolean",
           "default": false
         },
+        "group_proteins": {
+          "type": "boolean",
+          "default": false
+        },
         "group_by_gene": {
           "type": "boolean",
           "default": false

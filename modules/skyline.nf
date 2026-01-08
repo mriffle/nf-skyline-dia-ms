@@ -189,6 +189,7 @@ process SKYLINE_MERGE_RESULTS {
         --in="${skyline_zipfile.baseName}" \
         ${import_files_params} \
         ${params.skyline.protein_parsimony ? protein_parsimony_args : ''} \
+        ${params.skyline.group_proteins ? '--associate-proteins-group-proteins' : ''} \
         --out="${skyline_document_name}.sky" \
         --save \
         --share-zip="${skyline_document_name}.sky.zip" \
