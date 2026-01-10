@@ -175,7 +175,7 @@ process SKYLINE_MERGE_RESULTS {
     script:
 
     import_files_params = "--import-file=\"${(ms_files as List).collect{ "/tmp/" + file(it).name }.join('\" --import-file=\"')}\""
-    protein_parsimony_args = "--import-fasta=${fasta} --associate-proteins-shared-peptides=DuplicatedBetweenProteins --associate-proteins-min-peptides=1 --associate-proteins-remove-subsets --associate-proteins-minimal-protein-list"
+    protein_parsimony_args = "--associate-proteins-shared-peptides=DuplicatedBetweenProteins --associate-proteins-min-peptides=1 --associate-proteins-remove-subsets --associate-proteins-minimal-protein-list"
     if(params.skyline.group_by_gene) {
         protein_parsimony_args += ' --associate-proteins-gene-level-parsimony'
     }
@@ -188,6 +188,7 @@ process SKYLINE_MERGE_RESULTS {
     wine SkylineCmd \
         --in="${skyline_zipfile.baseName}" \
         ${import_files_params} \
+        --import-fasta=${fasta} \
         ${params.skyline.protein_parsimony ? protein_parsimony_args : ''} \
         ${params.skyline.group_proteins ? '--associate-proteins-group-proteins' : ''} \
         --out="${skyline_document_name}.sky" \
