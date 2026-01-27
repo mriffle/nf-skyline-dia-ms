@@ -89,6 +89,7 @@ workflow carafe {
                    carafe_fasta,
                    carafe_psm_file,
                    params.carafe.cli_options,
+                   params.carafe.mod_options,
                    search_engine)
 
         // We need to make sure speclib_tsv is a value channel

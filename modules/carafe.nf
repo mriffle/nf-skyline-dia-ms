@@ -13,6 +13,7 @@ process CARAFE {
         path fasta_file
         path peptide_results_file
         val carafe_params
+        val carafe_mod_params
         val output_format
 
     output:
@@ -47,6 +48,7 @@ process CARAFE {
             -se "DIA-NN" \\
             -lf_type ${lf_type_param} \\
             -device cpu \\
+            ${carafe_mod_params} \\
             ${carafe_params} \\
         > >(tee "carafe.stdout") 2> >(tee "carafe.stderr" >&2)
 

@@ -151,9 +151,13 @@ The ``params`` Section
      - The path to a DIA-NN ``tsv`` or ``parquet`` precursor report file. If this parameter is set, the DIA-NN search will be skipped and this file used. Default: ``null`` (run DIA-NN).
    * - ``carafe.carafe_fasta``
      - FASTA file used by Carafe to generate final spectral library. If ``null``, ``params.fasta`` is used.
-   * - ``carafe_cli_options``
-     - Command line options to pass to Carafe. Note: Do not set the ``se``, ``lf_type``, ``-db``, ``-i``, ``-o`` parameters, these are handled by the workflow. The default is ``-min_pep_charge 2 -max_pep_charge 3``
+   * - ``carafe.cli_options``
+     - Command line options to pass to Carafe. Note: Do not set the ``se``, ``lf_type``, ``-db``, ``-i``, ``-o`` parameters, these are handled by the workflow. The default is ``-fdr 0.01 -ptm_site_prob 0.75 -ptm_site_qvalue 0.01 -itol 20 -itolu ppm -rf -rf_rt_win auto -cor 0.8 -min_mz 200 -n_ion_min 2 -c_ion_min 2 -mode general -enzyme 2 -miss_c 1 -fixMod 1 -clip_n_m -minLength 7 -maxLength 35 -min_pep_mz 300 -max_pep_mz 1800 -min_pep_charge 2 -max_pep_charge 4 -lf_frag_mz_min 200 -lf_frag_mz_max 1800 -lf_top_n_frag 20 -lf_min_n_frag 2 -lf_frag_n_min 2 -tf all -nm -nf 4 -min_n 4 -valid -na 0 -ez -fast``
        See the `Carafe GitHub page <https://github.com/Noble-Lab/Carafe>`_ for details on available parameters.
+   * - ``carafe.mod_options``
+     - Variable modification-specific parameters to pass to Carafe. It is important to update this to match the variable modification you would like present in your spectral library. ``-varMod 0`` means no variable mods. ``-varMod 2`` means oxidized methionine. ``-varMod 7,8,9`` means phosphorylation. These can be combined: ``-varMod 2,7,8,9``. Including unneeded variable modifications will increase the library size. Default: ``-varMod 0``
+       See the `Carafe GitHub page <https://github.com/Noble-Lab/Carafe>`_ for details on available parameters.
+
    * - ``carafe.diann_fasta``
      - The FASTA file used by the DIA-NN search in the Carafe subworkflow. If not set either ``params.carafe_fasta`` or ``params.fasta`` will be used. Default: ``null``.
 

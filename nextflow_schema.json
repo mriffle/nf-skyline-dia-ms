@@ -170,6 +170,10 @@
         "cli_options": {
           "type": "string",
           "default": ""
+        },
+        "mod_options": {
+          "type": "string",
+          "default": ""
         }
       }
     },
