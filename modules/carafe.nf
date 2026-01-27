@@ -50,7 +50,7 @@ process CARAFE {
             ${carafe_params} \\
         > >(tee "carafe.stdout") 2> >(tee "carafe.stderr" >&2)
 
-        # move SkylineAI_spectral_library.tsv (legacy compatibility)
+        # move SkylineAI_spectral_library.tsv if it exists (legacy compatibility)
         [ -e SkylineAI_spectral_library.tsv ] && mv -v SkylineAI_spectral_library.tsv carafe_spectral_library.tsv
 
         echo "carafe_version=\$CARAFE_VERSION" > carafe_version.txt
