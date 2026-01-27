@@ -8,6 +8,7 @@ workflow run_carafe {
         fasta_file
         peptide_results_file
         carafe_params
+        carafe_mod_params
         output_format
 
     main:
@@ -16,6 +17,7 @@ workflow run_carafe {
             fasta_file,
             peptide_results_file,
             carafe_params,
+            carafe_mod_params,
             output_format
         )
 
