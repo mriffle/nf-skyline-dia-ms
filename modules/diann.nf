@@ -166,6 +166,15 @@ process CARAFE_DIANN_SEARCH {
 
         ms_file_args = "--f '${sorted_ms_files.join('\' --f \'')}'"
 
+        /*
+         * Parse version from container image tag (e.g., "quay.io/protio/diann:1.8.1" -> "1.8.1")
+         * Include --export-quant for version >= 2.0.0, or by default if version cannot be parsed
+         */
+        def imageTag = params.images.diann.tokenize(':').last()
+        def versionParts = imageTag.tokenize('.')
+        def major = versionParts[0]?.isInteger() ? versionParts[0].toInteger() : null
+        def exportQuantParam = (major == null || major >= 2) ? "--export-quant" : ""
+
         """
         diann ${ms_file_args} \
             --threads ${task.cpus} \
@@ -173,6 +182,7 @@ process CARAFE_DIANN_SEARCH {
             --lib ${spectral_library} \
             --gen-spec-lib --reanalyse \
             ${diann_params} \
+            ${exportQuantParam} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
 
         # DiaNN does weird things with output file names depending on the version
