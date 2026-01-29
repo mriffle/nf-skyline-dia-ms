@@ -40,11 +40,11 @@ process CARAFE {
 
         mod_param = ''
         if(include_phosphorylation && include_oxidized_methionine) {
-            mod_param = '-varMod 2,7,8,9 -mode phosphorylation ${max_mod_option}'
+            mod_param = "-varMod 2,7,8,9 -mode phosphorylation ${max_mod_option}"
         } else if(include_phosphorylation) {
-            mod_param = '-varMod 7,8,9 -mode phosphorylation ${max_mod_option}'
+            mod_param = "-varMod 7,8,9 -mode phosphorylation ${max_mod_option}"
         } else if(include_oxidized_methionine) {
-            mod_param = '-varMod 2 -mode general ${max_mod_option}'
+            mod_param = "-varMod 2 -mode general ${max_mod_option}"
         } else {
             mod_param = '-mode general'
         }
