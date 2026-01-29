@@ -13,7 +13,9 @@ process CARAFE {
         path fasta_file
         path peptide_results_file
         val carafe_params
-        val carafe_mod_params
+        val include_phosphorylation
+        val include_oxidized_methionine
+        val max_mod_option
         val output_format
 
     output:
@@ -36,6 +38,17 @@ process CARAFE {
 
         lf_type_param = output_format == 'diann' ? 'diann' : 'encyclopedia'
 
+        mod_param = ''
+        if(include_phosphorylation && include_oxidized_methionine) {
+            mod_param = '-varMod 2,7,8,9 -mode phosphorylation ${max_mod_option}'
+        } else if(include_phosphorylation) {
+            mod_param = '-varMod 7,8,9 -mode phosphorylation ${max_mod_option}'
+        } else if(include_oxidized_methionine) {
+            mod_param = '-varMod 2 -mode general ${max_mod_option}'
+        } else {
+            mod_param = '-mode general'
+        }
+
         """
         ${apptainer_cmds}
 
@@ -48,7 +61,7 @@ process CARAFE {
             -se "DIA-NN" \\
             -lf_type ${lf_type_param} \\
             -device cpu \\
-            ${carafe_mod_params} \\
+            ${mod_param} \\
             ${carafe_params} \\
         > >(tee "carafe.stdout") 2> >(tee "carafe.stderr" >&2)
 

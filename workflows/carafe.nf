@@ -89,7 +89,9 @@ workflow carafe {
                    carafe_fasta,
                    carafe_psm_file,
                    params.carafe.cli_options,
-                   params.carafe.mod_options,
+                   params.carafe.include_phosphorylation,
+                   params.carafe.include_oxidized_methionine,
+                   params.carafe.max_mod_option,
                    search_engine)
 
         // We need to make sure speclib_tsv is a value channel

@@ -17,7 +17,9 @@ workflow run_carafe {
             fasta_file,
             peptide_results_file,
             carafe_params,
-            carafe_mod_params,
+            include_phosphorylation,
+            include_oxidized_methionine,
+            max_mod_option,
             output_format
         )
 
