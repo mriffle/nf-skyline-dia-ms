@@ -102,7 +102,7 @@ process SKYLINE_ADD_LIB {
 process SKYLINE_IMPORT_MS_FILE {
     publishDir params.output_directories.skyline.import_spectra, pattern: '*.std[oe][ur][tr]', failOnError: true, mode: 'copy'
     cpus   8
-    memory { Math.max(8.0, ((skyline_zipfile.size() + ms_file.size()) / (1024 ** 3)) * 1.5 ).GB }
+    memory { Math.max(16.0, ((skyline_zipfile.size() + ms_file.size()) / (1024 ** 3)) * 6 ).GB }
     time   { 2.h * task.attempt }
     label 'error_retry'
     label 'proteowizard'
