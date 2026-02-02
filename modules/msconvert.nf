@@ -85,6 +85,7 @@ process UNZIP_DIRECTORY {
     label 'process_medium'
     label 'proteowizard'
     container params.images.proteowizard
+    maxForks 1
 
     input:
         tuple val(batch), path(zip_file)
