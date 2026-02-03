@@ -74,7 +74,7 @@ workflow carafe {
             carafe_psm_file = get_peptide_results.out.file
         } else {
             DIANN_BUILD_LIB(diann_fasta, params.diann.fasta_digest_params)
-            def diann_search_params = "--qvalue 0.01 --export-quant"
+            def diann_search_params = "--qvalue 0.01"
             DIANN_SEARCH(spectra_file,
                          diann_fasta,
                          DIANN_BUILD_LIB.out.speclib,
@@ -89,6 +89,9 @@ workflow carafe {
                    carafe_fasta,
                    carafe_psm_file,
                    params.carafe.cli_options,
+                   params.carafe.include_phosphorylation,
+                   params.carafe.include_oxidized_methionine,
+                   params.carafe.max_mod_option,
                    search_engine)
 
         // We need to make sure speclib_tsv is a value channel

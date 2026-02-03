@@ -170,6 +170,18 @@
         "cli_options": {
           "type": "string",
           "default": ""
+        },
+        "include_phosphorylation": {
+          "type": "boolean",
+          "default": false
+        },
+        "include_oxidized_methionine": {
+          "type": "boolean",
+          "default": false
+        },
+        "max_mod_option": {
+          "type": "string",
+          "default": "-maxVar 1"
         }
       }
     },

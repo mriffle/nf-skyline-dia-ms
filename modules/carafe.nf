@@ -1,6 +1,6 @@
 def exec_java_command(mem) {
     def xmx = "-Xmx${mem.toGiga()-1}G"
-    return "java -Djava.aws.headless=true ${xmx} -jar /opt/carafe/carafe-0.0.1/carafe-0.0.1.jar"
+    return "java -Djava.aws.headless=true ${xmx} -jar /opt/carafe/carafe-2.0.0-beta/carafe-2.0.0-beta.jar"
 }
 
 process CARAFE {
@@ -13,6 +13,9 @@ process CARAFE {
         path fasta_file
         path peptide_results_file
         val carafe_params
+        val include_phosphorylation
+        val include_oxidized_methionine
+        val max_mod_option
         val output_format
 
     output:
@@ -35,6 +38,17 @@ process CARAFE {
 
         lf_type_param = output_format == 'diann' ? 'diann' : 'encyclopedia'
 
+        mod_param = ''
+        if(include_phosphorylation && include_oxidized_methionine) {
+            mod_param = "-varMod 2,7,8,9 -mode phosphorylation ${max_mod_option}"
+        } else if(include_phosphorylation) {
+            mod_param = "-varMod 7,8,9 -mode phosphorylation ${max_mod_option}"
+        } else if(include_oxidized_methionine) {
+            mod_param = "-varMod 2 -mode general ${max_mod_option}"
+        } else {
+            mod_param = '-mode general'
+        }
+
         """
         ${apptainer_cmds}
 
@@ -47,10 +61,13 @@ process CARAFE {
             -se "DIA-NN" \\
             -lf_type ${lf_type_param} \\
             -device cpu \\
+            ${mod_param} \\
             ${carafe_params} \\
         > >(tee "carafe.stdout") 2> >(tee "carafe.stderr" >&2)
 
-        mv -v SkylineAI_spectral_library.tsv carafe_spectral_library.tsv
+        # move SkylineAI_spectral_library.tsv if it exists (legacy compatibility)
+        [ -e SkylineAI_spectral_library.tsv ] && mv -v SkylineAI_spectral_library.tsv carafe_spectral_library.tsv
+
         echo "carafe_version=\$CARAFE_VERSION" > carafe_version.txt
         """
 
