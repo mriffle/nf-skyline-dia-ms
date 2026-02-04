@@ -339,6 +339,7 @@ process BLIB_BUILD_LIBRARY {
 
     script:
         """
+        mv ${speclib} ${precursor_report.baseName}.speclib
         wine BlibBuild "${speclib}" "${get_blib_name()}"
         """
 
