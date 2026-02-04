@@ -342,7 +342,7 @@ process BLIB_BUILD_LIBRARY {
         # ensure the speclib has a filename that will allow BlibBuild to match the parquet file
         f=*.parquet.skyline.speclib && mv "\$f" "\${f%.parquet.skyline.speclib}-lib.parquet.skyline.speclib"
 
-        wine BlibBuild "${speclib}" "${get_blib_name()}"
+        wine BlibBuild "\${f%.parquet.skyline.speclib}-lib.parquet.skyline.speclib" "${get_blib_name()}"
         """
 
     stub:
