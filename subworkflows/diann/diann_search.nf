@@ -18,7 +18,7 @@ workflow diann_search_serial {
             ms_file_ch.collect(),
             fasta,
             spectral_library,
-            (speclib_only == true ? "subset_library" : "quant"),
+            (speclib_only == true ? "subset_library-lib" : "quant-lib"),
             search_params
         )
 
@@ -61,7 +61,7 @@ workflow diann_search_parallel {
             DIANN_QUANT.out.quant_file.collect(),
             fasta,
             spectral_library,
-            (speclib_only == true ? "subset_library" : "quant"),
+            (speclib_only == true ? "subset_library-lib" : "quant-lib"),
             mbr_params
         )
 
