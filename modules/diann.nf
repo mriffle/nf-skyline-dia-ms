@@ -57,6 +57,7 @@ process DIANN_BUILD_LIB {
     script:
         """
         diann --fasta ${fasta_file} \
+            --threads ${task.cpus} \
             ${lib_build_params} \
             --predictor --gen-spec-lib --fasta-search --out-lib ${fasta_file.baseName}.speclib \
             > >(tee "predict_lib.stdout") 2> >(tee "predict_lib.stderr" >&2)
@@ -339,7 +340,12 @@ process BLIB_BUILD_LIBRARY {
 
     script:
         """
-        wine BlibBuild "${speclib}" "${get_blib_name()}"
+        # ensure the speclib has a filename that will allow BlibBuild to match the parquet file
+        f=\$(echo *.parquet.skyline.speclib)
+        newf="\${f%.parquet.skyline.speclib}-lib.parquet.skyline.speclib"
+        mv "\$f" "\$newf"
+
+        wine BlibBuild "\$newf" "${get_blib_name()}"
         """
 
     stub:

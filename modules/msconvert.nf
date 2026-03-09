@@ -83,7 +83,7 @@ process MSCONVERT {
 
 process UNZIP_DIRECTORY {
     label 'process_medium'
-    label 'proteowizard'
+    label 'ubuntu'
     container params.images.proteowizard
     maxForks 1
 
