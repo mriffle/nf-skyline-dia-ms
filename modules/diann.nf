@@ -57,6 +57,7 @@ process DIANN_BUILD_LIB {
     script:
         """
         diann --fasta ${fasta_file} \
+            --threads ${task.cpus} \
             ${lib_build_params} \
             --predictor --gen-spec-lib --fasta-search --out-lib ${fasta_file.baseName}.speclib \
             > >(tee "predict_lib.stdout") 2> >(tee "predict_lib.stderr" >&2)
