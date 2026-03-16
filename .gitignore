@@ -1,9 +1,11 @@
 /docs/build
 .vscode
 
+# nextflow items:
 .nextflow.log*
 .nextflow/
 work/
 results/
 reports/
 mzml_cache/
+raw_cache/
