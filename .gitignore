@@ -1,2 +1,9 @@
 /docs/build
 .vscode
+
+.nextflow.log*
+.nextflow/
+work/
+results/
+reports/
+mzml_cache/
