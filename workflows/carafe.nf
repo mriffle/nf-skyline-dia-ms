@@ -113,9 +113,7 @@ workflow carafe {
                    params.carafe.max_mod_option,
                    search_engine)
 
-        // We need to make sure speclib_tsv is a value channel
-        // because Nextflow thinks it should be a queue channel
-        spectral_library = run_carafe.out.speclib_tsv.first()
+        spectral_library = run_carafe.out.speclib_tsv
 
     emit:
         spectral_library
