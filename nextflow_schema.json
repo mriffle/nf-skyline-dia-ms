@@ -158,6 +158,26 @@
         "spectra_file": {
           "type": "string"
         },
+        "spectra_dir": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "spectra_glob": {
+          "type": "string",
+          "default": "*.raw"
+        },
+        "spectra_regex": {
+          "type": "string"
+        },
         "peptide_results_file": {
           "type": "string"
         },

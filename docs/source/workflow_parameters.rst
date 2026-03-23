@@ -146,7 +146,13 @@ The ``params`` Section
    * - Parameter Name
      - Description
    * - ``carafe.spectra_file``
-     - ``raw`` or ``mzML`` file used by Carafe to generate final spectral library. If set to ``null`` Carafe is skipped. Default: ``null``.
+     - Legacy direct ``raw`` or ``mzML`` file input used by Carafe to generate the final spectral library. This remains supported for backwards compatibility. If set together with ``carafe.spectra_dir`` the workflow will fail. Default: ``null``.
+   * - ``carafe.spectra_dir``
+     - Directory, or list of directories, containing the ``raw`` or ``mzML`` files to use for Carafe. Carafe will run once across all matching files. If set to ``null`` and ``carafe.spectra_file`` is also ``null``, Carafe is skipped. Default: ``null``.
+   * - ``carafe.spectra_glob``
+     - Glob used to select files in ``carafe.spectra_dir``. Only ``*`` is treated as a wildcard. If set, ``carafe.spectra_regex`` must be ``null``. Default: ``*.raw``.
+   * - ``carafe.spectra_regex``
+     - Use this regex instead of ``carafe.spectra_glob`` to select files in ``carafe.spectra_dir``. If set, ``carafe.spectra_glob`` must be ``null``. Default: ``null``.
    * - ``carafe.peptide_results_file``
      - The path to a DIA-NN ``tsv`` or ``parquet`` precursor report file. If this parameter is set, the DIA-NN search will be skipped and this file used. Default: ``null`` (run DIA-NN).
    * - ``carafe.carafe_fasta``
