@@ -190,7 +190,7 @@ workflow {
     skyr_file_ch = get_input_files.out.skyr_files
 
     // Get input spectral library
-    if(params.carafe.spectra_file != null) {
+    if(carafe_enabled()) {
         if(params.spectral_library) {
             log.warn "Carafe spectral library will override params.spectral_library"
         }
@@ -336,8 +336,17 @@ def is_panorama_authentication_required() {
            (params.skyline.template_file && panorama_auth_required_for_url(params.skyline.template_file)) ||
            (params.quant_spectra_dir && any_map_entry_requires_panorama_auth(params.quant_spectra_dir)) ||
            (params.chromatogram_library_spectra_dir && any_entry_requires_panorama_auth(params.chromatogram_library_spectra_dir)) ||
-           (params.skyline_skyr_file && any_entry_requires_panorama_auth(params.skyline_skyr_file))
+           (params.carafe.spectra_file && panorama_auth_required_for_url(params.carafe.spectra_file)) ||
+           (params.carafe.spectra_dir && any_entry_requires_panorama_auth(params.carafe.spectra_dir)) ||
+           (params.skyline.skyr_file && any_entry_requires_panorama_auth(params.skyline.skyr_file))
 
+}
+
+def carafe_enabled() {
+    if (params.carafe.spectra_file != null && params.carafe.spectra_dir != null) {
+        error "Only one of params.carafe.spectra_file or params.carafe.spectra_dir may be set."
+    }
+    return params.carafe.spectra_file != null || params.carafe.spectra_dir != null
 }
 
 //

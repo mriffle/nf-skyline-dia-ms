@@ -9,7 +9,7 @@ process CARAFE {
     container params.images.carafe
 
     input:
-        path mzml_file
+        path mzml_files
         path fasta_file
         path peptide_results_file
         val carafe_params
@@ -55,7 +55,7 @@ process CARAFE {
         export HOME=\$PWD
 
         ${exec_java_command(task.memory)} \\
-            -ms "${mzml_file}" \\
+            -ms "." \\
             -db "${fasta_file}" \\
             -i "${peptide_results_file}" \\
             -se "DIA-NN" \\
