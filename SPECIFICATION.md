@@ -114,12 +114,9 @@ The current auth-detection logic checks these inputs:
 - `skyline.template_file`
 - `quant_spectra_dir`
 - `chromatogram_library_spectra_dir`
-- deprecated `skyline_skyr_file`
-
-Current limitation:
-
-- auth detection does not include `carafe.spectra_file`
-- auth detection does not include nested `skyline.skyr_file`
+- `carafe.spectra_file`
+- `carafe.spectra_dir`
+- nested `skyline.skyr_file`
 
 Relevant files:
 
@@ -292,14 +289,21 @@ Relevant files:
 
 ### 9. Optional Carafe library generation
 
-If `params.carafe.spectra_file` is set, `workflows/carafe.nf` generates a spectral library
+If either legacy `params.carafe.spectra_file` or directory-based
+`params.carafe.spectra_dir` is set, `workflows/carafe.nf` generates a spectral library
 before the main search branch.
 
 Current Carafe behavior:
 
+- `carafe.spectra_file` remains the backward-compatible single-file input
 - `carafe.spectra_file` may be local or an authenticated Panorama URL
-- only one spectra file is allowed
+- `carafe.spectra_dir` may be local or Panorama-backed and is filtered through:
+  - `carafe.spectra_glob`
+  - `carafe.spectra_regex`
+- `carafe.spectra_dir` may resolve one or more spectra files for a single Carafe run
 - supported spectra-file types are `.mzML` and `.raw`
+- all resolved mzML inputs are staged into the Carafe work directory and Carafe is invoked
+  with `-ms "."`
 - local alternative inputs may be requested through:
   - `carafe.carafe_fasta`
   - `carafe.diann_fasta`
@@ -638,6 +642,10 @@ Current implementation support is uneven by input type:
 
 - `carafe.spectra_file`:
   local and authenticated Panorama only
+
+- `carafe.spectra_dir`:
+  local, authenticated Panorama, Panorama Public
+  selected with `carafe.spectra_glob` or `carafe.spectra_regex`
 
 - `pdc.*`:
   separate PDC client branch
