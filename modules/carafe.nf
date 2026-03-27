@@ -1,6 +1,6 @@
 def exec_java_command(mem) {
     def xmx = "-Xmx${mem.toGiga()-1}G"
-    return "java -Djava.aws.headless=true ${xmx} -jar /opt/carafe/carafe-2.0.0-beta/carafe-2.0.0-beta.jar"
+    return "java -Djava.aws.headless=true ${xmx} -jar /opt/carafe/carafe-2.0.0/carafe-2.0.0.jar"
 }
 
 process CARAFE {
