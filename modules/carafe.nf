@@ -52,7 +52,7 @@ process CARAFE {
         """
         ${apptainer_cmds}
 
-        export HOME=\$PWD
+        // export HOME=\$PWD
 
         echo "\${JAVA_TOOL_OPTIONS:-<not set>}"
         python -c 'import sys; print(sys.executable)'
