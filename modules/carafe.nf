@@ -54,7 +54,7 @@ process CARAFE {
 
         export HOME=\$PWD
 
-        echo "\$JAVA_TOOL_OPTIONS"
+        echo "\${JAVA_TOOL_OPTIONS:-<not set>}"
         python -c 'import sys; print(sys.executable)'
         java -XshowSettings:properties -version 2>&1 | grep 'user.home'
         ls -l /opt/carafe-home/.carafe/.venv/bin/python3
