@@ -1,6 +1,6 @@
 def exec_java_command(mem) {
     def xmx = "-Xmx${mem.toGiga()-1}G"
-    return "java -Djava.aws.headless=true ${xmx} -jar /opt/carafe/carafe-2.0.0-beta/carafe-2.0.0-beta.jar"
+    return "java -Djava.aws.headless=true ${xmx} -jar /opt/carafe/carafe-2.0.0/carafe-2.0.0.jar"
 }
 
 process CARAFE {
@@ -28,13 +28,13 @@ process CARAFE {
     script:
 
         apptainer_cmds = ''
-        if (workflow.containerEngine == 'singularity' || workflow.containerEngine == 'apptainer') {
-            // Running with Apptainer/Singularity
-            apptainer_cmds = """
-                source /opt/conda/etc/profile.d/conda.sh
-                conda activate carafe
-            """
-        }
+        // if (workflow.containerEngine == 'singularity' || workflow.containerEngine == 'apptainer') {
+        //     // Running with Apptainer/Singularity
+        //     apptainer_cmds = """
+        //         source /opt/conda/etc/profile.d/conda.sh
+        //         conda activate carafe
+        //     """
+        // }
 
         lf_type_param = output_format == 'diann' ? 'diann' : 'encyclopedia'
 
@@ -52,7 +52,13 @@ process CARAFE {
         """
         ${apptainer_cmds}
 
-        export HOME=\$PWD
+        # export HOME=\$PWD
+
+        echo "\${JAVA_TOOL_OPTIONS:-<not set>}"
+        python -c 'import sys; print(sys.executable)'
+        java -XshowSettings:properties -version 2>&1 | grep 'user.home'
+        ls -l /opt/carafe-home/.carafe/.venv/bin/python3
+        /opt/carafe-home/.carafe/.venv/bin/python3 -c 'import torch, alphabase; print("ok")'
 
         ${exec_java_command(task.memory)} \\
             -ms "." \\
