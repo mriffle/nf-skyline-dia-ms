@@ -1,0 +1,5 @@
+url	file_name	md5sum	file_size
+https://example.com/file1.raw	test_pdc_file1.raw	d41d8cd98f00b204e9800998ecf8427e	1000
+https://example.com/file2.raw	test_pdc_file2.raw	d41d8cd98f00b204e9800998ecf8427e	1000
+https://example.com/file3.raw	test_pdc_file3.raw	d41d8cd98f00b204e9800998ecf8427e	1000
+https://example.com/file4.raw	test_pdc_file4.raw	d41d8cd98f00b204e9800998ecf8427e	1000

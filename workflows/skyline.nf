@@ -20,6 +20,7 @@ workflow skyline {
         pdc_study_name
         skyr_files
         use_batch_mode
+        batch_name_list
 
     main:
 
@@ -42,12 +43,7 @@ workflow skyline {
             final_skyline_hash = skyline_import.out.skyline_results_hash
 
             // Map Skyline documents to batch names
-            if (use_batch_mode == true) {
-                batch_names = params.quant_spectra_dir.collect{ k, v -> k }
-            } else {
-                batch_names = [null]
-            }
-            batched_skyline_files = Channel.fromList(batch_names)
+            batched_skyline_files = Channel.fromList(batch_name_list)
                 .combine(skyline_document_name)
                 .map{ it, doc_name -> [get_skyline_doc_name_per_batch(doc_name, it), it] }
                 .join(final_skyline_file.map{ it -> [it.baseName.replaceAll(/(_annotated)?\.sky$/, ''), it] },
