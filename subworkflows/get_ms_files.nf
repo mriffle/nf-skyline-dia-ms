@@ -263,7 +263,7 @@ def find_local_matches(local_dirs, spectra_regex) {
             batch,
             file(dir, checkIfExists: true)
                 .listFiles()
-                .findAll { it ==~ spectra_regex }
+                .findAll { it.name ==~ spectra_regex }
         ]
     }
 }
