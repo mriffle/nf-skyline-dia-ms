@@ -3,7 +3,7 @@ process CASCADIA_SEARCH {
     label 'process_high_constant'
     container params.images.cascadia
 
-    containerOptions = {
+    containerOptions {
 
         def options = ''
         if (params.cascadia.use_gpu) {
