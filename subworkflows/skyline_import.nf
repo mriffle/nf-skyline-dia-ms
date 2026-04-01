@@ -61,17 +61,12 @@ workflow skyline_import {
 
         if(params.skyline.minimize) {
             SKYLINE_MINIMIZE_DOCUMENT(skyline_results)
-            skyline_minimized_results = SKYLINE_MINIMIZE_DOCUMENT.out.final_skyline_zipfile
-            skyline_minimized_results_hash = SKYLINE_MINIMIZE_DOCUMENT.out.output_file_hashes
-        } else {
-            skyline_minimized_results = Channel.empty()
-            skyline_minimized_results_hash = Channel.empty()
+            skyline_results = SKYLINE_MINIMIZE_DOCUMENT.out.final_skyline_zipfile
+            skyline_results_hash = SKYLINE_MINIMIZE_DOCUMENT.out.output_file_hashes
         }
 
     emit:
         skyline_results
         skyline_results_hash
-        skyline_minimized_results
-        skyline_minimized_results_hash
         proteowizard_version = SKYLINE_ADD_LIB.out.version
 }

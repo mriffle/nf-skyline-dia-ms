@@ -52,6 +52,11 @@ process VALIDATE_LOCAL_METADATA {
             ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
             > >(tee "validate_metadata.stdout") 2> >(tee "validate_metadata.stderr" >&2)
         """
+
+    stub:
+        """
+        touch validate_metadata.stdout validate_metadata.stderr
+        """
 }
 
 process VALIDATE_PANORAMA_METADATA {
@@ -127,7 +132,7 @@ process VALIDATE_PANORAMA_PUBLIC_METADATA {
             ${format_flag(params.batch_report.control_key, "--controlKey")} \
             ${format_flags(params.batch_report.control_values, "--addControlValue")} \
             ${format_flags(params.batch_report.covariate_vars, "--addCovariate")} \
-            --api-key "${params.panorama.api_key}" \
+            --api-key "${params.panorama.public.key}" \
             > >(tee "validate_metadata.stdout") 2> >(tee "validate_metadata.stderr" >&2)
         """
 }

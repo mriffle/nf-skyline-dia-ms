@@ -20,7 +20,8 @@ jobs:
           'test-carafe-multi.config',
           'test-skip-dia-search.config',
           'test-msconvert-only-pdc.config',
-          'test-msconvert-only-local.config'
+          'test-msconvert-only-local.config',
+          'test-diann-multi-batch-metadata.config'
         ]
 
     steps:

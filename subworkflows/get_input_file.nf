@@ -14,7 +14,7 @@ workflow get_input_file {
             PANORAMA_GET_FILE(file_path, aws_secret_id)
             file = PANORAMA_GET_FILE.out.panorama_file
         } else {
-            file = Channel.value(file(params.spectral_library, checkIfExists: true))
+            file = Channel.value(file(file_path, checkIfExists: true))
         }
 
     emit:

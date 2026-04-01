@@ -276,12 +276,6 @@ Supported branches in the code:
 
 The validation step compares metadata against `file_json` from the MS-input resolver.
 
-Important implementation quirk:
-
-- Panorama Public metadata validation uses `params.panorama.api_key`
-- the configured public key actually lives at `params.panorama.public.key`
-- so Panorama Public replicate-metadata validation is wired incorrectly in the current code
-
 Relevant files:
 
 - `subworkflows/get_replicate_metadata.nf`
@@ -321,10 +315,6 @@ Main-workflow behavior:
 
 Important implementation quirks:
 
-- the helper subworkflow `subworkflows/get_input_file.nf` incorrectly resolves local files
-  to `params.spectral_library` instead of the requested path
-- that means local `carafe.carafe_fasta`, `carafe.diann_fasta`, and
-  `carafe.peptide_results_file` are currently miswired unless they are Panorama URLs
 - the EncyclopeDIA subworkflow still validates `params.spectral_library` directly, so a
   Carafe-generated library does not fully replace `params.spectral_library` for that branch
 
@@ -500,14 +490,6 @@ PDC gene-report behavior:
 - if `params.pdc.gene_level_data` is set and QC generation ran, gene-level reports are exported
 - those gene reports are emitted and do participate in checksum packaging
 
-Important implementation quirk:
-
-- `subworkflows/skyline_import.nf` emits minimized Skyline outputs when
-  `params.skyline.minimize` is true
-- `workflows/skyline.nf` does not switch downstream consumers to those minimized outputs
-- Panorama upload, checksum packaging, and report execution continue to use the non-minimized
-  `skyline_results` channel
-
 ## Provenance, Hashing, and Output Packaging
 
 ### Run details
@@ -678,9 +660,11 @@ That workflow runs `nextflow run . -stub-run -c test-resources/<config>` for mul
 configurations, including:
 
 - DIA-NN
+- DIA-NN multi-batch with replicate metadata
 - Cascadia
 - EncyclopeDIA with and without narrow-window data
 - PDC input
+- Carafe multi-file
 - no-search mode
 - `msconvert_only`
 
