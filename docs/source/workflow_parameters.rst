@@ -134,6 +134,8 @@ The ``params`` Section
      - If set to ``true`` download raw files through an S3 transfer instead of over https.
        This option will only work if the workflow execution environment is configured to directly access PDC AWS infrastructure.
        Default is ``faise``.
+   * - ``pdc.batch_file``
+     - A ``tsv`` file that assigns each PDC file to a named batch. The file must have ``file_name`` and ``batch`` columns. When set, the workflow produces a separate Skyline document per batch, following the same multi-batch behavior as when ``quant_spectra_dir`` is a ``Map``. All files in the batch file must match files downloaded from the PDC study, and all downloaded files must be present in the batch file. Default: ``null``.
 
 
 ``params.carafe``
@@ -338,7 +340,12 @@ Running the workflow in multi-batch mode
 The workflow can be run in multi-batch mode if the ``params.search_engine`` supports it.
 Currently the only search engine option that supports multi batch mode is ``'diann'``.
 
-To activate multi-batch mode ``params.quant_spectra_dir`` must be a ``Map`` where each key, value pair is a batch name and the ms files corresponding to the batch.
+There are two ways to activate multi-batch mode:
+
+Using ``quant_spectra_dir`` as a Map
+====================================
+
+For non-PDC runs, ``params.quant_spectra_dir`` must be a ``Map`` where each key, value pair is a batch name and the ms files corresponding to the batch.
 For example:
 
 .. code-block:: groovy
@@ -351,8 +358,40 @@ For example:
 
 **Note:** mzML/raw file names can not be duplicated in any batch. If there are duplicate file names the ``DIANN_MBR`` process will fail.
 
+Using ``pdc.batch_file`` for PDC runs
+=====================================
+
+For PDC runs, multi-batch mode is activated by setting ``params.pdc.batch_file`` to a ``tsv`` file that assigns each downloaded PDC file to a batch. The file must have ``file_name`` and ``batch`` columns:
+
+.. list-table:: Example PDC batch file format
+   :widths: 50 50
+   :header-rows: 1
+
+   * - file_name
+     - batch
+   * - sample_001.raw
+     - BatchA
+   * - sample_002.raw
+     - BatchA
+   * - sample_003.raw
+     - BatchB
+   * - sample_004.raw
+     - BatchB
+
+The workflow validates that all files in the batch file match files downloaded from the PDC study, and that all downloaded files appear in the batch file.
+
+For example:
+
+.. code-block:: groovy
+
+    params {
+      pdc.study_id = 'PDC000504'
+      pdc.batch_file = '/path/to/pdc_batches.tsv'
+    }
+
+
 Differences in result files in multi batch mode
-===============================================
+================================================
 
 - A separate Skyline document is generated for each batch and prefixed with the batch name.
 
@@ -360,6 +399,11 @@ Differences in result files in multi batch mode
 
     #. ``Plate1_human_dia.sky.zip``
     #. ``Plate2_human_dia.sky.zip``
+
+  * For PDC runs where ``skyline.document_name`` defaults to the study name, the batch name is appended similarly:
+
+    #. ``study_name_BatchA.sky.zip``
+    #. ``study_name_BatchB.sky.zip``
 
 - Any optional Skyline reports will be generated separately for each document.
 - A separate QC report is generated for each Skyline document.
