@@ -52,13 +52,8 @@ process CARAFE {
         """
         ${apptainer_cmds}
 
-        export HOME=/tmp
-
-        echo "\${JAVA_TOOL_OPTIONS:-<not set>}"
-        python -c 'import sys; print(sys.executable)'
-        java -XshowSettings:properties -version 2>&1 | grep 'user.home'
-        ls -l /opt/carafe-home/.carafe/.venv/bin/python3
-        /opt/carafe-home/.carafe/.venv/bin/python3 -c 'import torch, alphabase; print("ok")'
+        export HOME=\$PWD
+        export HF_HOME=\$PWD/.hf_cache
 
         ${exec_java_command(task.memory)} \\
             -ms "." \\
