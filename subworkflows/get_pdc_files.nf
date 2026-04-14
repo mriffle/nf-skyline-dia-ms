@@ -12,9 +12,10 @@ workflow get_pdc_study_metadata {
             annotations_csv = GET_STUDY_METADATA.out.skyline_annotations
             study_name = GET_STUDY_METADATA.out.study_name
         } else {
-            metadata = Channel.fromPath(file(params.pdc.metadata_tsv, checkIfExists: true))
-            METADATA_TO_SKY_ANNOTATIONS(metadata)
-            annotations_csv = METADATA_TO_SKY_ANNOTATIONS.out
+            metadata_file = file(params.pdc.metadata_tsv, checkIfExists: true)
+            metadata = Channel.fromPath(metadata_file)
+            METADATA_TO_SKY_ANNOTATIONS(metadata_file)
+            annotations_csv = METADATA_TO_SKY_ANNOTATIONS.out.skyline_annotations
             study_name = params.pdc.study_name == null ? params.pdc.study_id : params.pdc.study_name
         }
 

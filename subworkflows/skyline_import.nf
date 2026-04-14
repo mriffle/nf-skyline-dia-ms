@@ -49,8 +49,8 @@ workflow skyline_import {
             ANNOTATION_TSV_TO_CSV(replicate_metadata)
 
             SKYLINE_ANNOTATE_DOCUMENT(SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile,
-                                      ANNOTATION_TSV_TO_CSV.out.annotation_csv.first(),
-                                      ANNOTATION_TSV_TO_CSV.out.annotation_definitions.first())
+                                      ANNOTATION_TSV_TO_CSV.out.annotation_csv,
+                                      ANNOTATION_TSV_TO_CSV.out.annotation_definitions)
 
             skyline_results = SKYLINE_ANNOTATE_DOCUMENT.out.final_skyline_zipfile
             skyline_results_hash = SKYLINE_ANNOTATE_DOCUMENT.out.output_file_hashes
