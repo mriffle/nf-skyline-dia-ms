@@ -21,7 +21,9 @@ jobs:
           'test-skip-dia-search.config',
           'test-msconvert-only-pdc.config',
           'test-msconvert-only-local.config',
-          'test-diann-multi-batch-metadata.config'
+          'test-diann-multi-batch-metadata.config',
+          'test-diann-pdc-batches.config',
+          'test-diann-filename-glob.config'
         ]
 
     steps:

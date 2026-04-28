@@ -44,6 +44,11 @@ workflow get_ms_files {
         local_file_type = infer_local_ms_file_type(local_matches)
         expected_ms_file_type = local_file_type ?: infer_ms_file_type_from_regex(spectra_regex)
 
+        // Fail fast for batches whose only configured spectra sources are local directories
+        // that matched zero files. This is the most common misconfiguration (e.g., glob set
+        // to `*.raw` against a directory of mzMLs) and we catch it before any process runs.
+        check_local_only_batches_have_matches(spectra_dirs, spectra_dir_groups, local_matches, spectra_regex)
+
         // Find files in local directories matching spectra_regex
         if (local_matches) {
             sampled_local_files = local_matches
@@ -92,9 +97,7 @@ workflow get_ms_files {
         panorama_url_ch
             .concat(panorama_public_url_ch)
             .concat(local_file_ch.map{ batch, file -> [batch, file.name] })
-            .tap{ batched_paths_ch }
-            .map{ _, path -> path }
-            .set{ all_paths_ch }
+            .set{ batched_paths_ch }
 
         // Collapse list of files into a JSON string
         // The string is passed to qc_report.VALIDATE_METADATA
@@ -121,30 +124,39 @@ workflow get_ms_files {
                 }
         }
 
-        // make sure that all files have the same extension
-        all_paths_ch.collect().subscribe{ fileList ->
-            def directories = spectra_dirs.collect{
-                it -> it[1].collect{
-                        dir -> "${dir}${dir[-1] == '/' ? '' : '/' }${spectra_regex}"
-                    }.join('\n')
-                }.join('\n')
-
-            // Check that we have exactly 1 MS file extension
-            def extensions = fileList.collect { get_ms_file_type(it) }.unique()
-            if (extensions.size() == 0) {
-                error "No files matches for:\n" + directories +
-                      "\nPlease choose a file glob that will match raw or mzML files."
+        // Validation barrier: every expected batch must have produced at least one matched
+        // file, and matched files must share a single supported MS extension. Errors raised
+        // here propagate through the dataflow before downstream operators (e.g., the join
+        // on Skyline-document name) can fail with confusing key-mismatch messages.
+        def expected_batches = spectra_dirs.collect { it[0] } as Set
+        validation_ch = batched_paths_ch
+            .groupTuple()
+            .toList()
+            .map { entries ->
+                def found_batches = entries.collect { it[0] } as Set
+                def missing = expected_batches - found_batches
+                if (missing) {
+                    def filtered = spectra_dirs.findAll { it[0] in missing }
+                    error "No spectra files matched the glob/regex:\n" +
+                          format_dir_listing(filtered, spectra_regex) +
+                          "\nPlease choose a file glob/regex that will match raw, mzML, or .d.zip files."
+                }
+                def all_files = entries.collectMany { it[1] }
+                def extensions = all_files.collect { get_ms_file_type(it) }.unique()
+                if (extensions.size() > 1) {
+                    error "Matched more than 1 file type for:\n" +
+                          format_dir_listing(spectra_dirs, spectra_regex) +
+                          "\nFound extensions: [${extensions.join(', ')}]" +
+                          "\nPlease choose a file glob/regex that will match exactly one MS file type."
+                }
+                if (!(extensions[0] in ['raw', 'mzML', 'd.zip'])) {
+                    error "No MS data files found for:\n" +
+                          format_dir_listing(spectra_dirs, spectra_regex) +
+                          "\nFound extension: ${extensions[0]}" +
+                          "\nPlease choose a file glob/regex that will match raw, mzML, or .d.zip files."
+                }
+                true
             }
-            if (extensions.size() > 1) {
-                error "Matched more than 1 file type for:\n" + directories +
-                      "\nFound extensions: [" + extensions.join(", ") + "]" +
-                      "\nPlease choose a file glob that will only match one type of file."
-            }
-
-            if (!(extensions[0] in ['raw', 'mzML', 'd.zip'])) {
-                error "No MS data files found for:\n" + directories
-            }
-        }
 
         // Download files from panorama if applicable
         if (spectra_dir_groups.panorama_dirs) {
@@ -227,10 +239,43 @@ workflow get_ms_files {
             }
         }
 
+        // Force ms_file_ch to wait on validation_ch so any validation error stops the
+        // workflow before downstream stages can fail with confusing messages.
+        ms_file_ch = ms_file_ch.combine(validation_ch).map { entry -> entry[0..-2] }
+
     emit:
         ms_file_ch
         converted_mzml_ch
         file_json
+}
+
+// Format a list of (batch, [dir, ...]) tuples as a multi-line listing of "<dir>/<regex>" lines,
+// optionally prefixed with a batch label. Used to build user-facing error messages.
+def format_dir_listing(spectra_dirs, spectra_regex) {
+    return spectra_dirs.collect { batch, dirs ->
+        def label = batch == null ? '' : "[batch '${batch}'] "
+        dirs.collect { d -> "  ${label}${d}${d[-1] == '/' ? '' : '/'}${spectra_regex}" }.join('\n')
+    }.join('\n')
+}
+
+// Synchronously fail when a batch's only spectra sources are local directories that matched
+// zero files. Catches the common misconfiguration of a glob/regex that doesn't match any
+// files in the supplied directory; raises before any process runs.
+def check_local_only_batches_have_matches(spectra_dirs, spectra_dir_groups, local_matches, spectra_regex) {
+    def panorama_batches = (spectra_dir_groups.panorama_dirs + spectra_dir_groups.panorama_public_dirs)
+        .collect { it[0] } as Set
+    def empty_batches = []
+    local_matches.groupBy { it[0] }.each { batch, entries ->
+        if (!entries.any { it[1] } && !panorama_batches.contains(batch)) {
+            empty_batches << batch
+        }
+    }
+    if (empty_batches) {
+        def filtered = spectra_dirs.findAll { it[0] in empty_batches }
+        error "No spectra files matched the glob/regex in local directories:\n" +
+              format_dir_listing(filtered, spectra_regex) +
+              "\nPlease choose a file glob/regex that will match raw, mzML, or .d.zip files."
+    }
 }
 
 def is_panorama_url(url) {
@@ -263,7 +308,7 @@ def find_local_matches(local_dirs, spectra_regex) {
             batch,
             file(dir, checkIfExists: true)
                 .listFiles()
-                .findAll { it ==~ spectra_regex }
+                .findAll { it.name ==~ spectra_regex }
         ]
     }
 }

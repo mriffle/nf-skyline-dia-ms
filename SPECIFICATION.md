@@ -135,6 +135,9 @@ For non-PDC runs, `get_ms_files`:
 - lists local files matching the regex
 - lists matching files from authenticated Panorama or Panorama Public
 - randomly samples files per batch when `files_per_quant_batch` is set
+- enforces that every expected batch produced at least one matched file, raising a
+  user-facing error before any downstream stage so misconfigured globs/regexes do not
+  surface as opaque join-mismatch errors deeper in the workflow
 - enforces that all matched files have one MS-file type
 - resolves one of:
   - `.mzML`
@@ -163,12 +166,14 @@ Channel convention:
 
 Important detail:
 
-- batch mode is determined in `main.nf` only from `params.quant_spectra_dir instanceof Map`
+- batch mode is determined in `main.nf` from
+  `params.quant_spectra_dir instanceof Map || params.pdc.batch_file != null`
 
 Schema note:
 
 - the helper workflow can handle more shapes than the schema explicitly documents
-- in practice, the public interface for batching is centered on `quant_spectra_dir`
+- the public interface for batching is either a `quant_spectra_dir` Map (non-PDC) or
+  `pdc.batch_file` (PDC)
 
 Relevant files:
 
@@ -204,6 +209,20 @@ That path:
 - supports `.raw` and `.d.zip` inputs
 - converts RAW to mzML unless `use_vendor_raw` is enabled
 - emits Skyline-ready annotations that override user-supplied replicate metadata
+
+PDC batch mode:
+
+- if `params.pdc.batch_file` is set, the workflow reads a TSV file with `file_name` and
+  `batch` columns that assigns each downloaded PDC file to a named batch
+- the batch file is validated: every downloaded file must appear in the batch file and
+  every file in the batch file must be present in the downloaded files
+- downloaded files are emitted as `[batch_name, file]` tuples instead of `[null, file]`
+- `use_batch_mode` is set to `true`, activating the same downstream per-batch Skyline
+  document creation used by the non-PDC `quant_spectra_dir` Map path
+- batch names are extracted from the batch file in `main.nf` and passed to the Skyline
+  workflow as `batch_name_list`
+- if `pdc.batch_file` is not set, behavior is unchanged: `[null, file]` tuples,
+  single Skyline document
 
 Additional behavior:
 
@@ -632,6 +651,9 @@ Current implementation support is uneven by input type:
 - `pdc.*`:
   separate PDC client branch
 
+- `pdc.batch_file`:
+  local only; TSV with `file_name` and `batch` columns that assigns PDC files to batches
+
 ## Containers and External Programs
 
 The workflow is containerized and wraps these major tools:
@@ -664,6 +686,7 @@ configurations, including:
 - Cascadia
 - EncyclopeDIA with and without narrow-window data
 - PDC input
+- PDC input with batch file
 - Carafe multi-file
 - no-search mode
 - `msconvert_only`

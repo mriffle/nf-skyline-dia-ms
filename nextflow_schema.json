@@ -149,6 +149,9 @@
         "s3_download": {
           "type": "boolean",
           "default": false
+        },
+        "batch_file": {
+          "type": "string"
         }
       }
     },

@@ -94,13 +94,14 @@ workflow {
     }
 
     // get raw/mzML files
-    use_batch_mode = params.quant_spectra_dir instanceof Map
+    use_batch_mode = params.quant_spectra_dir instanceof Map || params.pdc.batch_file != null
     quant_spectra_file_json = Channel.empty()
     if(params.pdc.study_id) {
         get_pdc_files()
         wide_ms_file_ch = get_pdc_files.out.wide_ms_file_ch
         wide_mzml_ch = get_pdc_files.out.converted_mzml_ch
         pdc_study_name = get_pdc_files.out.study_name
+        batch_name_list = get_pdc_batch_names(params.pdc.batch_file)
         if(params.skyline.document_name == 'final') {
             skyline_document_name = pdc_study_name
          } else {
@@ -120,6 +121,7 @@ workflow {
         wide_mzml_ch = get_wide_ms_files.out.converted_mzml_ch
         quant_spectra_file_json = get_wide_ms_files.out.file_json
         pdc_study_name = null
+        batch_name_list = use_batch_mode ? params.quant_spectra_dir.collect{ k, v -> k } : [null]
         skyline_document_name = Channel.value(params.skyline.document_name)
     }
 
@@ -233,7 +235,8 @@ workflow {
         final_speclib,
         pdc_study_name,
         skyr_file_ch,
-        use_batch_mode
+        use_batch_mode,
+        batch_name_list
     )
 
     version_files = search_engine_version
@@ -340,6 +343,19 @@ def is_panorama_authentication_required() {
            (params.carafe.spectra_dir && any_entry_requires_panorama_auth(params.carafe.spectra_dir)) ||
            (params.skyline.skyr_file && any_entry_requires_panorama_auth(params.skyline.skyr_file))
 
+}
+
+// Extract unique sorted batch names from a PDC batch file, or [null] if no batch file
+def get_pdc_batch_names(batch_file_path) {
+    if (batch_file_path == null) return [null]
+    def f = file(batch_file_path, checkIfExists: true)
+    def lines = f.readLines()
+    def header = lines[0].split('\t')
+    def batch_idx = header.findIndexOf { it.trim() == 'batch' }
+    if (batch_idx < 0) {
+        error "Batch file '${batch_file_path}' must have a 'batch' column."
+    }
+    return lines[1..-1].collect { it.split('\t')[batch_idx].trim() }.unique().sort()
 }
 
 def carafe_enabled() {
