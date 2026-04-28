@@ -135,6 +135,9 @@ For non-PDC runs, `get_ms_files`:
 - lists local files matching the regex
 - lists matching files from authenticated Panorama or Panorama Public
 - randomly samples files per batch when `files_per_quant_batch` is set
+- enforces that every expected batch produced at least one matched file, raising a
+  user-facing error before any downstream stage so misconfigured globs/regexes do not
+  surface as opaque join-mismatch errors deeper in the workflow
 - enforces that all matched files have one MS-file type
 - resolves one of:
   - `.mzML`
