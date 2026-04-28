@@ -36,4 +36,4 @@ jobs:
         curl -s https://get.nextflow.io | bash
         chmod +x nextflow
         echo "Running Nextflow stub with config: ${{ matrix.config }}"
-        ./nextflow run . -stub-run -c test-resources/${{ matrix.config }}
+        ./nextflow run . -stub-run -c test-resources/${{ matrix.config }} -c test-resources/ci.config
