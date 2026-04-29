@@ -10,7 +10,9 @@ jobs:
   stub-run:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        nextflow-version: ['24.10.5', '25.10.4', '26.04.0']
         config: [
           'test-diann.config',
           'test-cascadia.config',
@@ -30,9 +32,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Run (${{ matrix.config }})
+    - name: Run (nf ${{ matrix.nextflow-version }} / ${{ matrix.config }})
+      env:
+        NXF_VER: ${{ matrix.nextflow-version }}
       run: |
-        echo "Installing Nextflow:"
+        echo "Installing Nextflow ${NXF_VER}:"
         curl -s https://get.nextflow.io | bash
         chmod +x nextflow
         echo "Running Nextflow stub with config: ${{ matrix.config }}"
