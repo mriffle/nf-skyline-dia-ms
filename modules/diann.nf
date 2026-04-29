@@ -132,7 +132,7 @@ process DIANN_SEARCH {
         """
         touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet stub.quant
         touch stub.stderr stub.stdout
-        diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+'| head -1 | xargs printf "diann_version=%s\\n" > diann_version.txt
+        echo "diann_version=stub" > diann_version.txt
 
         ${generate_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """
@@ -310,7 +310,7 @@ process DIANN_MBR {
         """
         touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet
         touch stub.stderr stub.stdout
-        diann | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+'| head -1 | xargs printf "diann_version=%s\\n" > diann_version.txt
+        echo "diann_version=stub" > diann_version.txt
 
         ${generate_diann_output_file_stats_script(ms_files.toList(), output_report_name)}
         """

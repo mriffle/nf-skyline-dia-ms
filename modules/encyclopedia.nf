@@ -118,9 +118,7 @@ process ENCYCLOPEDIA_CREATE_ELIB {
     touch "${outputFilePrefix}-combined-results.elib.peptides.txt"
     touch "${outputFilePrefix}-combined-results.elib.proteins.txt"
 
-    # get EncyclopeDIA version info
-    ${exec_java_command(task.memory)} --version > version.txt || echo "encyclopedia_version_exit=\$?"
-    echo "encyclopedia_version=\$(cat version.txt| awk '{print \$4}')" > encyclopedia_version.txt
+    echo "encyclopedia_version=stub" > encyclopedia_version.txt
     """
 }
 

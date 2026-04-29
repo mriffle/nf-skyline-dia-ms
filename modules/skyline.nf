@@ -76,26 +76,10 @@ process SKYLINE_ADD_LIB {
     touch "results.sky.zip"
     touch "skyline_add_library.stderr" "skyline_add_library.stdout"
 
-    # parse Skyline version info
-    wine SkylineCmd --version > version.txt
-    vars=(\$(cat version.txt | \
-            tr -cd '\\11\\12\\15\\40-\\176' | \
-            egrep -o 'Skyline.*' | \
-            sed -E "s/(Skyline[-a-z]*) \\((.*)\\) ([.0-9]+) \\(([A-Za-z0-9]{7})\\)/\\1 \\3 \\4/"))
-    skyline_build="\${vars[0]}"
-    skyline_version="\${vars[1]}"
-    skyline_commit="\${vars[2]}"
-
-    # parse msconvert info
-    msconvert_version=\$(cat version.txt | \
-                        tr -cd '\\11\\12\\15\\40-\\176' | \
-                        egrep -o 'Proteo[a-zA-Z0-9\\. ]+' | \
-                        egrep -o [0-9].*)
-
-    echo "skyline_build=\${skyline_build}" > pwiz_versions.txt
-    echo "skyline_version=\${skyline_version}" >> pwiz_versions.txt
-    echo "skyline_commit=\${skyline_commit}" >> pwiz_versions.txt
-    echo "msconvert_version=\${msconvert_version}" >> pwiz_versions.txt
+    echo "skyline_build=stub"     >  pwiz_versions.txt
+    echo "skyline_version=stub"   >> pwiz_versions.txt
+    echo "skyline_commit=stub"    >> pwiz_versions.txt
+    echo "msconvert_version=stub" >> pwiz_versions.txt
     """
 }
 

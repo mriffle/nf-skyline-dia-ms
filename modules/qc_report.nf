@@ -186,9 +186,8 @@ process MERGE_REPORTS {
     """
     touch merge_reports.stdout merge_reports.stderr qc_report_data.db3
 
-    # get dia_qc version and git info
-    dia_qc --version|awk '{print \$3}'|xargs -0 printf 'dia_qc_version=%s' > dia_qc_version.txt
-    echo "dia_qc_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" >> dia_qc_version.txt
+    echo "dia_qc_version=stub" > dia_qc_version.txt
+    echo "dia_qc_git_repo=stub" >> dia_qc_version.txt
     """
 }
 

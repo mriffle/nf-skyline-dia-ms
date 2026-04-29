@@ -74,7 +74,7 @@ process CARAFE {
 
     stub:
         """
-        echo "carafe_version=\$CARAFE_VERSION" > carafe_version.txt
+        echo "carafe_version=stub" > carafe_version.txt
         touch carafe_spectral_library.tsv
         touch stub.stderr stub.stdout
         touch parameter.txt

@@ -40,6 +40,20 @@ process GET_STUDY_METADATA {
 
         echo "pdc_client_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" > pdc_client_version.txt
         """
+
+    stub:
+        """
+        export study_id="${pdc_study_id}"
+        export study_name="stub_study"
+        printf '%s\\n' \
+            '[' \
+            '{"url":"https://example.com/stub1.raw","file_name":"stub_pdc_file1.raw","md5sum":"d41d8cd98f00b204e9800998ecf8427e","file_size":1000},' \
+            '{"url":"https://example.com/stub2.raw","file_name":"stub_pdc_file2.raw","md5sum":"d41d8cd98f00b204e9800998ecf8427e","file_size":1000}' \
+            ']' \
+            > "\${study_id}_flat.json"
+        touch "\${study_id}_skyline_annotations.csv"
+        echo "pdc_client_git_repo=stub" > pdc_client_version.txt
+        """
 }
 
 process METADATA_TO_SKY_ANNOTATIONS {
@@ -55,6 +69,11 @@ process METADATA_TO_SKY_ANNOTATIONS {
     script:
         """
         PDC_client metadataToSky ${pdc_study_metadata}
+        """
+
+    stub:
+        """
+        touch skyline_annotations.csv
         """
 }
 
