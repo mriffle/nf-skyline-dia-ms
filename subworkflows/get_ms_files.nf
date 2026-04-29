@@ -31,6 +31,8 @@ workflow get_ms_files {
 
     main:
 
+        def spectra_dirs
+        def multi_batch
         if (spectra_dir instanceof Map) {
             spectra_dirs = spectra_dir.collect{ k, v -> tuple(k, param_to_list(v))}
             multi_batch = true
@@ -116,7 +118,7 @@ workflow get_ms_files {
                 }
         } else {
             file_json = batched_paths_ch
-                .map{ _, path -> new File(path).name }
+                .map{ batch, path -> new File(path).name }
                 .toSortedList()
                 .map{ list ->
                     def quoted = list.collect{ "\"${it}\"" }.join(", ")

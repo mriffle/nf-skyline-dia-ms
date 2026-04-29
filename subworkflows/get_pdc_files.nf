@@ -53,10 +53,10 @@ def parse_batch_file(batch_file_path) {
 workflow get_pdc_files {
     main:
         get_pdc_study_metadata()
-        metadata = get_pdc_study_metadata.out.metadata
+        def metadata_ch = get_pdc_study_metadata.out.metadata
 
         // Handle both tsv and json metadata files
-        def meta_split = metadata.branch {
+        def meta_split = metadata_ch.branch {
             tsv:   it.name.toLowerCase().endsWith('.tsv')
             json:  it.name.toLowerCase().endsWith('.json')
             other: true
@@ -139,7 +139,7 @@ workflow get_pdc_files {
 
     emit:
         study_name = get_pdc_study_metadata.out.study_name
-        metadata
+        metadata = metadata_ch
         annotations_csv = get_pdc_study_metadata.out.annotations_csv
         wide_ms_file_ch
         converted_mzml_ch

@@ -24,7 +24,7 @@ def msconvert_cache_dir() {
 }
 
 process MSCONVERT_MULTI_BATCH {
-    storeDir "${params.mzml_cache_directory}/${msconvert_cache_dir()}"
+    storeDir { "${params.mzml_cache_directory}/${msconvert_cache_dir()}" }
     publishDir params.output_directories.msconvert, pattern: "*.mzML", failOnError: true, mode: 'copy', enabled: params.msconvert_only && !params.panorama.upload
     label 'process_medium'
     label 'process_high_memory'
@@ -53,7 +53,7 @@ process MSCONVERT_MULTI_BATCH {
 }
 
 process MSCONVERT {
-    storeDir "${params.mzml_cache_directory}/${msconvert_cache_dir()}"
+    storeDir { "${params.mzml_cache_directory}/${msconvert_cache_dir()}" }
     publishDir params.output_directories.msconvert, pattern: "*.mzML", failOnError: true, mode: 'copy', enabled: params.msconvert_only && !params.panorama.upload
     label 'process_medium'
     label 'process_high_memory'

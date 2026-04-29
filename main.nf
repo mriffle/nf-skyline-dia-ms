@@ -288,11 +288,20 @@ workflow {
             aws_secret_id
         )
     }
+
+    // Email notifications
+    workflow.onComplete = {
+        try {
+            email()
+        } catch (Exception e) {
+            println "Warning: Error sending completion email."
+        }
+    }
 }
 
 // Convert a Nextflow-style glob (only * is a wildcard) into a regex string
 def escape_regex(String str) {
-    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { _, group -> '\\' + group }
+    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { match, group -> '\\' + group }
 }
 
 // Return a regex string for matching files based on glob or regex parameters
@@ -386,13 +395,4 @@ def email() {
 //
 workflow dummy {
     println "This is a workflow that doesn't do anything."
-}
-
-// Email notifications:
-workflow.onComplete {
-    try {
-        email()
-    } catch (Exception e) {
-        println "Warning: Error sending completion email."
-    }
 }

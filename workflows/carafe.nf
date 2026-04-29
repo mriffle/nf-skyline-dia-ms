@@ -121,7 +121,7 @@ workflow carafe {
 }
 
 def escape_regex(String str) {
-    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { _, group -> '\\' + group }
+    return str.replaceAll(/([.\^$+?{}\[\]\\|()])/) { match, group -> '\\' + group }
 }
 
 def get_carafe_file_regex(String file_glob_param, String file_regex_param) {

@@ -336,7 +336,7 @@ process BLIB_BUILD_LIBRARY {
         path precursor_report
 
     output:
-        path("${get_blib_name()}"), emit: blib
+        path { get_blib_name() }, emit: blib
 
     script:
         """

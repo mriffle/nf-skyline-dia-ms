@@ -355,7 +355,7 @@ process EXPORT_TABLES {
 }
 
 process RENDER_QC_REPORT {
-    publishDir params.output_directories.qc_report, pattern: "*.${report_format}", failOnError: true, mode: 'copy'
+    publishDir params.output_directories.qc_report, pattern: { name -> name.endsWith(".${report_format}") }, failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stdout', failOnError: true, mode: 'copy'
     publishDir params.output_directories.qc_report, pattern: '*.stderr', failOnError: true, mode: 'copy'
     cpus   2

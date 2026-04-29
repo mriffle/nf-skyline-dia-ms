@@ -20,9 +20,6 @@ process CASCADIA_SEARCH {
     // don't melt the GPU
     maxForks params.cascadia.use_gpu ? 1 : null
 
-    // add extra command for apptainer
-    def extra_command = workflow.containerEngine in ['apptainer','singularity'] ? 'source /usr/local/bin/entrypoint.sh' : ''
-
     input:
         path ms_file
 
@@ -35,7 +32,8 @@ process CASCADIA_SEARCH {
         path("output_file_stats_${ms_file.baseName}.txt"), emit: output_file_stats
 
     script:
-
+        // add extra command for apptainer
+        def extra_command = workflow.containerEngine in ['apptainer','singularity'] ? 'source /usr/local/bin/entrypoint.sh' : ''
         """
         ${extra_command}
 
