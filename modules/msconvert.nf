@@ -98,11 +98,21 @@ def msconvert_wrapped_script(raw_file) {
             | awk '\$1 !~ /^Z/ && (\$2 == "msconvert.exe" || \$2 == "msconvert") { found=1 } END { exit !found }'
     }
 
-    validate_expected_mzml() {
-        if [[ ! -s "\$expected_mzml" ]]; then
-            echo "ERROR: Expected mzML file was not created or is empty: \$expected_mzml" >&2
-            echo "mzML files present in task directory:" >&2
-            ls -lh -- *.mzML 2>/dev/null >&2 || true
+    # Validate that an mzML was produced AND is structurally complete. msconvert
+    # writes the closing </mzML> (and, for indexed mzML, </indexedmzML>) as the
+    # very last bytes of the file, so a tail-grep for either tag is a reliable
+    # truncation check. This catches the case where msconvert crashed mid-write
+    # but wine still returned 0.
+    validate_mzml_complete() {
+        local f="\$1"
+
+        if [[ ! -s "\$f" ]]; then
+            echo "ERROR: mzML file was not created or is empty: \$f" >&2
+            return 1
+        fi
+
+        if ! tail -c 1024 "\$f" | grep -qE '</(indexedmzML|mzML)>'; then
+            echo "ERROR: mzML file does not end with </mzML> or </indexedmzML>; likely truncated: \$f" >&2
             return 1
         fi
 
@@ -117,7 +127,14 @@ def msconvert_wrapped_script(raw_file) {
     forced_wine_cleanup=0
     wine_rc=0
 
+    # Stage the conversion into a sibling directory so the expected output path
+    # only ever contains a fully validated file. If msconvert crashes mid-write
+    # (with or without wine reporting it), the partial output stays in
+    # .pending and the task fails before promoting it.
+    mkdir -p .pending
+
     wine msconvert ${msconvert_options()} \\
+        --outdir .pending \\
         "\$raw_file" &
 
     wine_pid=\$!
@@ -157,13 +174,21 @@ def msconvert_wrapped_script(raw_file) {
 
     wait "\$wine_pid" || wine_rc=\$?
 
-    if ! validate_expected_mzml; then
-        echo "ERROR: msconvert/Wine exit code was \$wine_rc, but expected output is missing." >&2
+    pending_mzml=".pending/\$expected_mzml"
+
+    if ! validate_mzml_complete "\$pending_mzml"; then
+        echo "ERROR: msconvert/Wine exit code was \$wine_rc, but \$pending_mzml is missing or truncated." >&2
+        echo "Files in .pending:" >&2
+        ls -lh -- .pending/ 2>/dev/null >&2 || true
         exit 1
     fi
 
+    # Promote the validated file to the expected output path. Nextflow's output
+    # check now sees only a fully validated mzML.
+    mv -- "\$pending_mzml" "\$expected_mzml"
+
     if [[ "\$forced_wine_cleanup" == "1" ]]; then
-        echo "Wine was force-cleaned after msconvert.exe exited. Expected mzML exists: \$expected_mzml" >&2
+        echo "Wine was force-cleaned after msconvert.exe exited. Validated mzML: \$expected_mzml" >&2
         exit 0
     fi
 
