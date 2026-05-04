@@ -17,22 +17,24 @@ def shell_quote(value) {
  * Those are handled by the wrapper so we can strictly validate output.
  */
 def msconvert_options() {
-    return """
-    -v --zlib --mzML --64 \
-        --ignoreUnknownInstrumentError --filter "peakPicking true 1-" \
-        ${params.msconvert.do_demultiplex ? '--filter "demultiplex optimization=overlap_only"' : ''} \
-        ${params.msconvert.do_simasspectra ? '--simAsSpectra' : ''} \
-        ${params.msconvert.mz_shift_ppm == null ? '' : '--filter "mzShift ' + "${params.msconvert.mz_shift_ppm}" + 'ppm msLevels=1-"'} \
-    """
+    def opts = '-v --zlib --mzML --64 --ignoreUnknownInstrumentError --filter "peakPicking true 1-"'
+    if (params.msconvert.do_demultiplex) {
+        opts += ' --filter "demultiplex optimization=overlap_only"'
+    }
+    if (params.msconvert.do_simasspectra) {
+        opts += ' --simAsSpectra'
+    }
+    if (params.msconvert.mz_shift_ppm != null) {
+        opts += " --filter \"mzShift ${params.msconvert.mz_shift_ppm}ppm msLevels=1-\""
+    }
+    return opts
 }
 
 /**
  * Generate the msconvert command text used for cache hashing.
  */
 def msconvert_command() {
-    return """
-    wine msconvert ${msconvert_options()}
-    """
+    return "wine msconvert ${msconvert_options()}"
 }
 
 /**
