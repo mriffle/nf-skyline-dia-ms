@@ -360,46 +360,23 @@ process BLIB_BUILD_LIBRARY {
         """
 }
 
-process DIANN_LIB_PARQUET_TO_TSV {
+process BLIB_BUILD_LIBRARY_FROM_PARQUET {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    cpus 2
-    memory { Math.max(4.0, (library_parquet.size() / (1024 ** 3)) * 4).GB }
-    time   { 1.h * task.attempt }
-    container params.images.parquet_to_tsv
+    cpus   2
+    memory { Math.max(8.0, (library_parquet.size() / (1024 ** 3)) * 5).GB }
+    time   { 2.h * task.attempt }
+    label 'proteowizard'
+    container params.images.proteowizard
 
     input:
         path library_parquet
-
-    output:
-        path("${library_parquet.baseName}.tsv"), emit: library_tsv
-
-    script:
-        """
-        parquet-to-tsv ${library_parquet} ${library_parquet.baseName}.tsv
-        """
-
-    stub:
-        """
-        touch ${library_parquet.baseName}.tsv
-        """
-}
-
-process BLIB_BUILD_LIBRARY_FROM_TSV {
-    publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
-    cpus   2
-    memory { Math.max(8.0, (library_tsv.size() / (1024 ** 3)) * 5).GB }
-    time   { 2.h * task.attempt }
-    container params.images.bibliospec
-
-    input:
-        path library_tsv
 
     output:
         path { get_blib_name() }, emit: blib
 
     script:
         """
-        BlibBuild "${library_tsv}" "${get_blib_name()}"
+        wine BlibBuild "${library_parquet}" "${get_blib_name()}"
         """
 
     stub:

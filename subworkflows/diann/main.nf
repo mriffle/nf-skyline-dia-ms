@@ -7,8 +7,7 @@ include { DIANN_BUILD_LIB } from "../../modules/diann"
 include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "../../modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "../../modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "../../modules/diann"
-include { DIANN_LIB_PARQUET_TO_TSV } from "../../modules/diann"
-include { BLIB_BUILD_LIBRARY_FROM_TSV } from "../../modules/diann"
+include { BLIB_BUILD_LIBRARY_FROM_PARQUET } from "../../modules/diann"
 
 workflow diann {
     take:
@@ -97,25 +96,19 @@ workflow diann {
             BLIB_BUILD_LIBRARY(diann_full_search.out.speclib,
                                diann_full_search.out.precursor_report)
 
-            // Single-file path: parquet library → TSV → .blib (BlibBuild can't read parquet,
-            // and DIA-NN only emits .skyline.speclib when MBR engages, which requires 2+ files)
-            DIANN_LIB_PARQUET_TO_TSV(diann_full_search.out.library_parquet)
-            BLIB_BUILD_LIBRARY_FROM_TSV(DIANN_LIB_PARQUET_TO_TSV.out.library_tsv)
+            // Single-file path: feed the parquet library directly to wine BlibBuild
+            BLIB_BUILD_LIBRARY_FROM_PARQUET(diann_full_search.out.library_parquet)
 
             final_speclib = BLIB_BUILD_LIBRARY.out.blib
-                                .mix(BLIB_BUILD_LIBRARY_FROM_TSV.out.blib)
+                                .mix(BLIB_BUILD_LIBRARY_FROM_PARQUET.out.blib)
                                 .first()
-            single_file_library_tsv = DIANN_LIB_PARQUET_TO_TSV.out.library_tsv
         } else {
             final_speclib = Channel.empty()
-            single_file_library_tsv = Channel.empty()
         }
 
         // all files to upload to panoramaweb (if requested)
         search_file_ch = diann_full_search.out.speclib.concat(
             diann_full_search.out.library_parquet
-        ).concat(
-            single_file_library_tsv
         ).concat(
             diann_full_search.out.precursor_report
         ).concat(
