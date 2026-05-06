@@ -421,14 +421,27 @@ Behavior:
 - converts `.blib` or `.dlib` libraries into DIA-NN TSV when required
 - otherwise predicts a library from FASTA
 - if narrow-window data exists, performs a subset/profiling search first
-- runs wide-window quantification through `DIANN_QUANT`
-- performs a second `DIANN_MBR` aggregation / reanalysis step
-- builds a Skyline `.blib` unless Skyline is skipped
+- the search is dispatched by `diann_search` to one of two underlying
+  workflows based on the resolved MS-file count:
+  - 2+ files → `diann_search_parallel`: per-file `DIANN_QUANT` followed by a
+    `DIANN_MBR` aggregation / reanalysis step that emits a
+    `*.parquet.skyline.speclib`
+  - 1 file → `diann_search_single`: a single `DIANN_SINGLE_SEARCH` invocation
+    that skips MBR (DIA-NN auto-disables it for one file and changes its
+    output names) and emits the empirical library as `*-lib.parquet`
+- builds a Skyline `.blib` unless Skyline is skipped:
+  - multi-file path: `BLIB_BUILD_LIBRARY` runs `BlibBuild` on the speclib
+  - single-file path: `DIANN_LIB_PARQUET_TO_TSV` converts the parquet library
+    to TSV (since BlibBuild does not accept parquet), then
+    `BLIB_BUILD_LIBRARY_FROM_TSV` runs `BlibBuild` on the TSV
+  - the `.blib` outputs from the two paths are mixed into `final_speclib`
 
 Capabilities:
 
 - supports batch mode
 - supports vendor RAW input through DIA-NN stage-in settings
+- single-file searches are supported on both wide-window and chromatogram-library
+  subset paths via the dispatcher
 
 ### Cascadia branch
 

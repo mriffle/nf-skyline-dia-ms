@@ -21,6 +21,11 @@ def generate_diann_output_file_stats_script(List ms_files, String report_name) {
 [[ \${#stat_files[@]} -eq 1 ]] || \
     { echo "Expected exactly one match for precursor report, found \${#stat_files[@]}" >&2; exit 1; }
 
+# Single-file DIA-NN runs emit the library as ${report_name}-lib.{parquet,tsv}
+# (no .skyline.speclib). Multi-file runs do not produce these.
+[[ -f ${report_name}-lib.tsv ]] && stat_files+=(${report_name}-lib.tsv)
+[[ -f ${report_name}-lib.parquet ]] && stat_files+=(${report_name}-lib.parquet)
+
 shopt -s nullglob
 for f in ${join_ms_files(ms_files)} ${report_name}*.speclib *.quant ; do
     stat_files+=("\$f")
@@ -69,13 +74,13 @@ process DIANN_BUILD_LIB {
         """
 }
 
-process DIANN_SEARCH {
+process DIANN_SINGLE_SEARCH {
     publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
     label 'process_high_constant'
     container params.images.diann
     stageInMode { !params.use_vendor_raw ? 'symlink' : (params.vendor_raw_copy ? 'copy' : 'link') }
     cache 'lenient'
-    
+
     input:
         path ms_files
         path fasta_file
@@ -86,7 +91,7 @@ process DIANN_SEARCH {
     output:
         path("*.stderr"), emit: stderr
         path("*.stdout"), emit: stdout
-        path("${output_report_name}*.speclib"), emit: speclib
+        path("${output_report_name}-lib.{parquet,tsv}"), emit: library_parquet
         path("${output_report_name}.{parquet,tsv}"), emit: precursor_report
         path("*.quant"), emit: quant_files
         path("diann_version.txt"), emit: version
@@ -107,20 +112,21 @@ process DIANN_SEARCH {
             --threads ${task.cpus} \
             --fasta ${fasta_file} \
             --lib ${spectral_library} \
-            --gen-spec-lib --reanalyse \
+            --gen-spec-lib \
             ${diann_params} \
             > >(tee "diann.stdout") 2> >(tee "diann.stderr" >&2)
 
-        # DiaNN does weird things with output file names depending on the version
-        # Instead of specifying them as options to DiaNN we will rename the default output files manually
-        if [[ -f report.tsv && -f lib.tsv.speclib ]] ; then
+        # DiaNN auto-disables MBR with one file and emits the empirical library as
+        # report-lib.{parquet,tsv} (no .skyline.speclib). Rename to the workflow's
+        # output_report_name so downstream stats / publishing patterns match.
+        if [[ -f report.tsv && -f report-lib.tsv ]] ; then
             mv -nv report.tsv ${output_report_name}.tsv
-            mv -nv lib.tsv.speclib ${output_report_name}.tsv.speclib
-        elif [[ -f report.parquet && -f report-lib.parquet.skyline.speclib ]] ; then
+            mv -nv report-lib.tsv ${output_report_name}-lib.tsv
+        elif [[ -f report.parquet && -f report-lib.parquet ]] ; then
             mv -nv report.parquet ${output_report_name}.parquet
-            mv -nv report-lib.parquet.skyline.speclib ${output_report_name}.parquet.skyline.speclib
+            mv -nv report-lib.parquet ${output_report_name}-lib.parquet
         else
-            echo "Missing DiaNN precursor report and/or speclib!" >&2
+            echo "Missing DiaNN precursor report and/or library!" >&2
             exit 1
         fi
 
@@ -130,7 +136,7 @@ process DIANN_SEARCH {
 
     stub:
         """
-        touch ${output_report_name}.parquet.skyline.speclib ${output_report_name}.parquet stub.quant
+        touch ${output_report_name}-lib.parquet ${output_report_name}.parquet stub.quant
         touch stub.stderr stub.stdout
         echo "diann_version=stub" > diann_version.txt
 
@@ -346,6 +352,54 @@ process BLIB_BUILD_LIBRARY {
         mv "\$f" "\$newf"
 
         wine BlibBuild "\$newf" "${get_blib_name()}"
+        """
+
+    stub:
+        """
+        touch "${get_blib_name()}"
+        """
+}
+
+process DIANN_LIB_PARQUET_TO_TSV {
+    publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
+    cpus 2
+    memory { Math.max(4.0, (library_parquet.size() / (1024 ** 3)) * 4).GB }
+    time   { 1.h * task.attempt }
+    container params.images.parquet_to_tsv
+
+    input:
+        path library_parquet
+
+    output:
+        path("${library_parquet.baseName}.tsv"), emit: library_tsv
+
+    script:
+        """
+        parquet-to-tsv ${library_parquet} ${library_parquet.baseName}.tsv
+        """
+
+    stub:
+        """
+        touch ${library_parquet.baseName}.tsv
+        """
+}
+
+process BLIB_BUILD_LIBRARY_FROM_TSV {
+    publishDir params.output_directories.diann, failOnError: true, mode: 'copy'
+    cpus   2
+    memory { Math.max(8.0, (library_tsv.size() / (1024 ** 3)) * 5).GB }
+    time   { 2.h * task.attempt }
+    container params.images.bibliospec
+
+    input:
+        path library_tsv
+
+    output:
+        path { get_blib_name() }, emit: blib
+
+    script:
+        """
+        BlibBuild "${library_tsv}" "${get_blib_name()}"
         """
 
     stub:
