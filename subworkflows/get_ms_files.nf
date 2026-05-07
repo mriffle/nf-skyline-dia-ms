@@ -31,13 +31,7 @@ workflow get_ms_files {
         allowed_extensions
 
     main:
-        if (!(allowed_extensions instanceof List) || allowed_extensions.isEmpty()) {
-            error "get_ms_files: allowed_extensions must be a non-empty list."
-        }
-        def disallowed = allowed_extensions.findAll { !(it in ['raw', 'mzML', 'd.zip']) }
-        if (disallowed) {
-            error "get_ms_files: unrecognized allowed_extensions entries: ${disallowed}. Valid values are 'raw', 'mzML', 'd.zip'."
-        }
+        validate_allowed_extensions(allowed_extensions)
 
         def spectra_dirs
         def multi_batch
@@ -57,12 +51,7 @@ workflow get_ms_files {
         // Synchronous early-fail when locally-resolved files are a type the caller doesn't allow
         // (e.g., Bruker .d.zip with EncyclopeDIA/Cascadia). The channel-based validation barrier
         // below catches the same case for Panorama-only inputs once listings complete.
-        if (local_file_type != null && !(local_file_type in allowed_extensions)) {
-            error "Resolved local spectra files have an extension that is not allowed in this configuration:\n" +
-                  format_dir_listing(spectra_dirs.findAll { it[0] in (local_matches.collect { it[0] } as Set) }, spectra_regex) +
-                  "\nFound extension: '.${local_file_type}'" +
-                  "\nAllowed for this run: ${format_extension_list(allowed_extensions)}."
-        }
+        check_local_file_type_allowed(local_file_type, allowed_extensions, spectra_dirs, local_matches, spectra_regex)
 
         // Fail fast for batches whose only configured spectra sources are local directories
         // that matched zero files. This is the most common misconfiguration (e.g., glob set
@@ -296,6 +285,34 @@ def check_local_only_batches_have_matches(spectra_dirs, spectra_dir_groups, loca
               format_dir_listing(filtered, spectra_regex) +
               "\nPlease choose a file glob/regex that will match ${format_extension_list(allowed_extensions)} files."
     }
+}
+
+// Validate the caller-supplied allowed_extensions allow-list. Defined at the top level so
+// strict Nextflow 24 parsing of `def x = list.findAll { ... }` inside a workflow `main:`
+// scope is sidestepped (the same pattern works fine in helper functions).
+def validate_allowed_extensions(allowed_extensions) {
+    if (!(allowed_extensions instanceof List) || allowed_extensions.isEmpty()) {
+        error "get_ms_files: allowed_extensions must be a non-empty list."
+    }
+    def disallowed = allowed_extensions - ['raw', 'mzML', 'd.zip']
+    if (disallowed) {
+        error "get_ms_files: unrecognized allowed_extensions entries: ${disallowed}. Valid values are 'raw', 'mzML', 'd.zip'."
+    }
+}
+
+// Synchronous early-fail when locally-resolved files have a type the caller doesn't allow.
+// `local_file_type` may be null when no local files matched (only Panorama listings); in that
+// case the channel-based validation barrier handles enforcement once listings complete.
+def check_local_file_type_allowed(local_file_type, allowed_extensions, spectra_dirs, local_matches, spectra_regex) {
+    if (local_file_type == null || local_file_type in allowed_extensions) {
+        return
+    }
+    def matched_batches = local_matches.collect { it[0] } as Set
+    def filtered_dirs = spectra_dirs.findAll { it[0] in matched_batches }
+    error "Resolved local spectra files have an extension that is not allowed in this configuration:\n" +
+          format_dir_listing(filtered_dirs, spectra_regex) +
+          "\nFound extension: '.${local_file_type}'" +
+          "\nAllowed for this run: ${format_extension_list(allowed_extensions)}."
 }
 
 // Format an extension allow-list for user-facing error messages, e.g.
