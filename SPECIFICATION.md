@@ -139,6 +139,12 @@ For non-PDC runs, `get_ms_files`:
   user-facing error before any downstream stage so misconfigured globs/regexes do not
   surface as opaque join-mismatch errors deeper in the workflow
 - enforces that all matched files have one MS-file type
+- enforces a caller-supplied `allowed_extensions` allow-list, so engine/format
+  incompatibilities (e.g., Bruker `.d.zip` with EncyclopeDIA or Cascadia) fail fast
+  with a clear error instead of an opaque tool-internal failure later. `main.nf`
+  derives the allow-list from `params.search_engine`:
+  - `'encyclopedia'`, `'cascadia'` → `['raw', 'mzML']`
+  - `'diann'`, `null` (no-search), or `params.msconvert_only == true` → `['raw', 'mzML', 'd.zip']`
 - resolves one of:
   - `.mzML`
   - `.raw`

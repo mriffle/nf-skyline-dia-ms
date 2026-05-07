@@ -65,6 +65,7 @@ The ``params`` Section
    * - ✓
      - ``quant_spectra_dir``
      - The path to the directory containing the raw data to be quantified. If using narrow window DIA and GPF to generated a chromatogram library this is the location of the wide-window data to be searched using the chromatogram library.
+       Supported file formats are ``.mzML``, ``.raw`` (Thermo), and ``.d.zip`` (Bruker). All matched files must share a single extension. Bruker ``.d.zip`` is only compatible with ``search_engine = 'diann'`` or ``search_engine = null``; EncyclopeDIA and Cascadia do not read Bruker data.
    * -
      - ``quant_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
@@ -78,6 +79,7 @@ The ``params`` Section
    * -
      - ``chromatogram_library_spectra_dir``
      - If you are creating a chromatogram library using GPF and narrow window DIA, this is the path to the directory containing the narrow-window raw data.
+       Accepts the same file formats as ``quant_spectra_dir``, with the same per-engine restrictions (Bruker ``.d.zip`` only with DIA-NN; EncyclopeDIA narrow-window searches require ``.mzML`` or ``.raw``).
    * -
      - ``chromatogram_library_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
@@ -104,6 +106,7 @@ The ``params`` Section
      - Must be set to either ``'encyclopedia'``, ``'diann'``, ``'cascadia'``, or ``null``.
        If set to ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored.
        If set to ``null``, the workflow will skip the search step and generate Skyline document(s) using ``spectral_library``, ``fasta``, and files in ``quant_spectra_dir``.
+       Bruker ``.d.zip`` MS input is only supported with ``'diann'`` or ``null``; ``'encyclopedia'`` and ``'cascadia'`` require ``.mzML`` or ``.raw`` input.
        Default: ``'encyclopedia'``.
    * -
      - ``replicate_metadata``

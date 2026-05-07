@@ -11,6 +11,16 @@ Each search engine works as a drop-in replacement for the other, supporting all 
 In all cases, the workflow supports converting RAW files, integrating with PanoramaWeb (ProteomeXchange) and Proteomic Data Commons,
 and will generate a Skyline document suitable for visualization and analysis in Skyline.
 
+Supported input file formats
+===================================
+The workflow accepts the following MS input file formats for ``quant_spectra_dir`` and ``chromatogram_library_spectra_dir``:
+
+* ``.mzML`` — supported by all search engines.
+* ``.raw`` (Thermo) — supported by all search engines. Files are converted to mzML using *msconvert* unless ``use_vendor_raw`` is enabled.
+* ``.d.zip`` (Bruker) — a zipped Bruker ``.d`` directory. The workflow extracts these to ``.d`` directories rather than running *msconvert*. **Bruker ``.d.zip`` input is only supported when ``search_engine`` is ``'diann'`` or ``null`` (no-search, Skyline-only).** EncyclopeDIA and Cascadia do not read Bruker data.
+
+All matched files in a single directory must share one extension; mixing formats within a batch is not supported.
+
 Cascadia workflow:
 ===================================
 The workflow will perform *de novo* identification of peptides using user-supplied DIA RAW (or mzML) files.
@@ -19,7 +29,7 @@ integrated peak areas for the identified peptides.
 
 DIA-NN workflow:
 ===================================
-The workflow will quantify peptides and proteins using user-supplied DIA RAW (or mzML) files, FASTA file, and spectral
+The workflow will quantify peptides and proteins using user-supplied DIA RAW, mzML, or Bruker ``.d.zip`` files, a FASTA file, and a spectral
 library (optional). If the user does not specify a spectral library, DIA-NN will be run in "library-free" mode, where
 it will create its own library using AI. Finally the workflow will generate a Skyline document using the quantified peptides
 and proteins.
@@ -80,7 +90,8 @@ The workflow is made up of the following software components, each may be run mu
 
 *  **msconvert** (https://proteowizard.sourceforge.io/)
 
-   If users supply RAW files as input, they will be converted to mzML using *msconvert*.
+   If users supply RAW files as input, they will be converted to mzML using *msconvert* (unless ``use_vendor_raw`` is set).
+   Bruker ``.d.zip`` inputs bypass *msconvert* and are extracted to ``.d`` directories that are passed directly to DIA-NN or Skyline.
 
 *  **EncyclopeDIA** (http://www.searlelab.org/software/encyclopedia/index.html)
 

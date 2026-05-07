@@ -115,7 +115,8 @@ workflow {
             params.quant_spectra_dir,
             quant_spectra_regex,
             params.files_per_quant_batch,
-            aws_secret_id
+            aws_secret_id,
+            allowed_ms_extensions_for_engine(params.search_engine)
         )
         wide_ms_file_ch = get_wide_ms_files.out.ms_file_ch
         wide_mzml_ch = get_wide_ms_files.out.converted_mzml_ch
@@ -136,7 +137,8 @@ workflow {
             params.chromatogram_library_spectra_dir,
             chrom_lib_spectra_regex,
             params.files_per_chrom_lib,
-            aws_secret_id
+            aws_secret_id,
+            allowed_ms_extensions_for_engine(params.search_engine)
         )
         narrow_ms_file_ch = get_narrow_ms_files.out.ms_file_ch
         chrom_lib_file_json = get_narrow_ms_files.out.file_json
@@ -365,6 +367,20 @@ def get_pdc_batch_names(batch_file_path) {
         error "Batch file '${batch_file_path}' must have a 'batch' column."
     }
     return lines[1..-1].collect { it.split('\t')[batch_idx].trim() }.unique().sort()
+}
+
+// Allowed MS-input extensions for the chosen search engine. EncyclopeDIA and Cascadia
+// cannot read Bruker .d directories, so .d.zip is excluded for those engines. msconvert_only
+// runs no search and accepts any supported input.
+def allowed_ms_extensions_for_engine(search_engine) {
+    if (params.msconvert_only) {
+        return ['raw', 'mzML', 'd.zip']
+    }
+    def normalized = search_engine == null ? null : search_engine.toString().toLowerCase().trim()
+    if (normalized == 'encyclopedia' || normalized == 'cascadia') {
+        return ['raw', 'mzML']
+    }
+    return ['raw', 'mzML', 'd.zip']
 }
 
 def carafe_enabled() {

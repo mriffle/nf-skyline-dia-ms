@@ -28,8 +28,16 @@ workflow get_ms_files {
         spectra_regex
         n_files
         aws_secret_id
+        allowed_extensions
 
     main:
+        if (!(allowed_extensions instanceof List) || allowed_extensions.isEmpty()) {
+            error "get_ms_files: allowed_extensions must be a non-empty list."
+        }
+        def disallowed = allowed_extensions.findAll { !(it in ['raw', 'mzML', 'd.zip']) }
+        if (disallowed) {
+            error "get_ms_files: unrecognized allowed_extensions entries: ${disallowed}. Valid values are 'raw', 'mzML', 'd.zip'."
+        }
 
         def spectra_dirs
         def multi_batch
@@ -46,10 +54,20 @@ workflow get_ms_files {
         local_file_type = infer_local_ms_file_type(local_matches)
         expected_ms_file_type = local_file_type ?: infer_ms_file_type_from_regex(spectra_regex)
 
+        // Synchronous early-fail when locally-resolved files are a type the caller doesn't allow
+        // (e.g., Bruker .d.zip with EncyclopeDIA/Cascadia). The channel-based validation barrier
+        // below catches the same case for Panorama-only inputs once listings complete.
+        if (local_file_type != null && !(local_file_type in allowed_extensions)) {
+            error "Resolved local spectra files have an extension that is not allowed in this configuration:\n" +
+                  format_dir_listing(spectra_dirs.findAll { it[0] in (local_matches.collect { it[0] } as Set) }, spectra_regex) +
+                  "\nFound extension: '.${local_file_type}'" +
+                  "\nAllowed for this run: ${format_extension_list(allowed_extensions)}."
+        }
+
         // Fail fast for batches whose only configured spectra sources are local directories
         // that matched zero files. This is the most common misconfiguration (e.g., glob set
         // to `*.raw` against a directory of mzMLs) and we catch it before any process runs.
-        check_local_only_batches_have_matches(spectra_dirs, spectra_dir_groups, local_matches, spectra_regex)
+        check_local_only_batches_have_matches(spectra_dirs, spectra_dir_groups, local_matches, spectra_regex, allowed_extensions)
 
         // Find files in local directories matching spectra_regex
         if (local_matches) {
@@ -141,7 +159,7 @@ workflow get_ms_files {
                     def filtered = spectra_dirs.findAll { it[0] in missing }
                     error "No spectra files matched the glob/regex:\n" +
                           format_dir_listing(filtered, spectra_regex) +
-                          "\nPlease choose a file glob/regex that will match raw, mzML, or .d.zip files."
+                          "\nPlease choose a file glob/regex that will match ${format_extension_list(allowed_extensions)} files."
                 }
                 def all_files = entries.collectMany { it[1] }
                 def extensions = all_files.collect { get_ms_file_type(it) }.unique()
@@ -151,11 +169,11 @@ workflow get_ms_files {
                           "\nFound extensions: [${extensions.join(', ')}]" +
                           "\nPlease choose a file glob/regex that will match exactly one MS file type."
                 }
-                if (!(extensions[0] in ['raw', 'mzML', 'd.zip'])) {
-                    error "No MS data files found for:\n" +
+                if (!(extensions[0] in allowed_extensions)) {
+                    error "Resolved spectra files have an extension that is not allowed in this configuration:\n" +
                           format_dir_listing(spectra_dirs, spectra_regex) +
-                          "\nFound extension: ${extensions[0]}" +
-                          "\nPlease choose a file glob/regex that will match raw, mzML, or .d.zip files."
+                          "\nFound extension: '.${extensions[0]}'" +
+                          "\nAllowed for this run: ${format_extension_list(allowed_extensions)}."
                 }
                 true
             }
@@ -263,7 +281,7 @@ def format_dir_listing(spectra_dirs, spectra_regex) {
 // Synchronously fail when a batch's only spectra sources are local directories that matched
 // zero files. Catches the common misconfiguration of a glob/regex that doesn't match any
 // files in the supplied directory; raises before any process runs.
-def check_local_only_batches_have_matches(spectra_dirs, spectra_dir_groups, local_matches, spectra_regex) {
+def check_local_only_batches_have_matches(spectra_dirs, spectra_dir_groups, local_matches, spectra_regex, allowed_extensions) {
     def panorama_batches = (spectra_dir_groups.panorama_dirs + spectra_dir_groups.panorama_public_dirs)
         .collect { it[0] } as Set
     def empty_batches = []
@@ -276,8 +294,17 @@ def check_local_only_batches_have_matches(spectra_dirs, spectra_dir_groups, loca
         def filtered = spectra_dirs.findAll { it[0] in empty_batches }
         error "No spectra files matched the glob/regex in local directories:\n" +
               format_dir_listing(filtered, spectra_regex) +
-              "\nPlease choose a file glob/regex that will match raw, mzML, or .d.zip files."
+              "\nPlease choose a file glob/regex that will match ${format_extension_list(allowed_extensions)} files."
     }
+}
+
+// Format an extension allow-list for user-facing error messages, e.g.
+// ['raw', 'mzML'] -> "'.raw' or '.mzML'"; ['raw', 'mzML', 'd.zip'] -> "'.raw', '.mzML', or '.d.zip'".
+def format_extension_list(extensions) {
+    def quoted = extensions.collect { "'.${it}'" }
+    if (quoted.size() == 1) return quoted[0]
+    if (quoted.size() == 2) return "${quoted[0]} or ${quoted[1]}"
+    return quoted[0..-2].join(', ') + ", or ${quoted[-1]}"
 }
 
 def is_panorama_url(url) {
