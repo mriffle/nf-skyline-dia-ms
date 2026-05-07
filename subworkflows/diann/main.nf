@@ -21,6 +21,48 @@ workflow diann {
             error "The parameter \'fasta\' is required when using diann."
         }
 
+        // DIA-NN's match-between-runs step needs at least 2 runs to emit the spectral
+        // library that BlibBuild consumes (and that DIANN_MBR declares as a required
+        // output). The same constraint applies to the narrow-window subset search when
+        // a chromatogram-library spectra dir is configured. File counts are only
+        // knowable once the resolver channels materialize (PDC/Panorama listings,
+        // optional sampling), so build a combined deferred validator that names exactly
+        // which input(s) are too small, and gate both search-input channels on it via
+        // .first() so the same value channel can be reused.
+        def wide_count_ch = wide_ms_file_ch.toList().map { it.size() }
+        def narrow_count_ch
+        if (params.chromatogram_library_spectra_dir != null) {
+            narrow_count_ch = narrow_ms_file_ch.toList().map { it.size() }
+        } else {
+            // Sentinel: -1 means "narrow input was not configured; skip the narrow check".
+            narrow_count_ch = Channel.value(-1)
+        }
+
+        def validation_ch = wide_count_ch.combine(narrow_count_ch).map { counts ->
+            def wide = counts[0]
+            def narrow = counts[1]
+            def problems = []
+            if (wide < 2) {
+                problems << "wide-window quant input ('quant_spectra_dir') has ${wide} file${wide == 1 ? '' : 's'}"
+            }
+            if (narrow >= 0 && narrow < 2) {
+                problems << "narrow-window/GPF input ('chromatogram_library_spectra_dir') has ${narrow} file${narrow == 1 ? '' : 's'}"
+            }
+            if (problems) {
+                error "DIA-NN requires at least 2 MS files for each input it searches. Found:\n" +
+                      "  - ${problems.join('\n  - ')}\n" +
+                      "DIA-NN's match-between-runs step needs two or more runs to emit the " +
+                      "spectral library used downstream. Provide additional MS files, or use " +
+                      "a different search engine."
+            }
+            true
+        }.first()
+
+        wide_ms_file_ch = wide_ms_file_ch.combine(validation_ch).map { it[0] }
+        if (params.chromatogram_library_spectra_dir != null) {
+            narrow_ms_file_ch = narrow_ms_file_ch.combine(validation_ch).map { it[0] }
+        }
+
         if (params.encyclopedia.quant.params != null) {
             log.warn "The parameter 'encyclopedia.quant.params' is set to a value (${params.encyclopedia.quant.params}) but will be ignored."
         }

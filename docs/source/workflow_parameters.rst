@@ -196,6 +196,11 @@ When using DIA-NN, the ``chromatogram_library_spectra_dir`` parameter can option
 The files in ``chromatogram_library_spectra_dir`` are searched first using a spectral library either specified by ``params.spectral_library``, or a predicted library generated in the workflow by Carafe or DiaNN.
 Then, the resulting subset library containing only those precursors identified in the first search, is then used to search the files in ``quant_spectra_dir``.
 
+DIA-NN requires at least 2 MS files in each search input.
+This applies to ``quant_spectra_dir``, and (when configured) also to ``chromatogram_library_spectra_dir``.
+The match-between-runs step (``DIANN_MBR``) needs two or more runs to emit the spectral library used downstream;
+the workflow will fail with an explicit error naming which input(s) are too small when fewer files are supplied.
+
 .. list-table:: Parameters for DIA-NN. All parameters in this section are optional.
    :widths: 20 80
    :header-rows: 1
