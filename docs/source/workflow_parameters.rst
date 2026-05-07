@@ -113,6 +113,9 @@ The ``params`` Section
      - ``replicate_metadata``
      - Metadata annotations for each ``raw`` or ``mzML`` file. Can be in ``tsv`` or ``csv`` format. See the :ref:`replicate_metadata` section for details of how the file should be formatted. If a metadata file is specified it will be used to add annotations to the final Skyline document and can be used to color PCA plots in the QC report by specifying the ``qc_report.color_vars`` parameter. If this parameter is set to ``null`` the skyline document annotation step is skipped.
    * -
+     - ``msconvert_only``
+     - If set to ``true``, the workflow resolves MS inputs (downloading and converting RAW or extracting Bruker ``.d.zip`` as needed), optionally uploads them to PanoramaWeb if ``panorama.upload`` is also set, and then exits. No search, Skyline document, QC report, or library generation is performed. Useful for pre-staging mzML files. Default: ``false``.
+   * -
      - ``email``
      - The email address to which a notification should be sent upon workflow completion. If no email is specified, no email will be sent. To send email, you must configure mail server settings (see below).
 
@@ -129,6 +132,10 @@ The ``params`` Section
    * - ``pdc.study_id``
      - When this option is set, raw files and metadata will be downloaded from the PDC. Default: ``null``.
        When the PDC branch is used and ``msconvert_only`` is ``false``, ``search_engine`` must be set to ``'diann'``; EncyclopeDIA, Cascadia, and no-search mode are not supported with PDC input.
+   * - ``pdc.metadata_tsv``
+     - Path to a pre-downloaded PDC study metadata file (``tsv``). When set, the workflow uses this file directly instead of fetching study metadata via the PDC API. Useful for offline runs or when the PDC API is slow/unavailable. Default: ``null``.
+   * - ``pdc.study_name``
+     - Override the study name used when ``pdc.metadata_tsv`` is supplied. If ``null``, the value of ``pdc.study_id`` is used. Default: ``null``.
    * - ``pdc.gene_level_data``
      - A ``tsv`` file mapping gene names to NCIB gene IDs and gene metadata. Required for PDC gene reports. Default: ``null``.
    * - ``pdc.n_raw_files``
@@ -138,7 +145,7 @@ The ``params`` Section
    * - ``pdc.s3_download``
      - If set to ``true`` download raw files through an S3 transfer instead of over https.
        This option will only work if the workflow execution environment is configured to directly access PDC AWS infrastructure.
-       Default is ``faise``.
+       Default is ``false``.
    * - ``pdc.batch_file``
      - A ``tsv`` file that assigns each PDC file to a named batch. The file must have ``file_name`` and ``batch`` columns. When set, the workflow produces a separate Skyline document per batch, following the same multi-batch behavior as when ``quant_spectra_dir`` is a ``Map``. All files in the batch file must match files downloaded from the PDC study, and all downloaded files must be present in the batch file. Default: ``null``.
 
@@ -238,9 +245,17 @@ the workflow will fail with an explicit error naming which input(s) are too smal
    * - ``encyclopedia.quant.params``
      - The command line options passed to EncyclopeDIA during the quantification step. Default: ``'-enableAdvancedOptions -v2scoring'`` If you do not wish to pass any options to EncyclopeDIA, this must be set to ``''``.
    * - ``encyclopedia.save_output``
-     - EncyclopeDIA generates many intermediate files that are subsequently processed by the workflow to generate the final results. These intermediate files may be large. If this is set to ``'true'``, these intermediate files will be saved locally in your ``results`` directory. Default: ``'false'``.
+     - EncyclopeDIA generates many intermediate files that are subsequently processed by the workflow to generate the final results. These intermediate files may be large. If set to ``true``, all intermediate files are saved in your ``results`` directory; if ``false``, only ``stdout``/``stderr`` logs are saved (the final ``.elib`` is always saved regardless). Default: ``true``.
    * - ``cascadia.use_gpu``
      - If set to ``true``, Cascadia will attempt to use the GPU(s) installed on the system where it is running. Do not set to true unless a GPU is available, otherwise an error will be gernated. Default: ``false``.
+   * - ``cascadia.score_threshold``
+     - Score threshold applied to Cascadia predictions. Must be between 0 and 1. Default: ``0.8``.
+
+Cascadia has additional behavioral constraints worth knowing:
+
+- Multi-batch mode is not supported. Setting ``quant_spectra_dir`` to a ``Map`` (or using ``pdc.batch_file``) with ``search_engine = 'cascadia'`` will cause the workflow to fail at startup.
+- Any user-supplied ``spectral_library`` is ignored with a warning. Cascadia performs *de novo* identification and produces its own library.
+- Cascadia generates its own FASTA from identified sequences; ``params.fasta`` is not required when running Cascadia.
 
 
 ``params.skyline``
@@ -265,6 +280,8 @@ the workflow will fail with an explicit error naming which input(s) are too smal
        pre-made Skyline template file suitable for EncyclopeDIA or DIA-NN will be used. Specify a file
        location here to use your own template. Note: The filenames in the .zip file must match
        the name of the zip file, itself. E.g., ``my-skyline-template.zip`` must contain ``my-skyline-template.sky``.
+   * - ``skyline.group_proteins``
+     - If ``true``, peptides are grouped into proteins in Skyline. Default is ``false``.
    * - ``skyline.protein_parsimony``
      - If ``true``, protein parsimony is performed in Skyline. If ``false`` the protein assignments given by the search engine are used as protein groups. Default is ``false``.
    * - ``skyline.fasta``
@@ -311,6 +328,12 @@ the workflow will fail with an explicit error naming which input(s) are too smal
        Default is ``null``.
    * - ``qc_report.export_tables``
      - Export tsv files containing normalized precursor and protein quantities? Default is ``false``.
+   * - ``qc_report.report_format``
+     - List of formats to render the QC report in. Allowed values are ``'html'`` and ``'pdf'``; either or both may be included. Default: ``['html']``.
+   * - ``qc_report.exclude_replicates``
+     - List of replicate names to exclude from normalization and batch correction. Default: ``null``.
+   * - ``qc_report.exclude_projects``
+     - List of batch/project names to exclude from normalization and batch correction. Default: ``null``.
    * - ``batch_report.skip``
      - If set to ``true``, will skip the creation of a the batch report. Default: ``true``.
    * - ``batch_report.batch1``
@@ -341,14 +364,14 @@ the workflow will fail with an explicit error naming which input(s) are too smal
    * - ``panorama.upload_url``
      - The WebDAV URL of a directory in PanoramaWeb to which to upload the results. Note that ``panorama.upload`` must be set to ``true`` to upload results.
    * - ``panorama.import_skyline``
-     - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the named used for the ``skyline_document_name`` parameter. Default: ``false``. Note: ``panorama_upload`` must be set to ``true`` and ``skip_skyline`` must be set to ``false`` to use this feature.
+     - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the name used for the ``skyline.document_name`` parameter. Default: ``false``. Note: ``panorama.upload`` must be set to ``true`` and ``skyline.skip`` must be set to ``false`` to use this feature.
 
 
 Running the workflow in multi-batch mode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The workflow can be run in multi-batch mode if the ``params.search_engine`` supports it.
-Currently the only search engine option that supports multi batch mode is ``'diann'``.
+Among the search engines, only ``'diann'`` supports multi-batch mode; EncyclopeDIA and Cascadia raise an error at startup if invoked with batch inputs (a ``Map``-shaped ``quant_spectra_dir`` or a ``pdc.batch_file``). No-search mode (``search_engine = null``) also accepts batch inputs and produces one Skyline document per batch.
 
 There are two ways to activate multi-batch mode:
 
@@ -403,12 +426,12 @@ For example:
 Differences in result files in multi batch mode
 ================================================
 
-- A separate Skyline document is generated for each batch and prefixed with the batch name.
+- A separate Skyline document is generated for each batch, with the batch name appended to the document name.
 
-  * For example, if ``params.skyline.document_name`` is ``'human_dia'`` and using the batches in the example above, 2 documents would be generated.
+  * For example, if ``params.skyline.document_name`` is ``'human_dia'`` and using the batches in the example above, 2 documents would be generated:
 
-    #. ``Plate1_human_dia.sky.zip``
-    #. ``Plate2_human_dia.sky.zip``
+    #. ``human_dia_Plate_1.sky.zip``
+    #. ``human_dia_Plate_2.sky.zip``
 
   * For PDC runs where ``skyline.document_name`` defaults to the study name, the batch name is appended similarly:
 

@@ -49,6 +49,14 @@ first generate the chromatogram library (Figure 1A) and use that as input to the
 proteins. If the experimental design does not include this, the user-supplied spectral library is used as input for quantifying
 peptides and proteins. Finally the workflow will generate a Skyline document using the quantified peptides and proteins.
 
+Other run modes
+===================================
+
+* **No-search mode** (``search_engine = null``) — the search step is skipped and the user-supplied ``spectral_library``, ``fasta``, and ``quant_spectra_dir`` files are imported directly into Skyline. Useful when you already have a curated library and only need quantification + Skyline import.
+* **msconvert-only mode** (``msconvert_only = true``) — the workflow resolves MS inputs (downloading and converting RAW or extracting Bruker ``.d.zip`` as needed), optionally uploads them to PanoramaWeb, and exits. No search, library generation, or Skyline document is produced.
+* **Carafe library generation** (``carafe.spectra_dir`` set) — Carafe runs before the main search to build a spectral library from your data. The resulting library overrides any user-supplied ``spectral_library``.
+* **PDC input** (``pdc.study_id`` set) — RAW or Bruker ``.d.zip`` files and study metadata are downloaded from the Proteomic Data Commons instead of from local/Panorama paths. Outside ``msconvert_only`` mode, PDC requires ``search_engine = 'diann'``.
+
 The workflow is summarized graphically as:
 
 .. figure:: /_static/workflow_figure.png
@@ -95,12 +103,32 @@ The workflow is made up of the following software components, each may be run mu
 
 *  **EncyclopeDIA** (http://www.searlelab.org/software/encyclopedia/index.html)
 
-   *EncyclopeDIA* is used in three parts of the pipeline:
+   When ``search_engine = 'encyclopedia'``, *EncyclopeDIA* is used in three parts of the pipeline:
 
       1. If the user supplies a *BLIB* spectral library, *EncyclopeDIA* will be used to convert that to a *DLIB*.
       2. *EncyclopeDIA* is used to search narrow window DIA data and generate a chromatogram library.
       3. *EncyclopeDIA* is used to quantify peptides and proteins.
 
+*  **DIA-NN** (https://github.com/vdemichev/DiaNN)
+
+   When ``search_engine = 'diann'``, *DIA-NN* performs the search. It can use a user-supplied spectral library, a Carafe-generated library, or run in library-free mode where it predicts a library from the FASTA. DIA-NN is the only search engine that supports Bruker ``.d.zip`` input and multi-batch runs.
+
+*  **Cascadia** (https://github.com/Noble-Lab/Cascadia)
+
+   When ``search_engine = 'cascadia'``, *Cascadia* performs *de novo* peptide identification and produces its own spectral library and FASTA. User-supplied spectral libraries are ignored and batch mode is not supported.
+
+*  **Carafe** (https://github.com/Noble-Lab/Carafe)
+
+   Optionally generates a spectral library before the main search when ``carafe.spectra_dir`` (or the legacy ``carafe.spectra_file``) is set. The generated library overrides any user-supplied ``spectral_library`` for downstream search.
+
+*  **PDC Client** (https://proteomic.datacommons.cancer.gov/)
+
+   When ``pdc.study_id`` is set, the workflow downloads RAW or Bruker ``.d.zip`` files and study metadata from the Proteomic Data Commons. PDC studies are searched with DIA-NN (the only search engine compatible with the PDC branch outside ``msconvert_only`` mode).
+
 *  **Skyline** (https://skyline.ms/project/home/begin.view)
 
-   *Skyline* is run to import raw scan data *EncyclopeDIA* results into a Skyline template file.
+   *Skyline* imports MS data and search results from any of the three search engines (or the user-supplied library in no-search mode) into a Skyline template document. The document is annotated with replicate metadata, optionally minimized, and used to run any user-supplied ``.skyr`` reports.
+
+*  **DIA-QC report tooling** (https://github.com/ajmaurais/DIA_QC_report)
+
+   When ``qc_report.skip`` is ``false``, this tooling generates a normalized precursor/protein quality report (HTML and/or PDF) from Skyline report exports. Batch reports and PDC gene-level reports use the same database.
