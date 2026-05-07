@@ -107,6 +107,7 @@ The ``params`` Section
        If set to ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored.
        If set to ``null``, the workflow will skip the search step and generate Skyline document(s) using ``spectral_library``, ``fasta``, and files in ``quant_spectra_dir``.
        Bruker ``.d.zip`` MS input is only supported with ``'diann'`` or ``null``; ``'encyclopedia'`` and ``'cascadia'`` require ``.mzML`` or ``.raw`` input.
+       When ``pdc.study_id`` is set and ``msconvert_only`` is ``false``, this must be ``'diann'``.
        Default: ``'encyclopedia'``.
    * -
      - ``replicate_metadata``
@@ -127,6 +128,7 @@ The ``params`` Section
      - Description
    * - ``pdc.study_id``
      - When this option is set, raw files and metadata will be downloaded from the PDC. Default: ``null``.
+       When the PDC branch is used and ``msconvert_only`` is ``false``, ``search_engine`` must be set to ``'diann'``; EncyclopeDIA, Cascadia, and no-search mode are not supported with PDC input.
    * - ``pdc.gene_level_data``
      - A ``tsv`` file mapping gene names to NCIB gene IDs and gene metadata. Required for PDC gene reports. Default: ``null``.
    * - ``pdc.n_raw_files``

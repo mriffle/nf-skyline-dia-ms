@@ -84,6 +84,17 @@ workflow {
         }
     }
 
+    if (params.pdc.study_id && !params.msconvert_only) {
+        def normalized_engine = params.search_engine == null ? null : params.search_engine.toString().toLowerCase().trim()
+        if (normalized_engine != 'diann') {
+            def shown = params.search_engine == null ? "null (no-search mode)" : "'${params.search_engine}'"
+            error "When using the PDC branch (params.pdc.study_id is set), params.search_engine must be 'diann'. " +
+                  "Got: ${shown}.\n" +
+                  "  - To run a non-DIA-NN analysis, supply MS inputs via params.quant_spectra_dir instead of params.pdc.study_id.\n" +
+                  "  - To download and convert PDC files without running a search, set params.msconvert_only = true."
+        }
+    }
+
     // if accessing panoramaweb and running on aws, set up an aws secret
     if(workflow.profile == 'aws' && is_panorama_authentication_required()) {
         GET_AWS_USER_ID()

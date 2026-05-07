@@ -235,6 +235,12 @@ Additional behavior:
 - if `skyline.document_name` is still `'final'`, the final Skyline document name is replaced
   with the PDC study name
 
+Constraints:
+
+- when `pdc.study_id` is set and `msconvert_only` is `false`, `search_engine` must be `'diann'`.
+  EncyclopeDIA, Cascadia, and no-search mode are rejected at startup with an informative error.
+  `msconvert_only` runs are exempt because no search executes.
+
 Relevant files:
 
 - `subworkflows/get_pdc_files.nf`
