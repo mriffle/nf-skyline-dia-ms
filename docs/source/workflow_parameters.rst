@@ -160,9 +160,9 @@ The ``params`` Section
    * - Parameter Name
      - Description
    * - ``carafe.spectra_file``
-     - Legacy direct ``raw`` or ``mzML`` file input used by Carafe to generate the final spectral library. This remains supported for backwards compatibility. If set together with ``carafe.spectra_dir`` the workflow will fail. Default: ``null``.
+     - Legacy direct ``raw``, ``mzML``, or Bruker ``.d.zip`` file input used by Carafe to generate the final spectral library. This remains supported for backwards compatibility. ``.raw`` files are converted to mzML by *msconvert*; ``.d.zip`` files are extracted to a ``.d`` directory and passed directly to Carafe. If set together with ``carafe.spectra_dir`` the workflow will fail. Default: ``null``.
    * - ``carafe.spectra_dir``
-     - Directory, or list of directories, containing the ``raw`` or ``mzML`` files to use for Carafe. Carafe will run once across all matching files. If set to ``null`` and ``carafe.spectra_file`` is also ``null``, Carafe is skipped. Default: ``null``.
+     - Directory, or list of directories, containing the ``raw``, ``mzML``, or Bruker ``.d.zip`` files to use for Carafe. All matched files must share a single extension. Carafe will run once across all matching files. ``.d.zip`` files bypass *msconvert* and are extracted to ``.d`` directories. If set to ``null`` and ``carafe.spectra_file`` is also ``null``, Carafe is skipped. Default: ``null``.
    * - ``carafe.spectra_glob``
      - Glob used to select files in ``carafe.spectra_dir``. Only ``*`` is treated as a wildcard. If set, ``carafe.spectra_regex`` must be ``null``. Default: ``*.raw``.
    * - ``carafe.spectra_regex``

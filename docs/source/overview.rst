@@ -119,7 +119,7 @@ The workflow is made up of the following software components, each may be run mu
 
 *  **Carafe** (https://github.com/Noble-Lab/Carafe)
 
-   Optionally generates a spectral library before the main search when ``carafe.spectra_dir`` (or the legacy ``carafe.spectra_file``) is set. The generated library overrides any user-supplied ``spectral_library`` for downstream search.
+   Optionally generates a spectral library before the main search when ``carafe.spectra_dir`` (or the legacy ``carafe.spectra_file``) is set. The generated library overrides any user-supplied ``spectral_library`` for downstream search. Carafe accepts ``.mzML``, ``.raw``, and Bruker ``.d.zip`` inputs; ``.raw`` files are converted to mzML and ``.d.zip`` files are extracted to ``.d`` directories before Carafe runs.
 
 *  **PDC Client** (https://proteomic.datacommons.cancer.gov/)
 

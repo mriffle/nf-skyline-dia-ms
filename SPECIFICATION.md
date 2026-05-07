@@ -326,9 +326,11 @@ Current Carafe behavior:
   - `carafe.spectra_glob`
   - `carafe.spectra_regex`
 - `carafe.spectra_dir` may resolve one or more spectra files for a single Carafe run
-- supported spectra-file types are `.mzML` and `.raw`
-- all resolved mzML inputs are staged into the Carafe work directory and Carafe is invoked
-  with `-ms "."`
+- supported spectra-file types are `.mzML`, `.raw`, and Bruker `.d.zip`
+- `.raw` files are converted to mzML via msconvert; `.d.zip` files are extracted to `.d`
+  directories via `UNZIP_BRUKER_D` and bypass msconvert
+- all resolved spectra inputs (mzML files and/or `.d` directories) are staged into the Carafe
+  work directory and Carafe is invoked with `-ms "."`
 - local alternative inputs may be requested through:
   - `carafe.carafe_fasta`
   - `carafe.diann_fasta`
@@ -655,10 +657,12 @@ Current implementation support is uneven by input type:
 
 - `carafe.spectra_file`:
   local and authenticated Panorama only
+  accepts `.mzML`, `.raw`, and Bruker `.d.zip`
 
 - `carafe.spectra_dir`:
   local, authenticated Panorama, Panorama Public
   selected with `carafe.spectra_glob` or `carafe.spectra_regex`
+  accepts `.mzML`, `.raw`, and Bruker `.d.zip` (single extension per run)
 
 - `pdc.*`:
   separate PDC client branch

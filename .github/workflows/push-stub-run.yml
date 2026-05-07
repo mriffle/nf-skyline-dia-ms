@@ -20,6 +20,7 @@ jobs:
           'test-encyclopedia-wide-only.config',
           'test-diann-pdc.config',
           'test-carafe-multi.config',
+          'test-carafe-dzip.config',
           'test-skip-dia-search.config',
           'test-msconvert-only-pdc.config',
           'test-msconvert-only-local.config',
