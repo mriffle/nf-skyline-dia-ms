@@ -139,7 +139,7 @@ The ``params`` Section
    * - ``pdc.gene_level_data``
      - A ``tsv`` file mapping gene names to NCIB gene IDs and gene metadata. Required for PDC gene reports. Default: ``null``.
    * - ``pdc.n_raw_files``
-     - If this option is set, only ``n`` raw files are downloaded. This is useful for testing but otherwise should be ``null``.
+     - If this option is set, only the first ``n`` files from the PDC study's metadata are downloaded for the main quant analysis. The selection is applied Nextflow-side (``PDC_client metadata`` always returns the full study file list). Useful for testing; otherwise should be ``null``. When ``carafe.pdc_files`` references a name outside this set, that file is also downloaded — but the main quant set itself is unchanged.
    * - ``pdc.client_args``
      - Additional command line arguments passed to ``PDC_client``. Default is ``null``.
    * - ``pdc.s3_download``
@@ -182,6 +182,10 @@ The ``params`` Section
      - The number of variable modifications allowed per peptide. Ignore if no variable modifications are include. Default: ``-maxVar 1``
    * - ``carafe.diann_fasta``
      - The FASTA file used by the DIA-NN search in the Carafe subworkflow. If not set either ``params.carafe_fasta`` or ``params.fasta`` will be used. Default: ``null``.
+   * - ``carafe.pdc_files``
+     - List of PDC file names (matching entries in the PDC study's metadata) to feed Carafe. Requires ``params.pdc.study_id`` to be set. Files already in the main quant download set (i.e. within ``pdc.n_raw_files`` of the study) are reused; any name outside that set is downloaded additionally for Carafe but does not enter the main quant analysis. Mutually exclusive with ``carafe.spectra_file``, ``carafe.spectra_dir``, and ``carafe.pdc_n_files``. Default: ``null``.
+   * - ``carafe.pdc_n_files``
+     - Random sample size: pick ``n`` files from the main PDC quant download set to feed Carafe, using ``params.random_file_seed`` for reproducibility. Requires ``params.pdc.study_id`` to be set. Must be ``<= params.pdc.n_raw_files`` when ``pdc.n_raw_files`` is also set. Mutually exclusive with ``carafe.spectra_file``, ``carafe.spectra_dir``, and ``carafe.pdc_files``. Default: ``null``.
 
 ``params.msconvert``
 ====================

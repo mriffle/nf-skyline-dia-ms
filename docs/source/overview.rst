@@ -54,7 +54,7 @@ Other run modes
 
 * **No-search mode** (``search_engine = null``) — the search step is skipped and the user-supplied ``spectral_library``, ``fasta``, and ``quant_spectra_dir`` files are imported directly into Skyline. Useful when you already have a curated library and only need quantification + Skyline import.
 * **msconvert-only mode** (``msconvert_only = true``) — the workflow resolves MS inputs (downloading and converting RAW or extracting Bruker ``.d.zip`` as needed), optionally uploads them to PanoramaWeb, and exits. No search, library generation, or Skyline document is produced.
-* **Carafe library generation** (``carafe.spectra_dir`` set) — Carafe runs before the main search to build a spectral library from your data. The resulting library overrides any user-supplied ``spectral_library``.
+* **Carafe library generation** (``carafe.spectra_dir`` set, or — when running against PDC — ``carafe.pdc_files`` / ``carafe.pdc_n_files`` set) — Carafe runs before the main search to build a spectral library from your data. The resulting library overrides any user-supplied ``spectral_library``. With PDC input, Carafe consumes a subset of the PDC quant download (no separate upload required).
 * **PDC input** (``pdc.study_id`` set) — RAW or Bruker ``.d.zip`` files and study metadata are downloaded from the Proteomic Data Commons instead of from local/Panorama paths. Outside ``msconvert_only`` mode, PDC requires ``search_engine = 'diann'``.
 
 The workflow is summarized graphically as:

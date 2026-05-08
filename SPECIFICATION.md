@@ -208,13 +208,19 @@ If `params.pdc.study_id` is set, `main.nf` bypasses normal spectra discovery and
 
 That path:
 
-- fetches study metadata with `PDC_client`, unless `params.pdc.metadata_tsv` is supplied
+- fetches study metadata with `PDC_client` (without `--nFiles`, so the full study file
+  list is visible Nextflow-side), unless `params.pdc.metadata_tsv` is supplied
 - converts metadata to Skyline annotations
 - accepts metadata in `.json` or `.tsv` form
-- downloads study files together with expected md5 and size values
+- partitions the file list into a quant set (first `pdc.n_raw_files` entries, or all
+  files when null) and an optional Carafe subset (named or randomly sampled — see
+  Section 9), then downloads the union with `PDC_client file`
 - supports `.raw` and `.d.zip` inputs
 - converts RAW to mzML unless `use_vendor_raw` is enabled
 - emits Skyline-ready annotations that override user-supplied replicate metadata
+- emits separate `wide_ms_file_ch` (main quant) and `carafe_pdc_ms_file_ch` (Carafe-only
+  files) channels by joining post-conversion file stems against the role lookup; only
+  the quant subset participates in the main analysis manifest and Panorama upload
 
 PDC batch mode:
 
@@ -314,9 +320,10 @@ Relevant files:
 
 ### 9. Optional Carafe library generation
 
-If either legacy `params.carafe.spectra_file` or directory-based
-`params.carafe.spectra_dir` is set, `workflows/carafe.nf` generates a spectral library
-before the main search branch.
+If any of `params.carafe.spectra_file`, `params.carafe.spectra_dir`,
+`params.carafe.pdc_files`, or `params.carafe.pdc_n_files` is set, `workflows/carafe.nf`
+generates a spectral library before the main search branch. The four input sources are
+mutually exclusive; the PDC-driven options additionally require `params.pdc.study_id`.
 
 Current Carafe behavior:
 
@@ -331,6 +338,18 @@ Current Carafe behavior:
   directories via `UNZIP_BRUKER_D` and bypass msconvert
 - all resolved spectra inputs (mzML files and/or `.d` directories) are staged into the Carafe
   work directory and Carafe is invoked with `-ms "."`
+- PDC-driven Carafe input (`carafe.pdc_files` or `carafe.pdc_n_files`) bypasses
+  `get_carafe_ms_files` and consumes pre-resolved post-conversion files supplied by
+  `get_pdc_files`:
+  - `carafe.pdc_files` is an explicit list of PDC file names; entries already in the
+    main quant download set (within `pdc.n_raw_files`) are reused, and entries outside
+    that set are downloaded additionally for Carafe but do not enter the main analysis
+  - `carafe.pdc_n_files` is a random sample size drawn from the main quant set, seeded
+    by `params.random_file_seed`; the sample is always a subset of the main quant set
+    so no extra downloads occur
+  - validation: `carafe.pdc_n_files <= pdc.n_raw_files` (when both set), all
+    `carafe.pdc_files` names exist in the study, and `pdc.n_raw_files <= total study
+    file count`
 - local alternative inputs may be requested through:
   - `carafe.carafe_fasta`
   - `carafe.diann_fasta`
@@ -669,6 +688,10 @@ Current implementation support is uneven by input type:
 
 - `pdc.batch_file`:
   local only; TSV with `file_name` and `batch` columns that assigns PDC files to batches
+
+- `carafe.pdc_files`, `carafe.pdc_n_files`:
+  PDC-only; subset of the PDC quant download is reused as Carafe input
+  (no separate file resolution; mutually exclusive with the four other Carafe input modes)
 
 ## Containers and External Programs
 
