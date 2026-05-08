@@ -205,6 +205,23 @@
         "max_mod_option": {
           "type": "string",
           "default": "-maxVar 1"
+        },
+        "pdc_files": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "pdc_n_files": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     },

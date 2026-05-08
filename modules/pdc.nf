@@ -36,7 +36,7 @@ process GET_STUDY_METADATA {
 
         PDC_client metadata ${pdc_client_args} \
             --flatten -f json --skylineAnnotations \$study_id \
-            ${format_flag(params.pdc.n_raw_files, "--nFiles")} ${params.pdc.s3_download ? "--s3Path" : ""}
+            ${params.pdc.s3_download ? "--s3Path" : ""}
 
         echo "pdc_client_git_repo='\$GIT_REPO - \$GIT_BRANCH [\$GIT_SHORT_HASH]'" > pdc_client_version.txt
         """

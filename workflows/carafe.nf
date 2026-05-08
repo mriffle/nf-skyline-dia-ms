@@ -20,6 +20,7 @@ workflow carafe {
     take:
         input_fasta
         aws_secret_id
+        pdc_carafe_ms_files  // pre-resolved Carafe input from get_pdc_files (or empty)
 
     main:
         // Get input fasta files
@@ -36,12 +37,16 @@ workflow carafe {
             diann_fasta = get_diann_fasta.out.file
         }
 
-        if (params.carafe.spectra_file != null && params.carafe.spectra_dir != null) {
-            error "Only one of params.carafe.spectra_file or params.carafe.spectra_dir may be set."
-        }
-
-        // Resolve Carafe input spectra, keeping legacy single-file behavior intact.
-        if (params.carafe.spectra_file != null) {
+        // Resolve Carafe input spectra. Source priority:
+        //   1. PDC-driven input (carafe.pdc_files / carafe.pdc_n_files) supplied via
+        //      pdc_carafe_ms_files — already downloaded and converted by get_pdc_files.
+        //   2. Legacy single-file carafe.spectra_file (local or Panorama URL).
+        //   3. carafe.spectra_dir (local or Panorama, glob/regex selected).
+        // Mutual exclusion across all three is enforced at workflow startup in
+        // main.nf carafe_enabled().
+        if (params.carafe.pdc_files != null || params.carafe.pdc_n_files != null) {
+            input_spectral_raw_file = pdc_carafe_ms_files
+        } else if (params.carafe.spectra_file != null) {
             if (is_panorama_url(params.carafe.spectra_file)) {
                 batched_url_ch = Channel.value(params.carafe.spectra_file)
                     .map{ it -> ['dummy_batch', it] }
