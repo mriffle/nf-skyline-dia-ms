@@ -8,6 +8,7 @@ include { get_input_file as get_peptide_results } from "../subworkflows/get_inpu
 include { PANORAMA_GET_MS_FILE } from "../modules/panorama"
 include { PANORAMA_PUBLIC_GET_MS_FILE } from "../modules/panorama"
 include { MSCONVERT } from "../modules/msconvert"
+include { UNZIP_DIRECTORY as UNZIP_BRUKER_D } from "../modules/msconvert"
 include { DIANN_BUILD_LIB } from "../modules/diann"
 include { CARAFE_DIANN_SEARCH as DIANN_SEARCH } from "../modules/diann"
 include { get_ms_files as get_carafe_ms_files } from "../subworkflows/get_ms_files"
@@ -19,6 +20,7 @@ workflow carafe {
     take:
         input_fasta
         aws_secret_id
+        pdc_carafe_ms_files  // pre-resolved Carafe input from get_pdc_files (or empty)
 
     main:
         // Get input fasta files
@@ -35,12 +37,16 @@ workflow carafe {
             diann_fasta = get_diann_fasta.out.file
         }
 
-        if (params.carafe.spectra_file != null && params.carafe.spectra_dir != null) {
-            error "Only one of params.carafe.spectra_file or params.carafe.spectra_dir may be set."
-        }
-
-        // Resolve Carafe input spectra, keeping legacy single-file behavior intact.
-        if (params.carafe.spectra_file != null) {
+        // Resolve Carafe input spectra. Source priority:
+        //   1. PDC-driven input (carafe.pdc_files / carafe.pdc_n_files) supplied via
+        //      pdc_carafe_ms_files — already downloaded and converted by get_pdc_files.
+        //   2. Legacy single-file carafe.spectra_file (local or Panorama URL).
+        //   3. carafe.spectra_dir (local or Panorama, glob/regex selected).
+        // Mutual exclusion across all three is enforced at workflow startup in
+        // main.nf carafe_enabled().
+        if (params.carafe.pdc_files != null || params.carafe.pdc_n_files != null) {
+            input_spectral_raw_file = pdc_carafe_ms_files
+        } else if (params.carafe.spectra_file != null) {
             if (is_panorama_url(params.carafe.spectra_file)) {
                 batched_url_ch = Channel.value(params.carafe.spectra_file)
                     .map{ it -> ['dummy_batch', it] }
@@ -59,22 +65,34 @@ workflow carafe {
                 params.carafe.spectra_glob,
                 params.carafe.spectra_regex
             )
-            get_carafe_ms_files(params.carafe.spectra_dir, carafe_spectra_regex, null, aws_secret_id, ['raw', 'mzML'])
+            get_carafe_ms_files(params.carafe.spectra_dir, carafe_spectra_regex, null, aws_secret_id, ['raw', 'mzML', 'd.zip'])
             input_spectral_raw_file = get_carafe_ms_files.out.ms_file_ch.map{ it[1] }
         }
 
-        // Convert spectral files to mzML if necessary.
+        // Convert .raw to mzML, extract any Bruker .d.zip that didn't come through
+        // get_ms_files (i.e., the legacy spectra_file path), and pass .mzML files and
+        // pre-extracted Bruker .d directories through unchanged. The spectra_dir path
+        // is routed through get_ms_files, which already unzips .d.zip into .d before
+        // emitting; only the spectra_file path can deliver a raw .d.zip here.
         input_spectral_raw_file.branch{
-            mzml: it.name.endsWith('.mzML')
-            raw: it.name.endsWith('.raw')
+            mzml:  it.name.endsWith('.mzML')
+            raw:   it.name.endsWith('.raw')
+            d_zip: it.name.endsWith('.d.zip')
+            d_dir: it.name.endsWith('.d')
             other: true
-                error "Carafe spectra inputs must be .raw or .mzML files. Found: ${it.name}"
+                error "Carafe spectra inputs must be .raw, .mzML, .d.zip, or pre-extracted .d directories. Found: ${it.name}"
         }.set{ branched_ms_file_ch }
 
         MSCONVERT(branched_ms_file_ch.raw)
 
+        // UNZIP_BRUKER_D's IO is (batch, file); wrap with a placeholder batch and unwrap after.
+        UNZIP_BRUKER_D(branched_ms_file_ch.d_zip.map{ d_zip -> ['carafe', d_zip] })
+        unzipped_d_dir_ch = UNZIP_BRUKER_D.out.map{ batch, d_dir -> d_dir }
+
         spectra_files = MSCONVERT.out
             .concat(branched_ms_file_ch.mzml)
+            .concat(unzipped_d_dir_ch)
+            .concat(branched_ms_file_ch.d_dir)
             .collect()
             .map{ file_list ->
                 def sorted_file_list = file_list.sort { a, b -> a.toString() <=> b.toString() }

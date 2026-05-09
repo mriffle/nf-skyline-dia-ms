@@ -71,7 +71,8 @@ workflow diann {
             log.warn "The parameter 'encyclopedia.chromatogram.params' is set to a value (${params.encyclopedia.chromatogram.params}) but will be ignored."
         }
 
-        if (params.carafe.spectra_file || params.carafe.spectra_dir) {
+        if (params.carafe.spectra_file || params.carafe.spectra_dir ||
+                params.carafe.pdc_files || params.carafe.pdc_n_files) {
             spectral_library_to_use = spectral_library
             predicted_speclib = Channel.empty()
         }

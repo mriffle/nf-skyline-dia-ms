@@ -95,6 +95,9 @@ workflow {
         }
     }
 
+    // Fail fast on Carafe param-combination errors before any process runs.
+    carafe_enabled()
+
     // if accessing panoramaweb and running on aws, set up an aws secret
     if(workflow.profile == 'aws' && is_panorama_authentication_required()) {
         GET_AWS_USER_ID()
@@ -209,7 +212,12 @@ workflow {
         if(params.spectral_library) {
             log.warn "Carafe spectral library will override params.spectral_library"
         }
-        carafe(fasta, aws_secret_id)
+        // PDC-driven Carafe takes its files from the PDC download set; non-PDC modes
+        // ignore this channel via carafe.nf's source-selection block.
+        pdc_carafe_ch = (params.pdc.study_id && carafe_pdc_enabled())
+            ? get_pdc_files.out.carafe_pdc_ms_file_ch
+            : Channel.empty()
+        carafe(fasta, aws_secret_id, pdc_carafe_ch)
         spectral_library = carafe.out.spectral_library
         carafe_version = carafe.out.carafe_version
     }
@@ -394,11 +402,31 @@ def allowed_ms_extensions_for_engine(search_engine) {
     return ['raw', 'mzML', 'd.zip']
 }
 
+def carafe_pdc_enabled() {
+    return params.carafe.pdc_files != null || params.carafe.pdc_n_files != null
+}
+
 def carafe_enabled() {
-    if (params.carafe.spectra_file != null && params.carafe.spectra_dir != null) {
-        error "Only one of params.carafe.spectra_file or params.carafe.spectra_dir may be set."
+    def sources = [
+        'carafe.spectra_file': params.carafe.spectra_file != null,
+        'carafe.spectra_dir':  params.carafe.spectra_dir  != null,
+        'carafe.pdc_files':    params.carafe.pdc_files    != null,
+        'carafe.pdc_n_files':  params.carafe.pdc_n_files  != null,
+    ]
+    def active = sources.findAll { k, v -> v }.collect { k, v -> k }
+    if (active.size() > 1) {
+        error "Only one Carafe input source may be set, found: ${active.join(', ')}.\n" +
+              "  - carafe.spectra_file and carafe.spectra_dir are mutually exclusive.\n" +
+              "  - carafe.pdc_files and carafe.pdc_n_files are mutually exclusive with each other and with carafe.spectra_file/carafe.spectra_dir."
     }
-    return params.carafe.spectra_file != null || params.carafe.spectra_dir != null
+    if (carafe_pdc_enabled() && !params.pdc.study_id) {
+        error "params.carafe.pdc_files / params.carafe.pdc_n_files require params.pdc.study_id to also be set."
+    }
+    if (params.carafe.pdc_n_files != null && params.pdc.n_raw_files != null &&
+            params.carafe.pdc_n_files > params.pdc.n_raw_files) {
+        error "params.carafe.pdc_n_files (${params.carafe.pdc_n_files}) must be <= params.pdc.n_raw_files (${params.pdc.n_raw_files})."
+    }
+    return active.size() == 1
 }
 
 //
