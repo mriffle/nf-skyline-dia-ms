@@ -335,7 +335,8 @@ Current Carafe behavior:
 - `carafe.spectra_dir` may resolve one or more spectra files for a single Carafe run
 - supported spectra-file types are `.mzML`, `.raw`, and Bruker `.d.zip`
 - `.raw` files are converted to mzML via msconvert; `.d.zip` files are extracted to `.d`
-  directories via `UNZIP_BRUKER_D` and bypass msconvert
+  directories via `UNZIP_BRUKER_D` and bypass msconvert. The extracted `.d` directories are
+  cached in `panorama_cache_directory` (via `storeDir`), so extraction is skipped on re-runs
 - all resolved spectra inputs (mzML files and/or `.d` directories) are staged into the Carafe
   work directory and Carafe is invoked with `-ms "."`
 - PDC-driven Carafe input (`carafe.pdc_files` or `carafe.pdc_n_files`) bypasses

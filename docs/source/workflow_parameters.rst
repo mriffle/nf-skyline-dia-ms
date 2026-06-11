@@ -516,7 +516,7 @@ These parameters describe the capability of your local computer for running the 
      - When ``msconvert`` converts a RAW file to mzML, the mzML file is cached for future use. This specifies the directory in which the cached mzML files are stored.
    * - ✓
      - ``params.panorama_cache_directory``
-     - If the RAW files to be processed are in PanoramaWeb, the RAW files will be downloaded to and cached in this directory for future use.
+     - If the RAW files to be processed are in PanoramaWeb, the RAW files will be downloaded to and cached in this directory for future use. Bruker ``.d.zip`` files are also extracted into this directory and the resulting ``.d`` directories are cached here, so the extraction is skipped on subsequent runs.
 
 
 The ``process`` Section

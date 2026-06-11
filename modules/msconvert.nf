@@ -269,6 +269,7 @@ process MSCONVERT {
 }
 
 process UNZIP_DIRECTORY {
+    storeDir "${params.panorama_cache_directory}"
     label 'process_medium'
     label 'ubuntu'
     container params.images.proteowizard
