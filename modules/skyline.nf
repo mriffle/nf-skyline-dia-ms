@@ -92,7 +92,11 @@ process SKYLINE_IMPORT_MS_FILE {
     label 'proteowizard'
     cache 'lenient'
     container params.images.proteowizard
-    stageInMode "${params.skyline.use_hardlinks && task.executor != 'awsbatch' ? 'link' : 'symlink'}"
+    stageInMode {
+        def hardlink_ok = params.skyline.use_hardlinks && task.executor != 'awsbatch'
+        if (!hardlink_ok) return 'symlink'
+        ms_file.name.endsWith('.d') ? 'symlink' : 'link'
+    }
 
     input:
         path skyline_zipfile
