@@ -1,10 +1,6 @@
 
 include { get_total_file_sizes } from './utils.nf'
 
-def sky_basename(path) {
-    return path.baseName.replaceAll(/(\.zip)?\.sky$/, '').replaceAll(/_$/, '')
-}
-
 process SKYLINE_ADD_LIB {
     publishDir params.output_directories.skyline.add_lib, failOnError: true, mode: 'copy'
     cpus   8
@@ -127,7 +123,10 @@ process SKYLINE_IMPORT_MS_FILE {
 }
 
 process SKYLINE_MERGE_RESULTS {
-    publishDir params.output_directories.skyline.import_spectra, enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
+    // The loose .sky/.skyd are intermediate inputs for the next Skyline step and are not
+    // published; only the shared .sky.zip (when this step is the final document), logs, and
+    // hashes are copied.
+    publishDir params.output_directories.skyline.import_spectra, pattern: '*.{zip,stdout,stderr,txt}', enabled: params.replicate_metadata == null && params.pdc.study_id == null, failOnError: true, mode: 'copy'
     cpus   32
     memory {
         def bytes   = get_total_file_sizes(skyd_files)
@@ -155,13 +154,17 @@ process SKYLINE_MERGE_RESULTS {
         tuple path(skyd_files), val(ms_files), val(skyline_document_name)
 
     output:
-        path("*.sky.zip"), emit: final_skyline_zipfile
+        tuple val(skyline_document_name), path("${skyline_document_name}.sky"), path("${skyline_document_name}.skyd"), emit: loose_document
+        path("${skyline_document_name}.sky.zip"), optional: true, emit: final_skyline_zipfile
         path("skyline-merge.stdout"), emit: stdout
         path("skyline-merge.stderr"), emit: stderr
-        path('output_file_hashes.txt'), emit: output_file_hashes
+        path('output_file_hashes.txt'), optional: true, emit: output_file_hashes
 
     script:
-
+    // Only share (zip) the document here when this is the final Skyline step. When annotation
+    // follows (replicate metadata / PDC), the loose document is handed off directly so the
+    // chromatogram cache is not compressed and re-decompressed between adjacent steps.
+    def share_zip = params.replicate_metadata == null && params.pdc.study_id == null
     import_files_params = "--import-file=\"${(ms_files as List).collect{ "/tmp/" + file(it).name }.join('\" --import-file=\"')}\""
     protein_parsimony_args = "--associate-proteins-shared-peptides=DuplicatedBetweenProteins --associate-proteins-min-peptides=1 --associate-proteins-remove-subsets --associate-proteins-minimal-protein-list"
     if(params.skyline.group_by_gene) {
@@ -181,18 +184,24 @@ process SKYLINE_MERGE_RESULTS {
         ${params.skyline.group_proteins ? '--associate-proteins-group-proteins' : ''} \
         --out="${skyline_document_name}.sky" \
         --save \
-        --share-zip="${skyline_document_name}.sky.zip" \
-        --share-type="complete" \
+        ${share_zip ? "--share-zip=\"${skyline_document_name}.sky.zip\" --share-type=\"complete\"" : ''} \
         > >(tee 'skyline-merge.stdout') 2> >(tee 'skyline-merge.stderr' >&2)
 
-    md5sum "${skyline_document_name}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    if [ -f "${skyline_document_name}.sky.zip" ]; then
+        md5sum "${skyline_document_name}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    fi
     """
 
     stub:
+    def share_zip = params.replicate_metadata == null && params.pdc.study_id == null
     """
-    touch "${skyline_document_name}.sky.zip"
+    touch "${skyline_document_name}.sky" "${skyline_document_name}.skyd"
     touch "skyline-merge.stderr" "skyline-merge.stdout"
-    md5sum "${skyline_document_name}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    ${share_zip ? "touch \"${skyline_document_name}.sky.zip\"" : 'true'}
+
+    if [ -f "${skyline_document_name}.sky.zip" ]; then
+        md5sum "${skyline_document_name}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    fi
     """
 }
 
@@ -225,82 +234,93 @@ process SKYLINE_MINIMIZE_DOCUMENT {
     label 'process_high'
     label 'proteowizard'
     container params.images.proteowizard
+    stageInMode "${params.skyline.use_hardlinks && task.executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
-        path skyline_zipfile
+        tuple val(document_basename), path(skyline_sky), path(skyline_skyd)
+        path library
 
     output:
-        path("${sky_basename(skyline_zipfile)}_minimized.sky.zip"), emit: final_skyline_zipfile
+        path("${document_basename}_minimized.sky.zip"), emit: final_skyline_zipfile
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
         path('output_file_hashes.txt'), emit: output_file_hashes
 
     script:
+        // The loose .sky, its .skyd cache, and the spectral library are staged side by side so
+        // the document's relative references resolve without unzipping a shared archive first.
+        def out_basename = "${document_basename}_minimized"
         """
-        unzip ${skyline_zipfile}
-
         wine SkylineCmd \
-            --in="${skyline_zipfile.baseName}" \
+            --in="${skyline_sky}" \
             --chromatograms-discard-unused \
             --chromatograms-limit-noise=1 \
-            --out="${sky_basename(skyline_zipfile)}_minimized.sky" \
+            --out="${out_basename}.sky" \
             --save \
-            --share-zip="${sky_basename(skyline_zipfile)}_minimized.sky.zip" \
+            --share-zip="${out_basename}.sky.zip" \
             --share-type="minimal" \
         > >(tee 'minimize_skyline.stdout') 2> >(tee 'minimize_skyline.stderr' >&2)
 
-        md5sum "${sky_basename(skyline_zipfile)}_minimized.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+        md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
         """
 
     stub:
+    def out_basename = "${document_basename}_minimized"
     """
-    touch "${sky_basename(skyline_zipfile)}_minimized.sky.zip"
+    touch "${out_basename}.sky.zip"
     touch stub.stdout stub.stderr
-    md5sum "${sky_basename(skyline_zipfile)}_minimized.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 
 process SKYLINE_ANNOTATE_DOCUMENT {
-    publishDir params.output_directories.skyline.import_spectra, failOnError: true, mode: 'copy'
+    // The annotated .sky.zip is the published document; the loose .sky/.skyd are handed off to
+    // an optional minimize step without an intermediate compress/decompress cycle.
+    publishDir params.output_directories.skyline.import_spectra, pattern: '*.{zip,stdout,stderr,txt}', failOnError: true, mode: 'copy'
     cpus   8
-    memory { Math.max(12.0, (skyline_zipfile.size() / (1024 ** 3)) * 2).GB }
+    memory { Math.max(12.0, (skyline_skyd.size() / (1024 ** 3)) * 2).GB }
     time   { 4.h * task.attempt }
     label 'proteowizard'
     container params.images.proteowizard
+    stageInMode "${params.skyline.use_hardlinks && task.executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
-        path skyline_zipfile
+        tuple val(document_basename), path(skyline_sky), path(skyline_skyd)
+        path library
         path annotation_csv
         path annotation_definitions
 
     output:
-        path("${sky_basename(skyline_zipfile)}_annotated.sky.zip"), emit: final_skyline_zipfile
+        tuple val("${document_basename}_annotated"), path("${document_basename}_annotated.sky"), path("${document_basename}_annotated.skyd"), emit: loose_document
+        path("${document_basename}_annotated.sky.zip"), emit: final_skyline_zipfile
         path("*.stdout"), emit: stdout
         path("*.stderr"), emit: stderr
         path('output_file_hashes.txt'), emit: output_file_hashes
 
     script:
+    // The loose .sky, its .skyd cache, and the spectral library are staged side by side so the
+    // document's relative references resolve without unzipping a shared archive first.
+    def out_basename = "${document_basename}_annotated"
     """
-    unzip ${skyline_zipfile}
-
     # Create Skyline batch file with annotation definitions
-    echo '--in="${skyline_zipfile.baseName}"' > add_annotations.bat
+    echo '--in="${skyline_sky}"' > add_annotations.bat
     cat ${annotation_definitions} >> add_annotations.bat
     echo '--import-annotations="${annotation_csv}"' >> add_annotations.bat
-    echo '--save --out="${sky_basename(skyline_zipfile)}_annotated.sky"' >> add_annotations.bat
-    echo '--share-zip="${sky_basename(skyline_zipfile)}_annotated.sky.zip"' >> add_annotations.bat
+    echo '--save --out="${out_basename}.sky"' >> add_annotations.bat
+    echo '--share-zip="${out_basename}.sky.zip"' >> add_annotations.bat
 
     wine SkylineCmd --batch-commands=add_annotations.bat \
         > >(tee 'annotate_doc.stdout') 2> >(tee 'annotate_doc.stderr' >&2)
 
-    md5sum "${sky_basename(skyline_zipfile)}_annotated.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 
     stub:
+    def out_basename = "${document_basename}_annotated"
     """
-    touch "${sky_basename(skyline_zipfile)}_annotated.sky.zip"
+    touch "${out_basename}.sky" "${out_basename}.skyd" "${out_basename}.sky.zip"
     touch stub.stdout stub.stderr
-    md5sum "${sky_basename(skyline_zipfile)}_annotated.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
+    md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > output_file_hashes.txt
     """
 }
 

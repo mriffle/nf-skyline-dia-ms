@@ -22,8 +22,13 @@ workflow skyline_import {
 
     main:
 
+        // The spectral library is added once and never changes, but it is needed again by the
+        // annotate/minimize steps so the loose document's relative library reference resolves.
+        // Make it a value channel so it can be supplied to every Skyline step.
+        library_ch = library.first()
+
         // add library to skyline file
-        SKYLINE_ADD_LIB(skyline_template_zipfile, fasta, library)
+        SKYLINE_ADD_LIB(skyline_template_zipfile, fasta, library_ch)
         skyline_zipfile = SKYLINE_ADD_LIB.out.skyline_zipfile
 
         // import spectra into skyline file
@@ -45,22 +50,28 @@ workflow skyline_import {
             batched_input_files,
         )
 
+        // Pass the document between adjacent Skyline steps as a loose .sky/.skyd pair (not a
+        // re-shared .sky.zip). Each step only shares (zips) when it produces a published
+        // document, eliminating the repeated unzip/rezip of the chromatogram cache.
         if(params.replicate_metadata != null || params.pdc.study_id != null) {
             ANNOTATION_TSV_TO_CSV(replicate_metadata)
 
-            SKYLINE_ANNOTATE_DOCUMENT(SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile,
+            SKYLINE_ANNOTATE_DOCUMENT(SKYLINE_MERGE_RESULTS.out.loose_document,
+                                      library_ch,
                                       ANNOTATION_TSV_TO_CSV.out.annotation_csv,
                                       ANNOTATION_TSV_TO_CSV.out.annotation_definitions)
 
             skyline_results = SKYLINE_ANNOTATE_DOCUMENT.out.final_skyline_zipfile
             skyline_results_hash = SKYLINE_ANNOTATE_DOCUMENT.out.output_file_hashes
+            document_to_finalize = SKYLINE_ANNOTATE_DOCUMENT.out.loose_document
         } else {
             skyline_results = SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile
             skyline_results_hash = SKYLINE_MERGE_RESULTS.out.output_file_hashes
+            document_to_finalize = SKYLINE_MERGE_RESULTS.out.loose_document
         }
 
         if(params.skyline.minimize) {
-            SKYLINE_MINIMIZE_DOCUMENT(skyline_results)
+            SKYLINE_MINIMIZE_DOCUMENT(document_to_finalize, library_ch)
             skyline_results = SKYLINE_MINIMIZE_DOCUMENT.out.final_skyline_zipfile
             skyline_results_hash = SKYLINE_MINIMIZE_DOCUMENT.out.output_file_hashes
         }

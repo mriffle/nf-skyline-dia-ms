@@ -9,3 +9,4 @@ results/
 reports/
 mzml_cache/
 raw_cache/
+.nf-cache/

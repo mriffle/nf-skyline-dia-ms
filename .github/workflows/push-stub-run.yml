@@ -27,7 +27,8 @@ jobs:
           'test-msconvert-only-local.config',
           'test-diann-multi-batch-metadata.config',
           'test-diann-pdc-batches.config',
-          'test-diann-filename-glob.config'
+          'test-diann-filename-glob.config',
+          'test-diann-minimize.config'
         ]
 
     steps:
