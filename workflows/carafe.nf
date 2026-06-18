@@ -111,12 +111,11 @@ workflow carafe {
             carafe_psm_file = get_peptide_results.out.file
         } else {
             DIANN_BUILD_LIB(diann_fasta, params.diann.fasta_digest_params)
-            def diann_search_params = "--qvalue 0.01"
             DIANN_SEARCH(spectra_files,
                          diann_fasta,
                          DIANN_BUILD_LIB.out.speclib,
                          'carafe_input',
-                         diann_search_params)
+                         params.diann.search_params)
 
             carafe_psm_file = DIANN_SEARCH.out.precursor_report
         }
