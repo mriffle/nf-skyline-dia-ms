@@ -21,6 +21,7 @@ jobs:
           'test-diann-pdc.config',
           'test-carafe-multi.config',
           'test-carafe-dzip.config',
+          'test-diann-ddir.config',
           'test-carafe-pdc.config',
           'test-skip-dia-search.config',
           'test-msconvert-only-pdc.config',

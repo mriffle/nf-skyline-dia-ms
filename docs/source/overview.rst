@@ -18,6 +18,7 @@ The workflow accepts the following MS input file formats for ``quant_spectra_dir
 * ``.mzML`` — supported by all search engines.
 * ``.raw`` (Thermo) — supported by all search engines. Files are converted to mzML using *msconvert* unless ``use_vendor_raw`` is enabled.
 * ``.d.zip`` (Bruker) — a zipped Bruker ``.d`` directory. The workflow extracts these to ``.d`` directories rather than running *msconvert*. **Bruker ``.d.zip`` input is only supported when ``search_engine`` is ``'diann'`` or ``null`` (no-search, Skyline-only).** EncyclopeDIA and Cascadia do not read Bruker data.
+* ``.d`` (Bruker) — a pre-extracted Bruker ``.d`` directory (match with a ``*.d`` glob). These are passed straight to DIA-NN or Skyline with no extraction or *msconvert* step. **Pre-extracted ``.d`` directories are only supported for local filesystem inputs, not Panorama, Panorama Public, or PDC** — use ``.d.zip`` archives for Bruker data hosted on those sources. The same per-engine restrictions as ``.d.zip`` apply (``'diann'`` or ``null`` only).
 
 All matched files in a single directory must share one extension; mixing formats within a batch is not supported.
 

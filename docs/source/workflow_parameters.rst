@@ -65,7 +65,7 @@ The ``params`` Section
    * - ✓
      - ``quant_spectra_dir``
      - The path to the directory containing the raw data to be quantified. If using narrow window DIA and GPF to generated a chromatogram library this is the location of the wide-window data to be searched using the chromatogram library.
-       Supported file formats are ``.mzML``, ``.raw`` (Thermo), and ``.d.zip`` (Bruker). All matched files must share a single extension. Bruker ``.d.zip`` is only compatible with ``search_engine = 'diann'`` or ``search_engine = null``; EncyclopeDIA and Cascadia do not read Bruker data.
+       Supported file formats are ``.mzML``, ``.raw`` (Thermo), ``.d.zip`` (Bruker), and pre-extracted ``.d`` directories (Bruker, local filesystem only). All matched files must share a single extension. Bruker ``.d.zip`` and ``.d`` are only compatible with ``search_engine = 'diann'`` or ``search_engine = null``; EncyclopeDIA and Cascadia do not read Bruker data. Pre-extracted ``.d`` directories (selected with a ``*.d`` glob) must be local — Panorama and Panorama Public Bruker inputs must be supplied as ``.d.zip`` archives.
    * -
      - ``quant_spectra_glob``
      - Which files in this directory to use. Default: ``*.raw``
@@ -106,7 +106,7 @@ The ``params`` Section
      - Must be set to either ``'encyclopedia'``, ``'diann'``, ``'cascadia'``, or ``null``.
        If set to ``'cascadia'``, ``chromatogram_library_spectra_dir``, ``chromatogram_library_spectra_glob``, and EncyclopeDIA-specific parameters will be ignored.
        If set to ``null``, the workflow will skip the search step and generate Skyline document(s) using ``spectral_library``, ``fasta``, and files in ``quant_spectra_dir``.
-       Bruker ``.d.zip`` MS input is only supported with ``'diann'`` or ``null``; ``'encyclopedia'`` and ``'cascadia'`` require ``.mzML`` or ``.raw`` input.
+       Bruker MS input (``.d.zip`` or pre-extracted ``.d`` directories) is only supported with ``'diann'`` or ``null``; ``'encyclopedia'`` and ``'cascadia'`` require ``.mzML`` or ``.raw`` input.
        When ``pdc.study_id`` is set and ``msconvert_only`` is ``false``, this must be ``'diann'``.
        Default: ``'encyclopedia'``.
    * -
@@ -162,7 +162,7 @@ The ``params`` Section
    * - ``carafe.spectra_file``
      - Legacy direct ``raw``, ``mzML``, or Bruker ``.d.zip`` file input used by Carafe to generate the final spectral library. This remains supported for backwards compatibility. ``.raw`` files are converted to mzML by *msconvert*; ``.d.zip`` files are extracted to a ``.d`` directory and passed directly to Carafe. If set together with ``carafe.spectra_dir`` the workflow will fail. Default: ``null``.
    * - ``carafe.spectra_dir``
-     - Directory, or list of directories, containing the ``raw``, ``mzML``, or Bruker ``.d.zip`` files to use for Carafe. All matched files must share a single extension. Carafe will run once across all matching files. ``.d.zip`` files bypass *msconvert* and are extracted to ``.d`` directories. If set to ``null`` and ``carafe.spectra_file`` is also ``null``, Carafe is skipped. Default: ``null``.
+     - Directory, or list of directories, containing the ``raw``, ``mzML``, Bruker ``.d.zip``, or pre-extracted Bruker ``.d`` (local filesystem only) files to use for Carafe. All matched files must share a single extension. Carafe will run once across all matching files. ``.d.zip`` files bypass *msconvert* and are extracted to ``.d`` directories; pre-extracted ``.d`` directories (matched with a ``*.d`` glob) are used as-is. If set to ``null`` and ``carafe.spectra_file`` is also ``null``, Carafe is skipped. Default: ``null``.
    * - ``carafe.spectra_glob``
      - Glob used to select files in ``carafe.spectra_dir``. Only ``*`` is treated as a wildcard. If set, ``carafe.spectra_regex`` must be ``null``. Default: ``*.raw``.
    * - ``carafe.spectra_regex``
