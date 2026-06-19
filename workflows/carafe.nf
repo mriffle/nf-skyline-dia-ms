@@ -65,7 +65,7 @@ workflow carafe {
                 params.carafe.spectra_glob,
                 params.carafe.spectra_regex
             )
-            get_carafe_ms_files(params.carafe.spectra_dir, carafe_spectra_regex, null, aws_secret_id, ['raw', 'mzML', 'd.zip'])
+            get_carafe_ms_files(params.carafe.spectra_dir, carafe_spectra_regex, null, aws_secret_id, ['raw', 'mzML', 'd.zip', 'd'])
             input_spectral_raw_file = get_carafe_ms_files.out.ms_file_ch.map{ it[1] }
         }
 

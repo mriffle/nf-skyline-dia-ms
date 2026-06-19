@@ -389,17 +389,18 @@ def get_pdc_batch_names(batch_file_path) {
 }
 
 // Allowed MS-input extensions for the chosen search engine. EncyclopeDIA and Cascadia
-// cannot read Bruker .d directories, so .d.zip is excluded for those engines. msconvert_only
-// runs no search and accepts any supported input.
+// cannot read Bruker .d directories, so .d.zip and pre-extracted .d are excluded for those
+// engines. msconvert_only runs no search and accepts any supported input. The 'd' entry is
+// a local-only, pre-extracted Bruker .d directory (enforced in get_ms_files).
 def allowed_ms_extensions_for_engine(search_engine) {
     if (params.msconvert_only) {
-        return ['raw', 'mzML', 'd.zip']
+        return ['raw', 'mzML', 'd.zip', 'd']
     }
     def normalized = search_engine == null ? null : search_engine.toString().toLowerCase().trim()
     if (normalized == 'encyclopedia' || normalized == 'cascadia') {
         return ['raw', 'mzML']
     }
-    return ['raw', 'mzML', 'd.zip']
+    return ['raw', 'mzML', 'd.zip', 'd']
 }
 
 def carafe_pdc_enabled() {

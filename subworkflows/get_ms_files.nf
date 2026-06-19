@@ -53,6 +53,12 @@ workflow get_ms_files {
         // below catches the same case for Panorama-only inputs once listings complete.
         check_local_file_type_allowed(local_file_type, allowed_extensions, spectra_dirs, local_matches, spectra_regex)
 
+        // Pre-extracted Bruker .d directories are only supported from local filesystems.
+        // Panorama / Panorama Public resolve to single-file downloads and cannot deliver a
+        // directory, so reject them up front with a clear message instead of failing during
+        // an opaque single-file download attempt.
+        check_d_dir_is_local_only(local_file_type, spectra_regex, spectra_dir_groups)
+
         // Fail fast for batches whose only configured spectra sources are local directories
         // that matched zero files. This is the most common misconfiguration (e.g., glob set
         // to `*.raw` against a directory of mzMLs) and we catch it before any process runs.
@@ -225,6 +231,16 @@ workflow get_ms_files {
             UNZIP_BRUKER_D(d_zip_file_ch)
             converted_mzml_ch = Channel.empty()
             ms_file_ch = UNZIP_BRUKER_D.out
+        } else if (expected_ms_file_type == 'd') {
+            // Local, pre-extracted Bruker .d directories. No conversion or extraction needed;
+            // pass them straight through, matching the shape UNZIP_BRUKER_D would have emitted.
+            converted_mzml_ch = Channel.empty()
+            ms_file_ch = resolved_ms_file_ch.map { batch, ms_file ->
+                if (get_ms_file_type(ms_file) != 'd') {
+                    error "Unknown file type: ${ms_file.name}"
+                }
+                [batch, ms_file]
+            }
         } else {
             // Fall back to runtime branching when the selector regex does not identify a single type.
             resolved_ms_file_ch
@@ -232,6 +248,7 @@ workflow get_ms_files {
                     mzml:  it[1].name.endsWith('.mzML')
                     raw:   it[1].name.endsWith('.raw')
                     d_zip: it[1].name.endsWith('.d.zip')
+                    d_dir: it[1].name.endsWith('.d')
                     other: true
                         error "Unknown file type:" + it[1].name
                 }.set{branched_ms_file_ch}
@@ -240,11 +257,11 @@ workflow get_ms_files {
 
             if (params.use_vendor_raw) {
                 converted_mzml_ch = Channel.empty()
-                ms_file_ch = branched_ms_file_ch.raw.concat(branched_ms_file_ch.mzml, UNZIP_BRUKER_D.out)
+                ms_file_ch = branched_ms_file_ch.raw.concat(branched_ms_file_ch.mzml, branched_ms_file_ch.d_dir, UNZIP_BRUKER_D.out)
             } else {
                 MSCONVERT(branched_ms_file_ch.raw)
                 converted_mzml_ch = MSCONVERT.out
-                ms_file_ch = MSCONVERT.out.concat(branched_ms_file_ch.mzml, UNZIP_BRUKER_D.out)
+                ms_file_ch = MSCONVERT.out.concat(branched_ms_file_ch.mzml, branched_ms_file_ch.d_dir, UNZIP_BRUKER_D.out)
             }
         }
 
@@ -294,9 +311,9 @@ def validate_allowed_extensions(allowed_extensions) {
     if (!(allowed_extensions instanceof List) || allowed_extensions.isEmpty()) {
         error "get_ms_files: allowed_extensions must be a non-empty list."
     }
-    def disallowed = allowed_extensions - ['raw', 'mzML', 'd.zip']
+    def disallowed = allowed_extensions - ['raw', 'mzML', 'd.zip', 'd']
     if (disallowed) {
-        error "get_ms_files: unrecognized allowed_extensions entries: ${disallowed}. Valid values are 'raw', 'mzML', 'd.zip'."
+        error "get_ms_files: unrecognized allowed_extensions entries: ${disallowed}. Valid values are 'raw', 'mzML', 'd.zip', 'd'."
     }
 }
 
@@ -313,6 +330,20 @@ def check_local_file_type_allowed(local_file_type, allowed_extensions, spectra_d
           format_dir_listing(filtered_dirs, spectra_regex) +
           "\nFound extension: '.${local_file_type}'" +
           "\nAllowed for this run: ${format_extension_list(allowed_extensions)}."
+}
+
+// Reject pre-extracted Bruker .d directory inputs that resolve to a Panorama / Panorama Public
+// source. The .d type can be requested via a `*.d` glob (regex inference) or detected from
+// locally-matched files; in either case it is only valid for local directories.
+def check_d_dir_is_local_only(local_file_type, spectra_regex, spectra_dir_groups) {
+    def requested_d = local_file_type == 'd' || infer_ms_file_type_from_regex(spectra_regex) == 'd'
+    if (!requested_d) {
+        return
+    }
+    if (spectra_dir_groups.panorama_dirs || spectra_dir_groups.panorama_public_dirs) {
+        error "Unzipped Bruker '.d' directories are only supported for local filesystem inputs, " +
+              "not Panorama or Panorama Public. Use '.d.zip' archives for Panorama-hosted Bruker data."
+    }
 }
 
 // Format an extension allow-list for user-facing error messages, e.g.
@@ -389,6 +420,11 @@ def infer_ms_file_type_from_regex(String file_regex) {
     if (normalized_regex ==~ /.*\\\.raw\$$/) {
         return 'raw'
     }
+    // Pre-extracted Bruker .d directory regex (e.g. from a `*.d` glob -> `^.*\.d$`).
+    // Checked after the .d.zip pattern so a `*.d.zip` glob is not misclassified.
+    if (normalized_regex ==~ /.*\\\.d\$$/) {
+        return 'd'
+    }
     return null
 }
 
@@ -402,6 +438,11 @@ def get_ms_file_type(path_or_name) {
     }
     if (file_name.endsWith('.raw')) {
         return 'raw'
+    }
+    // A local, pre-extracted Bruker .d directory. Checked after .d.zip so the longer
+    // extension wins; this is the same directory shape UNZIP_BRUKER_D produces.
+    if (file_name.endsWith('.d')) {
+        return 'd'
     }
     return file_name.substring(file_name.lastIndexOf('.') + 1)
 }
