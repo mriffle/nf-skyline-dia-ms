@@ -65,13 +65,17 @@ jobs:
     - name: Expect failure (nf ${{ matrix.nextflow-version }} / ${{ matrix.config }})
       env:
         NXF_VER: ${{ matrix.nextflow-version }}
+        CONFIG: ${{ matrix.config }}
+        # Passed via env (not inlined into the script) so backticks in the fragment are
+        # treated as literal text rather than shell command substitution.
+        EXPECT: ${{ matrix.expect }}
       run: |
         echo "Installing Nextflow ${NXF_VER}:"
         curl -s https://get.nextflow.io | bash
         chmod +x nextflow
-        echo "Running negative stub with config: ${{ matrix.config }} (expecting failure)"
+        echo "Running negative stub with config: ${CONFIG} (expecting failure)"
         set +e
-        output=$(./nextflow run . -stub-run -c test-resources/${{ matrix.config }} -c test-resources/ci.config 2>&1)
+        output=$(./nextflow run . -stub-run -c "test-resources/${CONFIG}" -c test-resources/ci.config 2>&1)
         status=$?
         set -e
         echo "$output"
@@ -79,8 +83,8 @@ jobs:
           echo "::error::Expected a non-zero exit but the run succeeded."
           exit 1
         fi
-        if ! echo "$output" | grep -qF "${{ matrix.expect }}"; then
-          echo "::error::Did not find expected message fragment: ${{ matrix.expect }}"
+        if ! echo "$output" | grep -qF "$EXPECT"; then
+          echo "::error::Did not find expected message fragment: $EXPECT"
           exit 1
         fi
         echo "Negative test passed: failed as expected with the attributed error message."
