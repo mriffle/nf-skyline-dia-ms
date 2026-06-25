@@ -8,6 +8,7 @@ include { EXPORT_GENE_REPORTS } from "../modules/qc_report"
 
 // functions
 include { get_skyline_doc_name_per_batch } from "../subworkflows/skyline_import"
+include { resolve_user_path } from "../modules/utils.nf"
 
 workflow skyline {
     take:
@@ -62,7 +63,7 @@ workflow skyline {
 
                 // Export PDC gene tables
                 if(params.pdc.gene_level_data != null) {
-                    gene_level_data = file(params.pdc.gene_level_data, checkIfExists: true)
+                    gene_level_data = resolve_user_path(params.pdc.gene_level_data, 'pdc.gene_level_data')
                     EXPORT_GENE_REPORTS(generate_dia_qc_report.out.qc_report_db,
                                         gene_level_data,
                                         pdc_study_name)

@@ -44,3 +44,43 @@ jobs:
         chmod +x nextflow
         echo "Running Nextflow stub with config: ${{ matrix.config }}"
         ./nextflow run . -stub-run -c test-resources/${{ matrix.config }} -c test-resources/ci.config
+
+  # Negative tests: configs that must fail fast with a clear, parameter-attributed error
+  # message (see modules/utils.nf resolve_user_path / list_user_dir). Each entry asserts the
+  # run exits non-zero AND that the expected message fragment appears in the output.
+  negative-stub-run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        nextflow-version: ['24.10.5', '25.10.4', '26.04.0']
+        include:
+          - config: 'test-bad-chromatogram-dir.config'
+            expect: 'Parameter `chromatogram_library_spectra_dir` resolved to the filesystem root'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Expect failure (nf ${{ matrix.nextflow-version }} / ${{ matrix.config }})
+      env:
+        NXF_VER: ${{ matrix.nextflow-version }}
+      run: |
+        echo "Installing Nextflow ${NXF_VER}:"
+        curl -s https://get.nextflow.io | bash
+        chmod +x nextflow
+        echo "Running negative stub with config: ${{ matrix.config }} (expecting failure)"
+        set +e
+        output=$(./nextflow run . -stub-run -c test-resources/${{ matrix.config }} -c test-resources/ci.config 2>&1)
+        status=$?
+        set -e
+        echo "$output"
+        if [ "$status" -eq 0 ]; then
+          echo "::error::Expected a non-zero exit but the run succeeded."
+          exit 1
+        fi
+        if ! echo "$output" | grep -qF "${{ matrix.expect }}"; then
+          echo "::error::Did not find expected message fragment: ${{ matrix.expect }}"
+          exit 1
+        fi
+        echo "Negative test passed: failed as expected with the attributed error message."

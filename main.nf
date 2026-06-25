@@ -25,6 +25,7 @@ include { BUILD_AWS_SECRETS } from "./modules/aws"
 
 // useful functions and variables
 include { param_to_list } from "./modules/utils.nf"
+include { resolve_user_path } from "./modules/utils.nf"
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
@@ -130,7 +131,8 @@ workflow {
             quant_spectra_regex,
             params.files_per_quant_batch,
             aws_secret_id,
-            allowed_ms_extensions_for_engine(params.search_engine)
+            allowed_ms_extensions_for_engine(params.search_engine),
+            'quant_spectra_dir'
         )
         wide_ms_file_ch = get_wide_ms_files.out.ms_file_ch
         wide_mzml_ch = get_wide_ms_files.out.converted_mzml_ch
@@ -152,7 +154,8 @@ workflow {
             chrom_lib_spectra_regex,
             params.files_per_chrom_lib,
             aws_secret_id,
-            allowed_ms_extensions_for_engine(params.search_engine)
+            allowed_ms_extensions_for_engine(params.search_engine),
+            'chromatogram_library_spectra_dir'
         )
         narrow_ms_file_ch = get_narrow_ms_files.out.ms_file_ch
         chrom_lib_file_json = get_narrow_ms_files.out.file_json
@@ -378,7 +381,7 @@ def is_panorama_authentication_required() {
 // Extract unique sorted batch names from a PDC batch file, or [null] if no batch file
 def get_pdc_batch_names(batch_file_path) {
     if (batch_file_path == null) return [null]
-    def f = file(batch_file_path, checkIfExists: true)
+    def f = resolve_user_path(batch_file_path, 'pdc.batch_file')
     def lines = f.readLines()
     def header = lines[0].split('\t')
     def batch_idx = header.findIndexOf { it.trim() == 'batch' }

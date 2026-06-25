@@ -6,6 +6,7 @@ include { GENERATE_QC_QMD } from "../modules/qc_report.nf"
 include { RENDER_QC_REPORT } from "../modules/qc_report.nf"
 include { GENERATE_BATCH_REPORT } from "../modules/qc_report.nf"
 include { EXPORT_TABLES } from "../modules/qc_report.nf"
+include { resolve_user_path } from "../modules/utils.nf"
 
 def run_impute_normalize() {
     return params.qc_report.normalization_method != null ||
@@ -23,7 +24,7 @@ workflow generate_dia_qc_report {
     main:
         // export skyline reports
         skyr_files = Channel.fromList([params.qc_report.replicate_report_template,
-                                       params.qc_report.precursor_report_template]).map{ file(it, checkIfExists: true) }
+                                       params.qc_report.precursor_report_template]).map{ resolve_user_path(it, 'qc_report report template') }
         SKYLINE_RUN_REPORTS(sky_zip_files, skyr_files.collect())
 
         // Rearange skyline report channels before calling MERGE_REPORTS

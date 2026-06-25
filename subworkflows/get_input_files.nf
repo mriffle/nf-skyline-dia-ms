@@ -5,6 +5,7 @@ include { PANORAMA_GET_FILE as PANORAMA_GET_SKYLINE_TEMPLATE } from "../modules/
 include { PANORAMA_GET_SKYR_FILE } from "../modules/panorama"
 
 include { param_to_list } from "../modules/utils.nf"
+include { resolve_user_path } from "../modules/utils.nf"
 
 workflow get_input_files {
 
@@ -19,7 +20,7 @@ workflow get_input_files {
                 PANORAMA_GET_FASTA(params.fasta, aws_secret_id)
                 fasta = PANORAMA_GET_FASTA.out.panorama_file
             } else {
-                fasta = Channel.value(file(params.fasta, checkIfExists: true))
+                fasta = Channel.value(resolve_user_path(params.fasta, 'fasta'))
             }
         } else {
             fasta = Channel.empty()
@@ -30,7 +31,7 @@ workflow get_input_files {
                 PANORAMA_GET_FASTA(params.skyline.fasta, aws_secret_id)
                 skyline_fasta = PANORAMA_GET_FASTA.out.panorama_file
             } else {
-                skyline_fasta = Channel.value(file(params.skyline.fasta, checkIfExists: true))
+                skyline_fasta = Channel.value(resolve_user_path(params.skyline.fasta, 'skyline.fasta'))
             }
         } else {
             skyline_fasta = fasta
@@ -41,7 +42,7 @@ workflow get_input_files {
                 PANORAMA_GET_SPECTRAL_LIBRARY(params.spectral_library, aws_secret_id)
                 spectral_library = PANORAMA_GET_SPECTRAL_LIBRARY.out.panorama_file
             } else {
-                spectral_library = Channel.value(file(params.spectral_library, checkIfExists: true))
+                spectral_library = Channel.value(resolve_user_path(params.spectral_library, 'spectral_library'))
             }
         } else {
             spectral_library = null
@@ -52,7 +53,7 @@ workflow get_input_files {
                 PANORAMA_GET_SKYLINE_TEMPLATE(params.skyline.template_file, aws_secret_id)
                 skyline_template_zipfile = PANORAMA_GET_SKYLINE_TEMPLATE.out.panorama_file
             } else {
-                skyline_template_zipfile = file(params.skyline.template_file, checkIfExists: true)
+                skyline_template_zipfile = resolve_user_path(params.skyline.template_file, 'skyline.template_file')
             }
         } else {
             skyline_template_zipfile = file(params.default_skyline_template_file)
@@ -64,7 +65,7 @@ workflow get_input_files {
             Channel.fromList(param_to_list(params.skyline.skyr_file)).branch{
                 panorama_files: panorama_auth_required_for_url(it)
                 local_files: true
-                    return file(it, checkIfExists: true)
+                    return resolve_user_path(it, 'skyline.skyr_file')
                 }.set{skyr_paths}
 
             skyr_files = skyr_paths.local_files

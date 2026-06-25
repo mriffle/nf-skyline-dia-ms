@@ -4,6 +4,7 @@ include { GET_FILE } from "../modules/pdc.nf"
 include { MSCONVERT_MULTI_BATCH as MSCONVERT } from "../modules/msconvert.nf"
 include { UNZIP_DIRECTORY as UNZIP_BRUKER_D } from "../modules/msconvert.nf"
 include { param_to_list } from "../modules/utils.nf"
+include { resolve_user_path } from "../modules/utils.nf"
 
 workflow get_pdc_study_metadata {
     main:
@@ -13,7 +14,7 @@ workflow get_pdc_study_metadata {
             annotations_csv = GET_STUDY_METADATA.out.skyline_annotations
             study_name = GET_STUDY_METADATA.out.study_name
         } else {
-            metadata_file = file(params.pdc.metadata_tsv, checkIfExists: true)
+            metadata_file = resolve_user_path(params.pdc.metadata_tsv, 'pdc.metadata_tsv')
             metadata = Channel.fromPath(metadata_file)
             METADATA_TO_SKY_ANNOTATIONS(metadata_file)
             annotations_csv = METADATA_TO_SKY_ANNOTATIONS.out.skyline_annotations
@@ -29,7 +30,7 @@ workflow get_pdc_study_metadata {
 // Parse a batch file (TSV with columns: file_name, batch) into a map of filename -> batch_name
 def parse_batch_file(batch_file_path) {
     def batch_map = [:]
-    def f = file(batch_file_path, checkIfExists: true)
+    def f = resolve_user_path(batch_file_path, 'pdc.batch_file')
     def lines = f.readLines()
     if (lines.size() < 2) {
         error "Batch file '${batch_file_path}' must have a header row and at least one data row."

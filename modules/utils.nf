@@ -87,3 +87,53 @@ def get_n_files(files) {
         error "Unknown type: ${files.getClass()}"
     }
 }
+
+/**
+ * Resolve a user-supplied path parameter to a Path with clear, parameter-attributed
+ * error messages instead of bare NIO exceptions (e.g. an opaque `ERROR ~ /root`).
+ *
+ * Local paths only: remote/URL values (Panorama Public, http(s), etc.) keep Nextflow's
+ * native `checkIfExists` handling, since they are fetched rather than read from disk.
+ *
+ * @param value The configured path value.
+ * @param label The parameter name shown in error messages (e.g. 'spectral_library').
+ * @param opts  Optional flags. Supported: [dir: true] to require a directory.
+ * @return The resolved Path.
+ */
+def resolve_user_path(value, String label, Map opts = [:]) {
+    def s = value?.toString()
+    if (s != null && s.contains('://')) {
+        // Remote input -- preserve Nextflow's existing behavior.
+        return file(value, checkIfExists: true)
+    }
+    def p = file(value)
+    if (p.toAbsolutePath().normalize().nameCount == 0) {
+        // Resolves to a filesystem root ('/', '//', ...): almost always an empty placeholder.
+        error "Parameter `${label}` resolved to the filesystem root (value: \"${value}\"). " +
+              "This usually means an empty or placeholder value -- set it to an actual path or remove it."
+    }
+    if (!p.exists()) {
+        error "Parameter `${label}` points to a path that does not exist (value: \"${value}\")."
+    }
+    if (opts.dir && !p.isDirectory()) {
+        error "Parameter `${label}` is not a directory (value: \"${value}\")."
+    }
+    return p
+}
+
+/**
+ * List the entries of a user-supplied directory parameter, attributing the common
+ * failure modes (missing, not a directory, unreadable) to the parameter name.
+ *
+ * @param value The configured directory value.
+ * @param label The parameter name shown in error messages.
+ * @return An array of entries in the directory.
+ */
+def list_user_dir(value, String label) {
+    def dir = resolve_user_path(value, label, [dir: true])
+    try {
+        return dir.listFiles()
+    } catch (java.nio.file.AccessDeniedException e) {
+        error "Parameter `${label}` could not be listed -- permission denied at ${e.message} (value: \"${value}\")."
+    }
+}

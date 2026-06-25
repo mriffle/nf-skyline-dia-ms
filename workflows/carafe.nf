@@ -15,6 +15,7 @@ include { get_ms_files as get_carafe_ms_files } from "../subworkflows/get_ms_fil
 
 include { panorama_auth_required_for_url } from "../subworkflows/get_ms_files"
 include { is_panorama_url } from "../subworkflows/get_ms_files"
+include { resolve_user_path } from "../modules/utils.nf"
 
 workflow carafe {
     take:
@@ -27,13 +28,13 @@ workflow carafe {
         if (params.carafe.carafe_fasta == null){
             carafe_fasta = input_fasta
         } else {
-            get_carafe_fasta(params.carafe.carafe_fasta, aws_secret_id)
+            get_carafe_fasta(params.carafe.carafe_fasta, aws_secret_id, 'carafe.carafe_fasta')
             carafe_fasta = get_carafe_fasta.out.file
         }
         if (params.carafe.diann_fasta == null){
             diann_fasta = carafe_fasta
         } else {
-            get_diann_fasta(params.carafe.diann_fasta, aws_secret_id)
+            get_diann_fasta(params.carafe.diann_fasta, aws_secret_id, 'carafe.diann_fasta')
             diann_fasta = get_diann_fasta.out.file
         }
 
@@ -58,14 +59,14 @@ workflow carafe {
                 }
                 input_spectral_raw_file = panorama_download.panorama_file.map{ it -> it[1] }
             } else {
-                input_spectral_raw_file = Channel.value(file(params.carafe.spectra_file, checkIfExists: true))
+                input_spectral_raw_file = Channel.value(resolve_user_path(params.carafe.spectra_file, 'carafe.spectra_file'))
             }
         } else {
             String carafe_spectra_regex = get_carafe_file_regex(
                 params.carafe.spectra_glob,
                 params.carafe.spectra_regex
             )
-            get_carafe_ms_files(params.carafe.spectra_dir, carafe_spectra_regex, null, aws_secret_id, ['raw', 'mzML', 'd.zip', 'd'])
+            get_carafe_ms_files(params.carafe.spectra_dir, carafe_spectra_regex, null, aws_secret_id, ['raw', 'mzML', 'd.zip', 'd'], 'carafe.spectra_dir')
             input_spectral_raw_file = get_carafe_ms_files.out.ms_file_ch.map{ it[1] }
         }
 
@@ -107,7 +108,7 @@ workflow carafe {
 
         // Get carafe input peptide results file
         if (params.carafe.peptide_results_file != null){
-            get_peptide_results(params.carafe.peptide_results_file, aws_secret_id)
+            get_peptide_results(params.carafe.peptide_results_file, aws_secret_id, 'carafe.peptide_results_file')
             carafe_psm_file = get_peptide_results.out.file
         } else {
             DIANN_BUILD_LIB(diann_fasta, params.diann.fasta_digest_params)

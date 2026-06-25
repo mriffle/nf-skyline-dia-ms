@@ -8,6 +8,7 @@ include { UNZIP_DIRECTORY as UNZIP_BRUKER_D } from "../modules/msconvert"
 
 // useful functions and variables
 include { param_to_list } from "../modules/utils.nf"
+include { list_user_dir } from "../modules/utils.nf"
 
 /**
  * Randomly sample a list and return a list with n elements.
@@ -29,6 +30,7 @@ workflow get_ms_files {
         n_files
         aws_secret_id
         allowed_extensions
+        param_label
 
     main:
         validate_allowed_extensions(allowed_extensions)
@@ -44,7 +46,7 @@ workflow get_ms_files {
         }
 
         spectra_dir_groups = split_spectra_dirs(spectra_dirs)
-        local_matches = find_local_matches(spectra_dir_groups.local_dirs, spectra_regex)
+        local_matches = find_local_matches(spectra_dir_groups.local_dirs, spectra_regex, param_label)
         local_file_type = infer_local_ms_file_type(local_matches)
         expected_ms_file_type = local_file_type ?: infer_ms_file_type_from_regex(spectra_regex)
 
@@ -379,12 +381,11 @@ def split_spectra_dirs(spectra_dirs) {
     return split
 }
 
-def find_local_matches(local_dirs, spectra_regex) {
+def find_local_matches(local_dirs, spectra_regex, param_label) {
     return local_dirs.collect { batch, dir ->
         [
             batch,
-            file(dir, checkIfExists: true)
-                .listFiles()
+            list_user_dir(dir, param_label)
                 .findAll { it.name ==~ spectra_regex }
         ]
     }

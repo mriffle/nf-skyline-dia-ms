@@ -5,6 +5,7 @@ include { VALIDATE_PANORAMA_PUBLIC_METADATA } from "../modules/qc_report"
 include { MAKE_EMPTY_FILE as METADATA_PLACEHOLDER } from "../modules/qc_report"
 
 include { panorama_auth_required_for_url } from "./get_input_files"
+include { resolve_user_path } from "../modules/utils.nf"
 
 workflow get_replicate_metadata {
     take:
@@ -29,7 +30,7 @@ workflow get_replicate_metadata {
             } else {
                 VALIDATE_LOCAL_METADATA(
                     quant_spectra_file_json, chrom_lib_file_json,
-                    file(params.replicate_metadata, checkIfExists: true)
+                    resolve_user_path(params.replicate_metadata, 'replicate_metadata')
                 )
                 validated_metadata = VALIDATE_LOCAL_METADATA.out.replicate_metadata
             }
