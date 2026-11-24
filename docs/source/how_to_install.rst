@@ -77,18 +77,27 @@ The workflow can send you a Slack message when a run starts and when it ends, wh
 
 Messages are sent by a Slack app that you create in your own workspace, so they appear under the name and icon you give that app, with Slack's "APP" label. Each webhook delivers to one destination that you choose when you create it. If you choose yourself, the messages arrive as a private direct message and no one else sees your runs.
 
-1. Go to https://api.slack.com/apps and click "Create New App", then "From scratch". Give the app a name (for example "Nextflow"), choose your workspace, and click "Create App".
-2. In the left sidebar under "Features", click "Incoming Webhooks" and switch "Activate Incoming Webhooks" on.
-3. Scroll to the bottom of that page and click "Add New Webhook to Workspace".
-4. Choose where the messages should go. To receive them privately, choose your own name; to share them, choose a channel. Click "Allow".
-5. Back on the "Incoming Webhooks" page, find the new entry in the "Webhook URLs for Your Workspace" table and click "Copy".
-6. Then on the system where you run Nextflow, run:
-    ``nextflow secrets set SLACK_WEBHOOK_URL "<your webhook URL>"``
+1. Go to https://api.slack.com/apps
+2. Click "Create New App".
+3. Click "Pick features", then "Continue".
+4. Supply an app name (for example "Nextflow"). Under "Select a workspace", choose your Slack workspace (for example your organization or lab).
+5. Type ``incoming-webhook``. Autocomplete should offer it before you finish typing. Click "Continue".
+6. Leave the next page blank and click "Continue".
+7. Leave the next page blank and click "Create and Install".
+
+   In the window that opens, make sure the correct workspace is selected. Under "Channel for webhook", open the pull-down menu and choose either a channel to post in, or yourself if you want the messages sent directly to you as direct messages (recommended). Then click "Allow".
+
+   The window should close, and the page should say that your app is ready.
+8. Click "Go to App Settings", then click "Incoming Webhooks" under "Features". Copy the Webhook URL.
+9. In your terminal, on the system where you run Nextflow, run:
+    ``nextflow secrets set SLACK_WEBHOOK_URL '<your webhook URL>'``
 
     **Be sure to replace <your webhook URL> with the URL you copied.** It begins with ``https://hooks.slack.com/services/``.
 
+You can now set ``slack.enabled = true`` in your pipeline configuration file.
+
 .. note::
-    Some Slack workspaces only let administrators install apps. If step 3 asks you to request approval, the webhook URL will not exist until an administrator approves the request.
+    Some Slack workspaces only let administrators install apps. If Slack asks you to request approval instead of installing the app, the webhook URL will not exist until an administrator approves the request.
 
 .. warning::
     The webhook URL is a credential: anyone who has it can post to that destination. Store it only with ``nextflow secrets set``. Do not put it in your pipeline configuration file, which is uploaded as-is when results are uploaded to PanoramaWeb.
