@@ -47,6 +47,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    # Pin Java rather than use whatever the runner image ships. Nextflow 24.10 only runs on
+    # Java up to 22, and the image's default moved past that; 21 is supported by every
+    # Nextflow version in the matrix.
+    - name: Set up Java 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
     - name: Run (nf ${{ matrix.nextflow-version }} / ${{ matrix.config }})
       env:
         NXF_VER: ${{ matrix.nextflow-version }}
@@ -102,6 +111,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    # Pin Java rather than use whatever the runner image ships. Nextflow 24.10 only runs on
+    # Java up to 22, and the image's default moved past that; 21 is supported by every
+    # Nextflow version in the matrix.
+    - name: Set up Java 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
     - name: Expect failure (nf ${{ matrix.nextflow-version }} / ${{ matrix.case.config }})
       env:
         NXF_VER: ${{ matrix.nextflow-version }}
@@ -155,6 +173,15 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
+    # Pin Java rather than use whatever the runner image ships. Nextflow 24.10 only runs on
+    # Java up to 22, and the image's default moved past that; 21 is supported by every
+    # Nextflow version in the matrix.
+    - name: Set up Java 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
 
     - name: Expect success with a warning (nf ${{ matrix.nextflow-version }} / ${{ matrix.case.name }})
       env:
