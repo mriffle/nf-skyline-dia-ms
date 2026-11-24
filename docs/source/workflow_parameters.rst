@@ -120,7 +120,7 @@ The ``params`` Section
      - If set to ``true``, the workflow resolves MS inputs (downloading and converting RAW or extracting Bruker ``.d.zip`` as needed), optionally uploads them to PanoramaWeb if ``panorama.upload`` is also set, and then exits. No search, Skyline document, QC report, or library generation is performed. Useful for pre-staging mzML files. Default: ``false``.
    * -
      - ``email``
-     - The email address to which a notification should be sent upon workflow completion. If no email is specified, no email will be sent. To send email, you must configure mail server settings (see below).
+     - The email address to which a notification should be sent upon workflow completion. If no email is specified, no email will be sent. To send email, you must configure mail server settings (see below). For notifications that need no mail server, see ``slack.enabled`` under ``params.slack``.
 
 
 ``params.pdc``
@@ -377,6 +377,28 @@ Cascadia has additional behavioral constraints worth knowing:
      - The WebDAV URL of a directory in PanoramaWeb to which to upload the results. Note that ``panorama.upload`` must be set to ``true`` to upload results.
    * - ``panorama.import_skyline``
      - If set to ``true``, the generated Skyline document will be imported into PanoramaWeb's relational database for inline visualization. The import will appear in the parent folder for the ``panorama.upload_url`` parameter, and will have the name used for the ``skyline.document_name`` parameter. Default: ``false``. Note: ``panorama.upload`` must be set to ``true`` and ``skyline.skip`` must be set to ``false`` to use this feature.
+
+
+``params.slack``
+================
+
+.. list-table:: Parameters for Slack notifications. All parameters in this section are optional.
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Parameter Name
+     - Description
+   * - ``slack.enabled``
+     - If set to ``true``, a Slack message is sent when the run starts and another when it ends, reporting success or failure. Default: ``false``. This requires a one-time setup of a Slack incoming webhook, stored as the Nextflow secret ``SLACK_WEBHOOK_URL``; see "Optional: Set up Slack notifications" in :doc:`how_to_install`. The webhook URL is not a parameter and must not be placed in the configuration file.
+
+How Slack notifications behave:
+
+- **A Slack problem never stops or fails a run.** If the ``SLACK_WEBHOOK_URL`` secret is missing or is not a valid URL, the webhook has been removed, or Slack cannot be reached, the workflow logs a warning and carries on. Each message attempt gives up after a few seconds.
+- The "started" message is sent once the configuration has passed the workflow's checks. A configuration error therefore produces a single "failed" message containing the error, rather than "started" followed by "failed".
+- The "failed" message is sent when the run actually ends, which can be some time after the first task fails, because tasks already running are allowed to finish. Stopping a run with Ctrl-C also sends a "failed" message.
+- Messages are sent from the computer that runs Nextflow, so that computer needs outbound HTTPS access to Slack. This is true for AWS Batch runs as well; nothing extra needs to be set up in AWS.
+- **No message does not mean the run is still going.** If Nextflow itself is killed outright (for example ``kill -9``, a scheduler terminating the job, or the computer shutting down), no message can be sent.
+- If ``slack.enabled`` is given a value that is not ``true`` or ``false``, the run stops at startup with a parameter validation error, like any other mistyped parameter.
 
 
 Running the workflow in multi-batch mode

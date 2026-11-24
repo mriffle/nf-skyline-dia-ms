@@ -128,3 +128,64 @@ jobs:
           exit 1
         fi
         echo "Negative test passed: failed as expected with the attributed error message."
+
+  # Slack notifications must never fail a run. With slack.enabled = true, each case below sets
+  # the SLACK_WEBHOOK_URL secret to something unusable (or leaves it unset) and expects the run
+  # to succeed anyway, log a specific warning, and never print the secret's value. No request
+  # leaves the runner, so this proves the failure paths only; delivery to a real Slack webhook
+  # is checked by hand.
+  slack-stub-run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        nextflow-version: ['24.10.5', '25.10.4', '26.04.0']
+        # A real matrix axis, not `include:`, for the reason given in negative-stub-run.
+        case:
+          - name: 'secret not set'
+            secret: ''
+            expect: 'the Nextflow secret SLACK_WEBHOOK_URL is not set'
+          - name: 'secret is not a URL'
+            secret: 'not-a-url'
+            expect: 'The Nextflow secret SLACK_WEBHOOK_URL is not a valid https URL'
+          - name: 'webhook unreachable'
+            secret: 'https://127.0.0.1:9/unreachable-ci-webhook'
+            expect: 'was not sent: could not reach Slack'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Expect success with a warning (nf ${{ matrix.nextflow-version }} / ${{ matrix.case.name }})
+      env:
+        NXF_VER: ${{ matrix.nextflow-version }}
+        SLACK_SECRET: ${{ matrix.case.secret }}
+        EXPECT: ${{ matrix.case.expect }}
+      run: |
+        echo "Installing Nextflow ${NXF_VER}:"
+        curl -s https://get.nextflow.io | bash
+        chmod +x nextflow
+        if [ -n "$SLACK_SECRET" ]; then
+          ./nextflow secrets set SLACK_WEBHOOK_URL "$SLACK_SECRET"
+        fi
+        echo "Running stub with Slack enabled (expecting success and a warning)"
+        set +e
+        output=$(./nextflow run . -stub-run -c test-resources/test-slack-notifications.config -c test-resources/ci.config 2>&1)
+        status=$?
+        set -e
+        echo "$output"
+        if [ "$status" -ne 0 ]; then
+          echo "::error::A Slack problem failed the run (exit $status)."
+          exit 1
+        fi
+        if ! echo "$output" | grep -qF "$EXPECT"; then
+          echo "::error::Did not find expected warning fragment: $EXPECT"
+          exit 1
+        fi
+        if [ -n "$SLACK_SECRET" ]; then
+          if echo "$output" | grep -qF "$SLACK_SECRET" || grep -qF "$SLACK_SECRET" .nextflow.log; then
+            echo "::error::The SLACK_WEBHOOK_URL secret value was printed."
+            exit 1
+          fi
+        fi
+        echo "Slack test passed: the run succeeded and warned as expected."

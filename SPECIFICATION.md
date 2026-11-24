@@ -65,6 +65,10 @@ The implementation standardizes:
 - `conf/`
   Base resource labels and output-directory configuration.
 
+- `lib/`
+  Plain Groovy helper classes, loaded automatically by Nextflow. `EmailTemplate.groovy` builds
+  the completion email and `SlackNotifier.groovy` sends the Slack start/end notifications.
+
 - `docs/`
   Sphinx documentation sources and build helpers for Read the Docs. The user-facing project
   docs live here, primarily under `docs/source/`.
@@ -100,6 +104,9 @@ The implementation standardizes:
   setting all three flags reports the conflict that changes results.
 - rejects `use_vendor_raw` when `msconvert_only` is set, since skipping msconvert leaves an
   `msconvert_only` run with nothing to convert
+- registers the Slack notification handlers as the first statements of the workflow block,
+  before `validateParameters()`, and sends the Slack "started" message as its last statement
+  (see "Slack notifications" under Configuration Model)
 
 Relevant files:
 
@@ -690,6 +697,9 @@ Key parameter families:
   - `batch_report.*`
 - Panorama:
   - `panorama.*`
+- notifications:
+  - `email`
+  - `slack.*`
 - PDC:
   - `pdc.*`
 - Carafe:
@@ -700,6 +710,37 @@ Other framework behavior:
 - `search_engine` defaults to `encyclopedia`
 - optional completion email is sent from `workflow.onComplete` when `params.email` is set and
   mail settings are configured
+
+### Slack notifications
+
+When `slack.enabled` is `true`, the workflow posts one message when a run starts and one when
+it ends (success or failure) to a Slack incoming webhook. The implementation is
+`lib/SlackNotifier.groovy`, called through `slack_notify()` in `main.nf`.
+
+Rules that must be preserved:
+
+- **A Slack problem never fails or stalls a run.** `slack_notify()` and `SlackNotifier` catch
+  everything, the POST has 5 second connect and read timeouts inside a 15 second hard limit,
+  there are no retries, and every problem becomes one `log.warn`.
+- **The webhook URL is the Nextflow secret `SLACK_WEBHOOK_URL`, never a parameter.** The
+  config file passed with `-c` is uploaded to Panorama as-is, so a credential in `params`
+  would leak. Warnings never include the URL or an exception message (exception messages can
+  contain the URL); they carry only an exception class name or an HTTP status.
+- **The handlers are registered before anything that can fail.** An error raised before a
+  handler is registered notifies no one, so registration precedes `validateParameters()`.
+- **Both `onComplete` and `onError` are registered.** Nextflow versions before 25 fire only
+  `onError` for an error during workflow construction; 25 and later fire both.
+  `SlackNotifier` sends the end message once. `onError` sends it only if the start point was
+  never reached, because with the default `finish` error strategy `onError` fires at the first
+  failed task while the run may continue for a long time; the "failed" message therefore
+  comes from `onComplete`, the real end.
+- **"Started" is sent from the last statement of the workflow block**, after every
+  construction-time check in `main.nf` and the subworkflows, so a bad config yields a single
+  "failed" message. The `msconvert_only` branch returns early and makes the same call just
+  before its `return`. Any new early exit from the workflow block must do the same.
+
+Not covered: if the Nextflow process itself is killed outright (`kill -9`, node loss, a
+scheduler hard-kill), no handler runs and no message is sent.
 
 ## Input Source Support Matrix
 
@@ -780,6 +821,12 @@ configurations, including:
 A companion `negative-stub-run` job covers configs that must fail fast, asserting both a
 non-zero exit and an expected message fragment. It includes `use_vendor_raw` combined with
 `msconvert.do_demultiplex`, and `use_vendor_raw` combined with `msconvert_only`.
+
+A `slack-stub-run` job covers the opposite guarantee: with `slack.enabled = true` and the
+`SLACK_WEBHOOK_URL` secret missing, malformed, or pointing at an unreachable address, the run
+must still succeed, log the expected warning, and never print the secret's value. It proves
+the failure paths only; no request leaves the runner, so a real delivery to Slack has to be
+checked by hand.
 
 This validates branching and workflow wiring, not scientific correctness.
 

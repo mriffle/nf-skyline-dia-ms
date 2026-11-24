@@ -514,6 +514,15 @@
         }
       }
     },
+    "slack": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
     "skyline": {
       "type": "object",
       "properties": {

@@ -71,6 +71,28 @@ If you will be downloading files from Panorama for processing, you will need to 
 
     **Be sure to replace “xxxxxxxxxxxxxxxxxxxxxxxx” with your access key.**
 
+Optional: Set up Slack notifications
+====================================
+The workflow can send you a Slack message when a run starts and when it ends, whether it succeeded or failed. This is off by default. To use it, create a Slack *incoming webhook* once, store its URL on the computer where you run Nextflow, and set ``slack.enabled = true`` in your configuration file (see :doc:`workflow_parameters`).
+
+Messages are sent by a Slack app that you create in your own workspace, so they appear under the name and icon you give that app, with Slack's "APP" label. Each webhook delivers to one destination that you choose when you create it. If you choose yourself, the messages arrive as a private direct message and no one else sees your runs.
+
+1. Go to https://api.slack.com/apps and click "Create New App", then "From scratch". Give the app a name (for example "Nextflow"), choose your workspace, and click "Create App".
+2. In the left sidebar under "Features", click "Incoming Webhooks" and switch "Activate Incoming Webhooks" on.
+3. Scroll to the bottom of that page and click "Add New Webhook to Workspace".
+4. Choose where the messages should go. To receive them privately, choose your own name; to share them, choose a channel. Click "Allow".
+5. Back on the "Incoming Webhooks" page, find the new entry in the "Webhook URLs for Your Workspace" table and click "Copy".
+6. Then on the system where you run Nextflow, run:
+    ``nextflow secrets set SLACK_WEBHOOK_URL "<your webhook URL>"``
+
+    **Be sure to replace <your webhook URL> with the URL you copied.** It begins with ``https://hooks.slack.com/services/``.
+
+.. note::
+    Some Slack workspaces only let administrators install apps. If step 3 asks you to request approval, the webhook URL will not exist until an administrator approves the request.
+
+.. warning::
+    The webhook URL is a credential: anyone who has it can post to that destination. Store it only with ``nextflow secrets set``. Do not put it in your pipeline configuration file, which is uploaded as-is when results are uploaded to PanoramaWeb.
+
 Optional: Install Docker on local system
 =========================================
 This step needs to be performed if processes (e.g., encyclopedia) are going to be run on your local computer. That is, the actual processing steps will be run locally.

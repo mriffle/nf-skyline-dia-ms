@@ -60,6 +60,13 @@ params.skyline.skyr_file = check_old_param_name('skyline_skyr_file',
 //
 workflow {
 
+    // Slack notifications. Registered before anything that can fail, including parameter
+    // validation: an error raised before a handler exists notifies no one. Both handlers
+    // are needed because Nextflow versions before 25 fire only onError for a failure during
+    // workflow construction. SlackNotifier makes sure one failure sends one message.
+    workflow.onComplete = { slack_notify('complete') }
+    workflow.onError = { slack_notify('error') }
+
     all_ms_file_ch = null       // hold all mzml files generated
     all_mzml_ch = null
 
@@ -226,6 +233,8 @@ workflow {
             )
         }
 
+        // This mode never reaches the end of the workflow block, so say "started" here.
+        slack_notify('start')
         return
     }
 
@@ -405,6 +414,12 @@ workflow {
             println "Warning: Error sending completion email."
         }
     }
+
+    // Keep this the last statement of the workflow. Every parameter check above, here and in
+    // the subworkflows, has passed by now, so a bad config produces a single "failed" message
+    // rather than "started" followed by "failed". The msconvert_only branch returns early and
+    // makes the same call just before it does.
+    slack_notify('start')
 }
 
 // Convert a Nextflow-style glob (only * is a wildcard) into a regex string
@@ -517,6 +532,28 @@ def email() {
             subject: subject,
             body: msg
         )
+    }
+}
+
+//
+// Used for Slack notifications. stage is 'start', 'complete' or 'error'.
+//
+// A Slack problem must never fail the run, so everything is inside the try, including the
+// parameter and secret lookups, and any problem is logged as a warning. The argument is
+// untyped on purpose: Nextflow 24.04 rejects a GString passed to a String-typed parameter of
+// a script function.
+//
+def slack_notify(stage) {
+    try {
+        if (params.slack?.enabled != true) {
+            return
+        }
+        def warning = SlackNotifier.notify(stage.toString(), workflow, secrets.SLACK_WEBHOOK_URL?.toString())
+        if (warning) {
+            log.warn warning.toString()
+        }
+    } catch (Throwable t) {
+        log.warn "Slack notification was not sent: ${t.getClass().simpleName}. The workflow is not affected."
     }
 }
 
