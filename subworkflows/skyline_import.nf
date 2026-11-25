@@ -39,16 +39,21 @@ workflow skyline_import {
                     [ms_files, skyd_files, get_skyline_doc_name_per_batch(document_name, batch_name)]
                 }
 
+        def annotate = params.replicate_metadata != null || params.pdc.study_id != null
         SKYLINE_MERGE_RESULTS(
             skyline_zipfile,
             fasta,
             batched_input_files,
+            annotate,
         )
 
-        if(params.replicate_metadata != null || params.pdc.study_id != null) {
+        if(annotate) {
             ANNOTATION_TSV_TO_CSV(replicate_metadata)
 
-            SKYLINE_ANNOTATE_DOCUMENT(SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile,
+            merged_documents = SKYLINE_MERGE_RESULTS.out.loose_document.map { name, directory ->
+                tuple(name, directory, directory.resolve("${name}.skyd").size())
+            }
+            SKYLINE_ANNOTATE_DOCUMENT(merged_documents,
                                       ANNOTATION_TSV_TO_CSV.out.annotation_csv,
                                       ANNOTATION_TSV_TO_CSV.out.annotation_definitions)
 
