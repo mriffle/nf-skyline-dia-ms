@@ -562,6 +562,21 @@ Document hand-off between Skyline steps:
   document and a second full-size copy of the chromatogram cache there
 - a step never writes into the directory it receives; annotate saves into a new directory and
   copies the library and any other sidecar files next to the new document
+- `SKYLINE_ADD_LIB` always names its document `results.sky.zip`. `SKYLINE_MERGE_RESULTS` stages
+  it under `add-lib-document/` rather than in the task directory, so the file names derived
+  from `skyline.document_name` can never be the path of the staged document. Staged directly,
+  a document named `results` made the merge step write `results.sky.zip` over its own input:
+  Skyline replaces the file and, under symlink staging, deletes the `SKYLINE_ADD_LIB` output it
+  links to. With that name the template and the merged document are still the same file
+  (`results.sky`), which Skyline simply saves in place
+- `SKYLINE_ADD_LIB` stages the template under `template-document/` for the same reason. A
+  template file that is itself named `results.sky.zip` (every run publishes one to
+  `skyline/add-lib`, so reusing it as a template is natural) used to be replaced by this
+  step's output, and under symlink staging Skyline deleted the file it linked to: the user's
+  own template. The run still reported success
+- the stub blocks of `SKYLINE_ADD_LIB` and `SKYLINE_MERGE_RESULTS` fail if the ZIP they are
+  about to write is already present as a staged input. `touch` would pass through the staged
+  link, so without that check a stub run could not see either collision
 - stub runs do not execute Skyline, so a change to these steps needs a real run to verify
 
 Batch naming:

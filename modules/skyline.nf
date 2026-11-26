@@ -21,7 +21,11 @@ process SKYLINE_ADD_LIB {
     container params.images.proteowizard
 
     input:
-        path skyline_template_zipfile
+        // Staged in a subdirectory: this step always writes `results.sky.zip`, and a template
+        // that happens to have that file name would otherwise be replaced by it. Under symlink
+        // staging Skyline also deletes the file the staged name links to, which for a local
+        // template is the user's own file.
+        path skyline_template_zipfile, stageAs: 'template-document/*'
         path fasta
         path elib
 
@@ -79,6 +83,13 @@ process SKYLINE_ADD_LIB {
 
     stub:
     """
+    # Skyline writes a new file here. If a staged input already had this name, a real run
+    # would replace it and delete the file it links to, while touch would quietly pass,
+    # so fail instead (see the note on the skyline_template_zipfile input).
+    if [ -e "results.sky.zip" ] || [ -L "results.sky.zip" ]; then
+        echo "ERROR: results.sky.zip is already present in the task directory as a staged input." >&2
+        exit 1
+    fi
     touch "results.sky.zip"
     touch "skyline_add_library.stderr" "skyline_add_library.stdout"
 
@@ -162,7 +173,12 @@ process SKYLINE_MERGE_RESULTS {
     stageInMode "${params.skyline.use_hardlinks && task.executor != 'awsbatch' ? 'link' : 'symlink'}"
 
     input:
-        path skyline_zipfile
+        // Staged in a subdirectory so that no file this task writes can have the same path as
+        // the staged document. SKYLINE_ADD_LIB always names its document `results.sky.zip`;
+        // staged in the task directory itself, that is also the name of this step's own ZIP
+        // when skyline.document_name is 'results'. Skyline then replaces the staged file and,
+        // under symlink staging, deletes the SKYLINE_ADD_LIB output it points to.
+        path skyline_zipfile, stageAs: 'add-lib-document/*'
         path fasta
         tuple path(skyd_files), val(ms_files), val(skyline_document_name)
         val(handoff)
@@ -239,6 +255,13 @@ process SKYLINE_MERGE_RESULTS {
         mkdir skyline-document
         touch "skyline-document/${skyline_document_name}.sky" "skyline-document/${skyline_document_name}.skyd"
     else
+        # Skyline writes a new file here. If a staged input already had this name, a real run
+        # would replace it and delete the file it links to, while touch would quietly pass,
+        # so fail instead (see the note on the skyline_zipfile input).
+        if [ -e "${skyline_document_name}.sky.zip" ] || [ -L "${skyline_document_name}.sky.zip" ]; then
+            echo "ERROR: ${skyline_document_name}.sky.zip is already present in the task directory as a staged input." >&2
+            exit 1
+        fi
         touch "${skyline_document_name}.sky.zip"
         md5sum "${skyline_document_name}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > "${skyline_document_name}.output_file_hashes.txt"
     fi
