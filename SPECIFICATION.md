@@ -545,10 +545,24 @@ If `params.skyline.skip` is false, the Skyline stage:
 - optionally runs a minimize step
 - publishes the final document to `skyline/final_documents` from whichever of
   `SKYLINE_MERGE_RESULTS`, `SKYLINE_ANNOTATE_DOCUMENT`, or `SKYLINE_MINIMIZE_DOCUMENT` is the
-  terminal step for that run; the non-terminal steps publish only their logs and hashes to
-  `skyline/import-spectra` or `skyline/minimize`, so no intermediate `.sky.zip` is published
+  terminal step for that run. Only the terminal step shares the document as a `.sky.zip` and
+  writes its MD5 hash; the non-terminal steps publish only their logs to
+  `skyline/import-spectra`, so no intermediate `.sky.zip` exists
 - optionally runs user-provided `.skyr` reports
 - optionally generates QC outputs from Skyline report exports
+
+Document hand-off between Skyline steps:
+
+- a non-terminal step passes the document to the next one as a directory (`skyline-document/`
+  from merge, `annotated-document/` from annotate) holding the `.sky`, its `.skyd`, its `.skyl`
+  audit log, and the spectral library, rather than zipping it and unzipping it again
+- Skyline looks for the per-file `.skyd` caches only in the directory of the document it opens,
+  so `SKYLINE_MERGE_RESULTS` moves the staged caches next to the document before it runs
+- the merge step prunes the directory before handing it on: Skyline leaves the template
+  document and a second full-size copy of the chromatogram cache there
+- a step never writes into the directory it receives; annotate saves into a new directory and
+  copies the library and any other sidecar files next to the new document
+- stub runs do not execute Skyline, so a change to these steps needs a real run to verify
 
 Batch naming:
 
