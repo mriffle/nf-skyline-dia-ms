@@ -7,7 +7,8 @@ include { skyline_reports } from "../subworkflows/skyline_run_reports"
 include { EXPORT_GENE_REPORTS } from "../modules/qc_report"
 
 // functions
-include { get_skyline_doc_name_per_batch } from "../subworkflows/skyline_import"
+include { get_final_skyline_doc_name } from "../subworkflows/skyline_import"
+include { check_final_skyline_doc_names } from "../subworkflows/skyline_import"
 include { resolve_user_path } from "../modules/utils.nf"
 
 workflow skyline {
@@ -27,6 +28,9 @@ workflow skyline {
 
         if(!params.skyline.skip) {
 
+            // Fail before any task runs if two batches would write the same document.
+            check_final_skyline_doc_names(batch_name_list)
+
             // create Skyline document
             if(skyline_template_zipfile != null) {
                 skyline_import(
@@ -43,11 +47,14 @@ workflow skyline {
             final_skyline_file = skyline_import.out.skyline_results
             final_skyline_hash = skyline_import.out.skyline_results_hash
 
-            // Map Skyline documents to batch names
+            // Map Skyline documents to batch names. Each batch is keyed by the file name its
+            // final document is given, computed from the document and batch name. Nothing is
+            // derived from the file names the processes produce, so a document or batch name
+            // that looks like a step suffix (or ends in an underscore) cannot break the match.
             batched_skyline_files = Channel.fromList(batch_name_list)
                 .combine(skyline_document_name)
-                .map{ it, doc_name -> [get_skyline_doc_name_per_batch(doc_name, it), it] }
-                .join(final_skyline_file.map{ it -> [it.baseName.replaceAll(/(_annotated)?(_minimized)?\.sky$/, ''), it] },
+                .map{ it, doc_name -> ["${get_final_skyline_doc_name(doc_name, it)}.sky.zip".toString(), it] }
+                .join(final_skyline_file.map{ it -> [it.name, it] },
                       failOnMismatch: true, failOnDuplicate: true)
                 .map{ it -> [it[1], it[2]] }
 

@@ -44,7 +44,10 @@ jobs:
           'test-sampled-dup-names.config',
           'test-batch-name-whitespace.config',
           'test-diann-filename-glob.config',
-          'test-diann-v2-naming.config'
+          'test-diann-v2-naming.config',
+          'test-diann-document-name-underscore.config',
+          'test-diann-batch-name-underscore.config',
+          'test-diann-document-name-suffix.config'
         ]
 
     steps:
@@ -110,6 +113,8 @@ jobs:
             expect: 'Parameter `msconvert.do_demultiplex` cannot be true when `use_vendor_raw` is true'
           - config: 'test-msconvert-only-vendor-raw.config'
             expect: 'Parameter `msconvert_only` requires `use_vendor_raw` to be false'
+          - config: 'test-batch-name-document-collision.config'
+            expect: "Batch names 'Plate1' and 'Plate1_' would produce the same Skyline document name"
 
     steps:
     - name: Checkout repository

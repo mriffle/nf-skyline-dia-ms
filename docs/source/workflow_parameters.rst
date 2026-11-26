@@ -464,6 +464,11 @@ Spaces inside a name are kept, though ``_`` or ``-`` usually makes for easier ha
 downstream. The same rules apply to batch names in a ``pdc.batch_file``, whose fields are
 trimmed the same way.
 
+Two batch names may also not differ only by a trailing underscore (``Plate1`` and ``Plate1_``)
+when the Skyline document is annotated or minimized. The ``_annotated`` and ``_minimized``
+suffixes replace a trailing underscore, so both batches would write
+``final_Plate1_annotated.sky.zip``. The run stops before it starts and names the two batches.
+
 Using ``pdc.batch_file`` for PDC runs
 =====================================
 

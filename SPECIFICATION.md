@@ -583,6 +583,20 @@ Batch naming:
 
 - the final document basename is `skyline.document_name`
 - in batch mode, batch names are appended as `document_batch`
+- the annotate and minimize steps append `_annotated` and `_minimized`; a trailing underscore
+  on the incoming name is replaced by the suffix, not doubled (`mydoc_` becomes
+  `mydoc_annotated`)
+- `get_final_skyline_doc_name` in `subworkflows/skyline_import.nf` builds the name of a
+  batch's final document from the document name, the batch name and the steps that run, using
+  the same helpers that name the process outputs. `workflows/skyline.nf` joins the final
+  documents to their batches on that predicted file name. Nothing is recovered by parsing an
+  output file name: a suffix that is part of the user's name cannot be told from one a step
+  added
+- because the suffix replaces a trailing underscore, batches `A` and `A_` would share a final
+  document name when annotate or minimize runs; `check_final_skyline_doc_names` rejects that
+  at startup
+- a new Skyline step that renames the document must be added to `get_final_skyline_doc_name`;
+  if it is not, the join fails on every run, including every stub config
 
 QC behavior:
 
