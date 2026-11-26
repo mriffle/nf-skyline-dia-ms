@@ -16,6 +16,14 @@ def get_search_file_dir() {
     return 'UNKNOWN_SEARCH_ENGINE'
 }
 
+// Parse one line of md5sum output into [file name, hash].
+def parse_md5sum_line(line) {
+    def m = (line =~ /^([a-f0-9]{32}) [ *](.*?)\r?\n?$/)
+    if (!m.matches()) {
+        error "Could not parse md5sum output: '${line}'"
+    }
+    return tuple(m.group(2), m.group(1))
+}
 
 workflow combine_file_hashes {
     take:
@@ -76,10 +84,12 @@ workflow combine_file_hashes {
         md5_input = file_stat_files.map{ it -> it[1] }
         CALCULATE_MD5(md5_input)
 
+        // md5sum prints "<hash>  <file name>". Only that first separator is split on: the
+        // file name can contain spaces (a document or batch name with a space ends up in
+        // the names of the QC and Skyline reports).
         calc_md5_hashes = CALCULATE_MD5.out
             .splitText()
-            .map{ it -> tuple(it.split(/\s+/)) }
-            .map{ it -> tuple(it[1], it[0]) }
+            .map{ it -> parse_md5sum_line(it) }
 
         // Combine all file hashes into a single channel
         output_file_hash_ch = search_file_data.mzml_files

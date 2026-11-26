@@ -173,6 +173,106 @@ def validate_batch_names(names, String label) {
 }
 
 /**
+ * Characters that cannot appear in the name of a Skyline document.
+ *
+ * / and \ are path separators; : * ? " < > | cannot be in a Windows file name, so Skyline
+ * cannot save the document; ' ` and $ end or expand the quoted strings the name is written
+ * into in the task scripts.
+ */
+def document_name_forbidden_chars() {
+    return '/\\:*?"<>|\'`$'
+}
+
+/**
+ * @param name A document name, or a part of one such as a batch name.
+ * @return The distinct forbidden characters found in the name, in order of appearance.
+ */
+def forbidden_document_name_chars(String name) {
+    def forbidden = document_name_forbidden_chars()
+    return name.toList().findAll { forbidden.contains(it) }.unique()
+}
+
+/**
+ * Check batch names against the characters a Skyline document name cannot contain.
+ *
+ * In multi-batch mode the batch name is part of the document name
+ * (`<document_name>_<batch>.sky.zip`), so a character that cannot be in a document name
+ * cannot be in a batch name either. Call this only when a Skyline document will be made:
+ * validate_batch_names applies to every run, and a batch name with one of these characters
+ * can work when no document is written (msconvert_only, skyline.skip).
+ *
+ * Only the forbidden characters are checked. validate_batch_names already rejects control
+ * characters, surrounding whitespace is trimmed before this point, and a leading '-' is not
+ * at the start of the document name.
+ *
+ * @param names The batch names, already trimmed.
+ * @param label The parameter the names came from, shown in error messages.
+ */
+def validate_batch_names_for_documents(names, String label) {
+    names.each { name ->
+        if (name == null) {
+            return
+        }
+        def n = name.toString()
+        def found = forbidden_document_name_chars(n)
+        if (found) {
+            error "Parameter `${label}` contains a batch name with characters that cannot be used in a " +
+                  "Skyline document name: ${found.join(' ')} (batch name: \"${n}\").\n" +
+                  "  The batch name becomes part of the document name (`<document_name>_<batch>.sky.zip`), " +
+                  "which is written by Skyline, a Windows program, from shell scripts.\n" +
+                  "  Spaces are allowed, but none of: ${document_name_forbidden_chars().toList().join(' ')}"
+        }
+    }
+}
+
+/**
+ * Validate the base name of the Skyline document (params.skyline.document_name, or the PDC
+ * study name that replaces the default on PDC runs).
+ *
+ * The name becomes the start of file names (`<name>.sky.zip`, `<name>_diann_lib.blib`,
+ * `<name>_qc_report.html`), is written into the task scripts inside quotes, and is passed
+ * to Skyline, a Windows program run under wine. Spaces are fine, as is most punctuation.
+ * Like validate_batch_names, this rejects only the shapes that cannot produce a document,
+ * so that they stop the run before the first task instead of deep inside a Skyline step,
+ * and it never rewrites the name. A null or empty name is left alone.
+ *
+ * This is the single startup check on the document name: any further rule about what the
+ * name may be (reserved names, suffixes) belongs here.
+ *
+ * @param name The document base name.
+ * @param label The parameter the name came from, shown in error messages.
+ */
+def validate_document_name(name, String label) {
+    if (name == null || name.toString().isEmpty()) {
+        return
+    }
+    def n = name.toString()
+    def explain = "\n  The document name becomes part of file names (e.g. `<name>.sky.zip`) that are written " +
+                  "by Skyline, a Windows program, from shell scripts."
+
+    if (n.any { Character.isISOControl(it as char) }) {
+        error "Parameter `${label}` contains control characters (value: \"${n}\").${explain}"
+    }
+    def found = forbidden_document_name_chars(n)
+    if (found) {
+        error "Parameter `${label}` contains characters that cannot be used in a Skyline document name: " +
+              "${found.join(' ')} (value: \"${n}\").${explain}\n" +
+              "  Spaces are allowed, but none of: ${document_name_forbidden_chars().toList().join(' ')}"
+    }
+    if (Character.isWhitespace(n.charAt(0))) {
+        // Skyline drops leading whitespace from the name of the .sky.zip it shares, so the
+        // file the workflow expects is never written.
+        error "Parameter `${label}` starts with whitespace (value: \"${n}\").${explain}\n" +
+              "  Spaces inside the name are allowed, but it cannot start with one."
+    }
+    if (n.startsWith('-')) {
+        // The file names are handed to command-line tools, which read a leading '-' as an option.
+        error "Parameter `${label}` starts with '-' (value: \"${n}\").${explain}\n" +
+              "  It cannot start with '-', which command-line tools read as an option."
+    }
+}
+
+/**
  * Normalize a batch map (e.g. params.quant_spectra_dir given as a Map): trim surrounding
  * whitespace from every batch name and validate the result. Non-Map values pass through
  * untouched, so callers can hand this any accepted quant_spectra_dir shape.

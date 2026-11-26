@@ -29,6 +29,8 @@ include { resolve_user_path } from "./modules/utils.nf"
 include { parse_batch_file } from "./modules/utils.nf"
 include { validate_batch_names } from "./modules/utils.nf"
 include { normalize_batch_map } from "./modules/utils.nf"
+include { validate_document_name } from "./modules/utils.nf"
+include { validate_batch_names_for_documents } from "./modules/utils.nf"
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
@@ -149,6 +151,32 @@ workflow {
     // Batch names are trimmed here and this one normalized value feeds both get_ms_files and
     // batch_name_list, so the two can never disagree about a batch's name.
     quant_spectra_dir = normalize_batch_map(params.quant_spectra_dir, 'quant_spectra_dir')
+
+    // The Skyline document name becomes part of file names too, so it is checked here with
+    // the batch names. It is not used when no document is made.
+    if(!params.msconvert_only && !params.skyline.skip) {
+        validate_document_name(params.skyline.document_name, 'skyline.document_name')
+
+        // On PDC runs the default name 'final' is replaced by the study name. A name fetched
+        // from PDC is reduced to letters and underscores by PDC_client; one taken from the
+        // config (with pdc.metadata_tsv) is used as it is.
+        if(params.pdc.study_id && params.pdc.metadata_tsv != null && params.skyline.document_name == 'final') {
+            if(params.pdc.study_name != null) {
+                validate_document_name(params.pdc.study_name, 'pdc.study_name')
+            } else {
+                validate_document_name(params.pdc.study_id, 'pdc.study_id')
+            }
+        }
+
+        // In multi-batch mode the batch name is part of the document name
+        // (<document_name>_<batch>), so it cannot contain those characters either.
+        if(quant_spectra_dir instanceof Map) {
+            validate_batch_names_for_documents(quant_spectra_dir.keySet(), 'quant_spectra_dir')
+        }
+        if(pdc_batch_map != null) {
+            validate_batch_names_for_documents(pdc_batch_map.values().toList().unique(), 'pdc.batch_file')
+        }
+    }
 
     quant_spectra_file_json = Channel.empty()
     if(params.pdc.study_id) {

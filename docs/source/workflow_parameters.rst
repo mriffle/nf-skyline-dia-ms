@@ -139,6 +139,7 @@ The ``params`` Section
      - Path to a pre-downloaded PDC study metadata file (``tsv``). When set, the workflow uses this file directly instead of fetching study metadata via the PDC API. Useful for offline runs or when the PDC API is slow/unavailable. Default: ``null``.
    * - ``pdc.study_name``
      - Override the study name used when ``pdc.metadata_tsv`` is supplied. If ``null``, the value of ``pdc.study_id`` is used. Default: ``null``.
+       When ``skyline.document_name`` is left at its default, this name is used as the document name, so the rules in :ref:`document_names` apply to it.
    * - ``pdc.gene_level_data``
      - A ``tsv`` file mapping gene names to NCIB gene IDs and gene metadata. Required for PDC gene reports. Default: ``null``.
    * - ``pdc.n_raw_files``
@@ -283,6 +284,7 @@ Cascadia has additional behavioral constraints worth knowing:
      - If set to ``true``, will skip the creation of a Skyline document. Default: ``false``.
    * - ``skyline.document_name``
      - The base of the file name of the generated Skyline document. If set to ``'human_dia'``, the output file name would be ``human_dia.sky.zip``. Note: If importing into PanoramaWeb, this is also the name that appears in the list of imported Skyline documents on the project page. Default: ``final``.
+       The name may contain spaces (``'human dia'`` gives ``human dia.sky.zip``). Some characters cannot be used and stop the run at startup; see :ref:`document_names`.
    * - ``skyline.skyr_file``
      - Path(s) (local file system or Panorama WebDAV) to a ``.skyr`` file, which is a Skyline report template. Any reports specified in the ``.skyr`` file will be run automatically as the last step of the workflow and the results saved in your ``results`` directory and (if requested) uploaded to Panorama. The report template(s) can be a single string, or for multiple ``.skyr`` files can be given as a list of strings.
        For example: ``'/path/to/report.skyr'`` for a single file, or
@@ -468,6 +470,44 @@ Two batch names may also not differ only by a trailing underscore (``Plate1`` an
 when the Skyline document is annotated or minimized. The ``_annotated`` and ``_minimized``
 suffixes replace a trailing underscore, so both batches would write
 ``final_Plate1_annotated.sky.zip``. The run stops before it starts and names the two batches.
+
+When a Skyline document is made, a batch name is part of its file name, so it also may not
+contain any of the characters that are not allowed in a document name (see
+:ref:`document_names`): ``:``, ``*``, ``?``, ``"``, ``<``, ``>``, ``|``, ``'``, a backtick or
+``$``. Runs that make no Skyline document (``skyline.skip`` or ``msconvert_only``) do not
+have this restriction.
+
+The batch name is used in more than the document name: it is the prefix of that batch's
+Skyline reports and QC report (``Plate 1_qc_report.html``) and the name of its ``mzML``
+directory when results are uploaded to PanoramaWeb.
+
+.. _document_names:
+
+Document names
+==============
+
+``skyline.document_name`` is the start of several file names: the Skyline document
+(``<document_name>.sky.zip``, with ``_annotated`` and ``_minimized`` added by those steps and
+the batch name added in multi-batch mode), the DIA-NN spectral library
+(``<document_name>_diann_lib.blib``) and, when a QC report is made for a run without batches,
+the QC report (``<document_name>_qc_report.html``).
+
+The name may contain spaces, and they are kept as they are: ``'human dia'`` produces
+``human dia.sky.zip``. It is checked before the run starts, and the run stops with a message
+naming the parameter if the name:
+
+- contains ``/``, ``\``, ``:``, ``*``, ``?``, ``"``, ``<``, ``>`` or ``|``. Skyline is a Windows
+  program and cannot write a file with these characters in its name.
+- contains ``'``, a backtick or ``$``, which are not safe in the commands the workflow runs
+- contains control characters
+- starts with whitespace or with ``-``
+
+The name is never changed for you. Letters, digits, spaces, ``_``, ``-`` and ``.`` are the
+safe choice; other punctuation and non-ASCII letters are not checked and may not work.
+
+On PDC runs the default name ``final`` is replaced by the study name. A name fetched from the
+PDC is reduced to letters and underscores first. With ``pdc.metadata_tsv`` the name comes from
+``pdc.study_name`` (or ``pdc.study_id``) and gets the check above.
 
 Using ``pdc.batch_file`` for PDC runs
 =====================================
