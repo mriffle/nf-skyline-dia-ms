@@ -39,33 +39,42 @@ workflow skyline_import {
                     [ms_files, skyd_files, get_skyline_doc_name_per_batch(document_name, batch_name)]
                 }
 
+        // Each Skyline step shares (zips) the document only when it is the last one. Between
+        // adjacent steps the document is handed off as a directory, so the chromatogram
+        // cache is not zipped and unzipped again at every step.
         def annotate = params.replicate_metadata != null || params.pdc.study_id != null
+        def minimize = params.skyline.minimize
+
         SKYLINE_MERGE_RESULTS(
             skyline_zipfile,
             fasta,
             batched_input_files,
-            annotate,
+            annotate || minimize,
         )
+        loose_document = SKYLINE_MERGE_RESULTS.out.loose_document
+        skyline_results = SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile
+        skyline_results_hash = SKYLINE_MERGE_RESULTS.out.output_file_hashes
 
         if(annotate) {
             ANNOTATION_TSV_TO_CSV(replicate_metadata)
 
-            merged_documents = SKYLINE_MERGE_RESULTS.out.loose_document.map { name, directory ->
+            // The size of the chromatogram cache sets the memory request. It is read here
+            // because a process directive only sees the staged name of a directory input.
+            sized_document = loose_document.map { name, directory ->
                 tuple(name, directory, directory.resolve("${name}.skyd").size())
             }
-            SKYLINE_ANNOTATE_DOCUMENT(merged_documents,
+            SKYLINE_ANNOTATE_DOCUMENT(sized_document,
                                       ANNOTATION_TSV_TO_CSV.out.annotation_csv,
-                                      ANNOTATION_TSV_TO_CSV.out.annotation_definitions)
+                                      ANNOTATION_TSV_TO_CSV.out.annotation_definitions,
+                                      minimize)
 
+            loose_document = SKYLINE_ANNOTATE_DOCUMENT.out.loose_document
             skyline_results = SKYLINE_ANNOTATE_DOCUMENT.out.final_skyline_zipfile
             skyline_results_hash = SKYLINE_ANNOTATE_DOCUMENT.out.output_file_hashes
-        } else {
-            skyline_results = SKYLINE_MERGE_RESULTS.out.final_skyline_zipfile
-            skyline_results_hash = SKYLINE_MERGE_RESULTS.out.output_file_hashes
         }
 
-        if(params.skyline.minimize) {
-            SKYLINE_MINIMIZE_DOCUMENT(skyline_results)
+        if(minimize) {
+            SKYLINE_MINIMIZE_DOCUMENT(loose_document)
             skyline_results = SKYLINE_MINIMIZE_DOCUMENT.out.final_skyline_zipfile
             skyline_results_hash = SKYLINE_MINIMIZE_DOCUMENT.out.output_file_hashes
         }

@@ -1,8 +1,14 @@
 
 include { get_total_file_sizes } from './utils.nf'
 
-def sky_basename(path) {
-    return path.baseName.replaceAll(/(\.zip)?\.sky$/, '').replaceAll(/_$/, '')
+// Names of the documents produced by the optional steps. A trailing underscore on the
+// incoming name is dropped so the suffix is not doubled up.
+def annotated_basename(document_basename) {
+    return document_basename.replaceAll(/_$/, '') + '_annotated'
+}
+
+def minimized_basename(document_basename) {
+    return document_basename.replaceAll(/_$/, '') + '_minimized'
 }
 
 process SKYLINE_ADD_LIB {
@@ -130,7 +136,8 @@ process SKYLINE_MERGE_RESULTS {
     // The merged document is the final one only when neither the annotate nor the minimize
     // step follows. Annotation runs when replicate metadata or PDC annotations are available;
     // this mirrors the branch in subworkflows/skyline_import.nf.
-    // Publish merge logs for every run and the archive hash whenever merge produces a ZIP.
+    // The merge logs are published on every run. The ZIP and its hash only exist when merge
+    // is the last Skyline step; otherwise the document is handed on as a directory.
     publishDir params.output_directories.skyline.final_documents, pattern: '*.sky.zip', enabled: params.replicate_metadata == null && params.pdc.study_id == null && !params.skyline.minimize, failOnError: true, mode: 'copy'
     publishDir params.output_directories.skyline.import_spectra, pattern: '*.{stdout,stderr,txt}', failOnError: true, mode: 'copy'
     cpus   32
@@ -158,7 +165,7 @@ process SKYLINE_MERGE_RESULTS {
         path skyline_zipfile
         path fasta
         tuple path(skyd_files), val(ms_files), val(skyline_document_name)
-        val(annotate)
+        val(handoff)
 
     output:
         path("${skyline_document_name}.sky.zip"), optional: true, emit: final_skyline_zipfile
@@ -175,15 +182,22 @@ process SKYLINE_MERGE_RESULTS {
         protein_parsimony_args += ' --associate-proteins-gene-level-parsimony'
     }
 
-    // Keep the extracted libraries and other Skyline sidecars next to the merged document.
-    def document_directory = annotate ? 'skyline-document/' : ''
-    def share_zip = annotate ? '' : "--share-zip=\"${skyline_document_name}.sky.zip\" --share-type=complete"
+    // When another Skyline step follows (handoff), the document is not shared as a ZIP.
+    // Instead the merged .sky, its .skyd and every sidecar (libraries, audit log) are left
+    // together in skyline-document/, which is handed to the next step as a directory.
+    def document_directory = handoff ? 'skyline-document/' : ''
+    def share_zip = handoff ? '' : "--share-zip=\"${skyline_document_name}.sky.zip\" --share-type=complete"
+    def template_basename = skyline_zipfile.baseName.replaceAll(/\.sky$/, '')
 
     """
-    ${annotate ? 'mkdir skyline-document' : ''}
-    unzip "${skyline_zipfile}" ${annotate ? '-d skyline-document' : ''}
+    ${handoff ? 'mkdir skyline-document' : ''}
+    unzip "${skyline_zipfile}" ${handoff ? '-d skyline-document' : ''}
 
     cp -vaL ${skyd_files} /tmp/
+
+    # Skyline only finds the per-file .skyd caches when they are in the same directory as
+    # the document it opens, so they have to move with it.
+    ${handoff ? "mv ${skyd_files} skyline-document/" : ''}
 
     wine SkylineCmd \
         --in="${document_directory}${skyline_zipfile.baseName}" \
@@ -196,9 +210,22 @@ process SKYLINE_MERGE_RESULTS {
         ${share_zip} \\
         > >(tee '${skyline_document_name}.skyline-merge.stdout') 2> >(tee '${skyline_document_name}.skyline-merge.stderr' >&2)
 
-    if [ "${annotate}" = true ]; then
-        test -s "${document_directory}${skyline_document_name}.sky"
-        test -s "${document_directory}${skyline_document_name}.skyd"
+    if [ "${handoff}" = true ]; then
+        # Hand off only what the next step needs. Skyline leaves the template document and a
+        # second full-size copy of the chromatogram cache (<template>.skyd) behind, along
+        # with whatever is left of the per-file caches.
+        if [ "${template_basename}" != "${skyline_document_name}" ]; then
+            rm -f "skyline-document/${template_basename}.sky" "skyline-document/${template_basename}.skyl" \\
+                  "skyline-document/${template_basename}.sky.view"
+        fi
+        for f in skyline-document/*.skyd; do
+            if [ "\$f" != "skyline-document/${skyline_document_name}.skyd" ]; then
+                rm -f -- "\$f"
+            fi
+        done
+
+        test -s "skyline-document/${skyline_document_name}.sky"
+        test -s "skyline-document/${skyline_document_name}.skyd"
     else
         test -s "${skyline_document_name}.sky.zip"
         md5sum "${skyline_document_name}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > "${skyline_document_name}.output_file_hashes.txt"
@@ -208,7 +235,7 @@ process SKYLINE_MERGE_RESULTS {
     stub:
     """
     touch "${skyline_document_name}.skyline-merge.stderr" "${skyline_document_name}.skyline-merge.stdout"
-    if [ "${annotate}" = true ]; then
+    if [ "${handoff}" = true ]; then
         mkdir skyline-document
         touch "skyline-document/${skyline_document_name}.sky" "skyline-document/${skyline_document_name}.skyd"
     else
@@ -250,25 +277,23 @@ process SKYLINE_MINIMIZE_DOCUMENT {
     container params.images.proteowizard
 
     input:
-        path skyline_zipfile
+        tuple val(document_basename), path(skyline_document)
 
     output:
-        path("${sky_basename(skyline_zipfile)}_minimized.sky.zip"), emit: final_skyline_zipfile
-        path("${sky_basename(skyline_zipfile)}_minimized.minimize_skyline.stdout"), emit: stdout
-        path("${sky_basename(skyline_zipfile)}_minimized.minimize_skyline.stderr"), emit: stderr
-        path("${sky_basename(skyline_zipfile)}_minimized.output_file_hashes.txt"), emit: output_file_hashes
+        path("${minimized_basename(document_basename)}.sky.zip"), emit: final_skyline_zipfile
+        path("${minimized_basename(document_basename)}.minimize_skyline.stdout"), emit: stdout
+        path("${minimized_basename(document_basename)}.minimize_skyline.stderr"), emit: stderr
+        path("${minimized_basename(document_basename)}.output_file_hashes.txt"), emit: output_file_hashes
 
     script:
         // Every published file is named after the document it describes. In batch mode this
         // process runs once per batch and all of them publish into the same directory, so
         // fixed file names would overwrite each other.
-        out_basename = "${sky_basename(skyline_zipfile)}_minimized"
+        out_basename = minimized_basename(document_basename)
 
         """
-        unzip ${skyline_zipfile}
-
         wine SkylineCmd \
-            --in="${skyline_zipfile.baseName}" \
+            --in="${skyline_document}/${document_basename}.sky" \
             --chromatograms-discard-unused \
             --chromatograms-limit-noise=1 \
             --out="${out_basename}.sky" \
@@ -277,21 +302,18 @@ process SKYLINE_MINIMIZE_DOCUMENT {
             --share-type="minimal" \
         > >(tee '${out_basename}.minimize_skyline.stdout') 2> >(tee '${out_basename}.minimize_skyline.stderr' >&2)
 
+        test -s "${out_basename}.sky.zip"
         md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > "${out_basename}.output_file_hashes.txt"
         """
 
     stub:
-        out_basename = "${sky_basename(skyline_zipfile)}_minimized"
+        out_basename = minimized_basename(document_basename)
 
         """
         touch "${out_basename}.sky.zip"
         touch "${out_basename}.minimize_skyline.stdout" "${out_basename}.minimize_skyline.stderr"
         md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > "${out_basename}.output_file_hashes.txt"
         """
-}
-
-def annotated_basename(document_basename) {
-    return document_basename.replaceAll(/_$/, '') + '_annotated'
 }
 
 process SKYLINE_ANNOTATE_DOCUMENT {
@@ -307,40 +329,73 @@ process SKYLINE_ANNOTATE_DOCUMENT {
         tuple val(document_basename), path(skyline_document), val(chromatogram_bytes)
         path annotation_csv
         path annotation_definitions
+        val(handoff)
 
     output:
-        path("${annotated_basename(document_basename)}.sky.zip"), emit: final_skyline_zipfile
+        path("${annotated_basename(document_basename)}.sky.zip"), optional: true, emit: final_skyline_zipfile
+        tuple val("${annotated_basename(document_basename)}"), path('annotated-document', type: 'dir'), optional: true, emit: loose_document
         path("${annotated_basename(document_basename)}.annotate_doc.stdout"), emit: stdout
         path("${annotated_basename(document_basename)}.annotate_doc.stderr"), emit: stderr
-        path("${annotated_basename(document_basename)}.output_file_hashes.txt"), emit: output_file_hashes
+        path("${annotated_basename(document_basename)}.output_file_hashes.txt"), optional: true, emit: output_file_hashes
 
     script:
     // Every published file is named after the document it describes. In batch mode this
     // process runs once per batch and all of them publish into the same directory, so
     // fixed file names would overwrite each other.
-    out_basename = "${annotated_basename(document_basename)}"
+    out_basename = annotated_basename(document_basename)
+    // When the minimize step follows (handoff), the annotated document is passed on as a
+    // directory instead of being shared as a ZIP. The input directory belongs to the merge
+    // task and is never written to; libraries and other sidecars are copied next to the new
+    // document so it still resolves them.
+    def out_directory = handoff ? 'annotated-document/' : ''
 
     """
+    if [ "${handoff}" = true ]; then
+        mkdir annotated-document
+        for f in "${skyline_document}"/*; do
+            case "\$(basename "\$f")" in
+                "${document_basename}.sky"|"${document_basename}.skyd"|"${document_basename}.skyl"|"${document_basename}.sky.view")
+                    ;;
+                *)
+                    if [ -f "\$f" ]; then
+                        cp "\$f" annotated-document/
+                    fi
+                    ;;
+            esac
+        done
+    fi
+
     # Create Skyline batch file with annotation definitions
     echo '--in="${skyline_document}/${document_basename}.sky"' > add_annotations.bat
     cat ${annotation_definitions} >> add_annotations.bat
     echo '--import-annotations="${annotation_csv}"' >> add_annotations.bat
-    echo '--save --out="${out_basename}.sky"' >> add_annotations.bat
-    echo '--share-zip="${out_basename}.sky.zip"' >> add_annotations.bat
+    echo '--save --out="${out_directory}${out_basename}.sky"' >> add_annotations.bat
+    ${handoff ? '' : "echo '--share-zip=\"${out_basename}.sky.zip\"' >> add_annotations.bat"}
 
     wine SkylineCmd --batch-commands=add_annotations.bat \
         > >(tee '${out_basename}.annotate_doc.stdout') 2> >(tee '${out_basename}.annotate_doc.stderr' >&2)
 
-    md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > "${out_basename}.output_file_hashes.txt"
+    if [ "${handoff}" = true ]; then
+        test -s "annotated-document/${out_basename}.sky"
+        test -s "annotated-document/${out_basename}.skyd"
+    else
+        test -s "${out_basename}.sky.zip"
+        md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > "${out_basename}.output_file_hashes.txt"
+    fi
     """
 
     stub:
-    out_basename = "${annotated_basename(document_basename)}"
+    out_basename = annotated_basename(document_basename)
 
     """
-    touch "${out_basename}.sky.zip"
     touch "${out_basename}.annotate_doc.stdout" "${out_basename}.annotate_doc.stderr"
-    md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > "${out_basename}.output_file_hashes.txt"
+    if [ "${handoff}" = true ]; then
+        mkdir annotated-document
+        touch "annotated-document/${out_basename}.sky" "annotated-document/${out_basename}.skyd"
+    else
+        touch "${out_basename}.sky.zip"
+        md5sum "${out_basename}.sky.zip" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\1\\t\\2/' > "${out_basename}.output_file_hashes.txt"
+    fi
     """
 }
 

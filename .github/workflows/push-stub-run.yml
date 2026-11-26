@@ -28,6 +28,7 @@ jobs:
           'test-msconvert-only-local.config',
           'test-diann-multi-batch-metadata.config',
           'test-diann-minimize.config',
+          'test-diann-minimize-no-metadata.config',
           'test-diann-panorama-upload.config',
           'test-diann-pdc-upload.config',
           'test-diann-pdc-gene-reports.config',
