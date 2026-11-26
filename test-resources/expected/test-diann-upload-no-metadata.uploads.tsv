@@ -3,8 +3,8 @@ file_checksums.tsv	<RUN>
 final.sky.zip	<RUN>/results/skyline
 final_diann_lib.blib	<RUN>/results/diann
 nextflow_run_details.txt	<RUN>
-quant.parquet	<RUN>/results/diann
-quant.parquet.skyline.speclib	<RUN>/results/diann
+quant.tsv	<RUN>/results/diann
+quant.tsv.speclib	<RUN>/results/diann
 stub.stderr	<RUN>/results/diann
 stub.stdout	<RUN>/results/diann
 template.sky.zip	<RUN>/input-files

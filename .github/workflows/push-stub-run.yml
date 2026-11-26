@@ -41,7 +41,8 @@ jobs:
           'test-diann-batch-multidir.config',
           'test-sampled-dup-names.config',
           'test-batch-name-whitespace.config',
-          'test-diann-filename-glob.config'
+          'test-diann-filename-glob.config',
+          'test-diann-v2-naming.config'
         ]
 
     steps:

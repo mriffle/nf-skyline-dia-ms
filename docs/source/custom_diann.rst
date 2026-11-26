@@ -95,7 +95,24 @@ After saving your ``pipeline.config``, run the workflow as you normally would (s
 The workflow will automatically use your custom DIA-NN version for the DIA-NN search step.
 
 No other parameter changes are needed. DIA-NN 2.x names its output files differently than 1.8.1,
-and the workflow detects and handles both naming conventions automatically.
+and the workflow detects and handles both naming conventions automatically:
+
+.. list-table::
+   :header-rows: 1
+
+   * - File in the ``diann`` results directory
+     - DIA-NN 1.8.1
+     - DIA-NN 2.x
+   * - Precursor report
+     - ``quant.tsv``
+     - ``quant.parquet``
+   * - Spectral library used to build the Skyline library
+     - ``quant.tsv.speclib``
+     - ``quant.parquet.skyline.speclib``
+
+If a chromatogram library search is also run, its ``subset_library`` files follow the same pattern.
+Every other file, including the ``.blib`` library that is imported into Skyline, has the same
+name with either version.
 
 
 Using a Custom Image on AWS Batch
