@@ -252,7 +252,7 @@ process GENERATE_QC_QMD {
 
     script:
         """
-        dia_qc qc_qmd ${format_flag(batch, '--project')} \
+        dia_qc qc_qmd ${batch == null ? '' : "--project \"${batch}\""} \
             --title "${batch == null ? '' : batch + ' '}DIA QC report" \
             ${format_flags(params.qc_report.standard_proteins, '--addStdProtein')} \
             ${format_flags(params.qc_report.color_vars, '--addColorVar')} \
@@ -407,7 +407,7 @@ process EXPORT_GENE_REPORTS {
 
     script:
         """
-        dia_qc export_gene_matrix --prefix=${file_prefix} --useAliquotId \
+        dia_qc export_gene_matrix --prefix="${file_prefix}" --useAliquotId \
             '${gene_level_data}' '${batch_db}'  \
             > >(tee "export_reports.stdout") 2> >(tee "export_reports.stderr" >&2)
         """

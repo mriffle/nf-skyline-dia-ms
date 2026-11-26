@@ -1,0 +1,29 @@
+file	destination
+Batch A_TestReport.report.tsv	<RUN>/results/skyline_reports
+Plate2_TestReport.report.tsv	<RUN>/results/skyline_reports
+file_checksums.tsv	<RUN>
+my doc_Batch A.sky.zip	<RUN>/results/skyline
+my doc_Plate2.sky.zip	<RUN>/results/skyline
+my doc_diann_lib.blib	<RUN>/results/diann
+nextflow_run_details.txt	<RUN>
+quant.tsv	<RUN>/results/diann
+quant.tsv.speclib	<RUN>/results/diann
+stub.stderr	<RUN>/results/diann
+stub.stdout	<RUN>/results/diann
+template.sky.zip	<RUN>/input-files
+test-document-name-spaces-batch.config	<RUN>
+test-report.skyr	<RUN>/input-files
+test.fasta	<RUN>/input-files
+test.predicted.speclib	<RUN>/results/diann
+test_narrow1.mzML	<RUN>/results/msconvert/Batch A
+test_narrow1.quant	<RUN>/results/diann
+test_narrow2.mzML	<RUN>/results/msconvert/Batch A
+test_narrow2.quant	<RUN>/results/diann
+test_wide1.mzML	<RUN>/results/msconvert/Plate2
+test_wide1.quant	<RUN>/results/diann
+test_wide2.mzML	<RUN>/results/msconvert/Plate2
+test_wide2.quant	<RUN>/results/diann
+test_wide3.mzML	<RUN>/results/msconvert/Plate2
+test_wide3.quant	<RUN>/results/diann
+test_wide4.mzML	<RUN>/results/msconvert/Plate2
+test_wide4.quant	<RUN>/results/diann

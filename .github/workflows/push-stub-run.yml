@@ -47,7 +47,9 @@ jobs:
           'test-diann-v2-naming.config',
           'test-diann-document-name-underscore.config',
           'test-diann-batch-name-underscore.config',
-          'test-diann-document-name-suffix.config'
+          'test-diann-document-name-suffix.config',
+          'test-document-name-spaces.config',
+          'test-document-name-spaces-batch.config'
         ]
 
     steps:
@@ -115,6 +117,16 @@ jobs:
             expect: 'Parameter `msconvert_only` requires `use_vendor_raw` to be false'
           - config: 'test-batch-name-document-collision.config'
             expect: "Batch names 'Plate1' and 'Plate1_' would produce the same Skyline document name"
+          - config: 'test-document-name-invalid.config'
+            expect: 'Parameter `skyline.document_name` contains characters that cannot be used in a Skyline document name'
+          - config: 'test-document-name-leading-space.config'
+            expect: 'Parameter `skyline.document_name` starts with whitespace'
+          - config: 'test-document-name-leading-dash.config'
+            expect: 'Parameter `skyline.document_name` starts with ''-'''
+          - config: 'test-pdc-study-name-invalid.config'
+            expect: 'Parameter `pdc.study_name` contains characters that cannot be used in a Skyline document name'
+          - config: 'test-batch-name-document-characters.config'
+            expect: 'Parameter `quant_spectra_dir` contains a batch name with characters that cannot be used in a Skyline document name'
 
     steps:
     - name: Checkout repository

@@ -36,6 +36,11 @@ process SKYLINE_ADD_LIB {
         path("pwiz_versions.txt"), emit: version
 
     script:
+    // The library is passed as "${elib.name}", not "${elib}". Nextflow backslash-escapes a
+    // path variable so that it can be used unquoted (my\ doc.blib); inside double quotes the
+    // backslash is not removed by the shell and Skyline is given a file name that does not
+    // exist. On the DIA-NN path the library is named after the document
+    // (<document_name>_diann_lib.blib), so this is where a document name with a space fails.
     """
     unzip ${skyline_template_zipfile}
 
@@ -52,7 +57,7 @@ process SKYLINE_ADD_LIB {
     wine SkylineCmd \
         --in="\$skyfile" \
         --import-fasta="${fasta}" \
-        --add-library-path="${elib}" \
+        --add-library-path="${elib.name}" \
         --out="results.sky" \
         --save \
         --share-zip="results.sky.zip" \
@@ -470,7 +475,7 @@ process SKYLINE_RUN_REPORTS {
     """
     for skyrfile in ./*.skyr; do
         awk -F'"' '/<view name=/ { print \$2 }' "\$skyrfile" | while read reportname; do
-            touch ${batch == null ? '' : batch + '_'}\${reportname}.report.tsv
+            touch "${batch == null ? '' : batch + '_'}\${reportname}.report.tsv"
         done
     done
 

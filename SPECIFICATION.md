@@ -104,6 +104,14 @@ The implementation standardizes:
   setting all three flags reports the conflict that changes results.
 - rejects `use_vendor_raw` when `msconvert_only` is set, since skipping msconvert leaves an
   `msconvert_only` run with nothing to convert
+- checks `skyline.document_name` with `validate_document_name` (`modules/utils.nf`) whenever
+  a document will be made (not `msconvert_only`, not `skyline.skip`). Spaces are allowed; the
+  shapes that cannot produce a document are rejected and the name is never rewritten (see
+  "Document and batch names in file names" under Skyline, QC, and Reporting). On PDC runs
+  that take the study name from the config (`pdc.metadata_tsv`), that name gets the same
+  check when it replaces the default document name. In multi-batch mode the batch names
+  (`quant_spectra_dir` keys or `pdc.batch_file` values) are checked for the same forbidden
+  characters.
 - registers the Slack notification handlers as the first statements of the workflow block,
   before `validateParameters()`, and sends the Slack "started" message as its last statement
   (see "Slack notifications" under Configuration Model)
@@ -255,6 +263,10 @@ Additional behavior:
 
 - if `skyline.document_name` is still `'final'`, the final Skyline document name is replaced
   with the PDC study name
+- a study name fetched from PDC is made file-name safe by `PDC_client studyName --normalize`,
+  which turns every run of characters other than letters and `_` into a single `_` (so it
+  never contains a space, but can begin or end with `_`). With `pdc.metadata_tsv` the name is
+  `pdc.study_name`, or `pdc.study_id` when that is null, taken as it is from the config.
 
 Constraints:
 
@@ -598,6 +610,34 @@ Batch naming:
 - a new Skyline step that renames the document must be added to `get_final_skyline_doc_name`;
   if it is not, the join fails on every run, including every stub config
 
+Document and batch names in file names:
+
+- the document name is also the start of the DIA-NN library name
+  (`<document_name>_diann_lib.blib`, `get_blib_name()` in `modules/diann.nf`) and, outside
+  batch mode, the DIA-QC project name, which `dia_qc qc_qmd` puts in front of the QC report
+  file name (`<document_name>_qc_report.qmd`). In batch mode the batch name is the project
+  name and the prefix of every exported Skyline report.
+- both names may contain spaces, and those spaces reach file names unchanged. Every script
+  that uses one of these names, or a file named after one, therefore has to quote it:
+  - a `val` holding a name is always written inside quotes (`--project "${batch}"`)
+  - a `path` variable is written bare (`unzip ${skyline_zipfile}`): Nextflow
+    backslash-escapes it for exactly that use. It must not be put inside quotes, where the
+    backslash survives (`"my\ doc.blib"`) and the program is given a file name that does not
+    exist. To get a quoted file name use `"${file.name}"`.
+  - anything that parses a file name out of text must not split on whitespace (see
+    `parse_md5sum_line` in `subworkflows/combine_file_hashes.nf`)
+- `validate_document_name` rejects, at startup, only the names that cannot work: path
+  separators, the characters Windows does not allow in file names (`: * ? " < > |`, which
+  Skyline cannot save), the characters that end or expand a quoted shell string
+  (`'`, backtick, `$`), control characters, and a leading space or `-`. Batch names have their
+  own check, `validate_batch_names`, which is narrower (empty, `/`, `\`, control characters)
+  and applies to every run. When a document will be made, `validate_batch_names_for_documents`
+  also rejects the same forbidden characters in a batch name, since the batch name is part of
+  the document name. It does not reject a leading `-`, which is not at the start of the
+  document name and can work when no QC or Skyline report is made.
+- stub runs execute neither Skyline nor `dia_qc`, so they show that the channel joins, the
+  checksum table and the upload manifest cope with a space, not that the tools do
+
 QC behavior:
 
 - `generate_dia_qc_report` exports two Skyline reports:
@@ -882,7 +922,13 @@ configurations, including:
 
 A companion `negative-stub-run` job covers configs that must fail fast, asserting both a
 non-zero exit and an expected message fragment. It includes `use_vendor_raw` combined with
-`msconvert.do_demultiplex`, and `use_vendor_raw` combined with `msconvert_only`.
+`msconvert.do_demultiplex`, `use_vendor_raw` combined with `msconvert_only`, and document
+names that cannot be used as file names (`test-document-name-invalid.config` and its
+siblings).
+
+Names with spaces are covered by `test-document-name-spaces.config` (document name, through
+annotate and minimize, with upload and import) and `test-document-name-spaces-batch.config`
+(document name and batch name in multi-batch mode).
 
 A `slack-stub-run` job covers the opposite guarantee: with `slack.enabled = true` and the
 `SLACK_WEBHOOK_URL` secret missing, malformed, or pointing at an unreachable address, the run
