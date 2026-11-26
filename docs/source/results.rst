@@ -114,8 +114,11 @@ The files present in this directory will be:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This directory contains the output of DIA-NN when ``search_engine = 'diann'``. The exact set of files depends on whether a chromatogram-library / subset search was performed, but typically includes:
 
-- ``*.tsv`` and ``*.parquet`` - DIA-NN precursor and protein report files.
-- ``*.speclib`` - The spectral library used (or predicted) by DIA-NN.
+- ``*.tsv`` and ``*.parquet`` - DIA-NN precursor and protein report files. The precursor report is
+  ``quant.tsv`` with DIA-NN 1.8.1 and ``quant.parquet`` with DIA-NN 2.x.
+- ``*.speclib`` - The spectral library used (or predicted) by DIA-NN. The library DIA-NN builds from
+  the search results is ``quant.tsv.speclib`` with DIA-NN 1.8.1 and ``quant.parquet.skyline.speclib``
+  with DIA-NN 2.x.
 - ``*.quant`` - Per-file DIA-NN quantification artifacts.
 - ``*.stdout`` / ``*.stderr`` - Command-line and error output for each DIA-NN step.
 - ``diann_version.txt`` - The version of DIA-NN used. The workflow includes DIA-NN 1.8.1 by default;

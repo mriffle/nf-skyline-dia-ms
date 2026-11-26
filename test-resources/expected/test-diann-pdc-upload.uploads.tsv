@@ -2,8 +2,8 @@ file	destination
 file_checksums.tsv	<RUN>
 final_diann_lib.blib	<RUN>/results/diann
 nextflow_run_details.txt	<RUN>
-quant.parquet	<RUN>/results/diann
-quant.parquet.skyline.speclib	<RUN>/results/diann
+quant.tsv	<RUN>/results/diann
+quant.tsv.speclib	<RUN>/results/diann
 skyline_annotations.csv	<RUN>/input-files
 stub.stderr	<RUN>/results/diann
 stub.stdout	<RUN>/results/diann

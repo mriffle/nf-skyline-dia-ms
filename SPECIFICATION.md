@@ -475,6 +475,25 @@ Behavior:
 - performs a second `DIANN_MBR` aggregation / reanalysis step
 - builds a Skyline `.blib` unless Skyline is skipped
 
+Output naming by DIA-NN version:
+
+- DIA-NN 1.8.x (the default image) writes a TSV precursor report and a `.tsv.speclib`; later
+  versions (confirmed with 1.9.2 and 2.3.0) write a parquet report and a
+  `.parquet.skyline.speclib`. `DIANN_MBR` (and `DIANN_SEARCH`, `CARAFE_DIANN_SEARCH`) detect
+  which set DIA-NN produced and rename it to `<name>.tsv` + `<name>.tsv.speclib` or
+  `<name>.parquet` + `<name>.parquet.skyline.speclib`, where `<name>` is `quant` (or
+  `subset_library` for the narrow-window search).
+- every consumer of those outputs must accept both sets. `BLIB_BUILD_LIBRARY` does so in
+  `blib_build_input_script()`: BlibBuild is given only the speclib and derives the report's file
+  name from it, so the staged files are renamed to a pair BlibBuild matches explicitly
+  (`<name>-lib.parquet.skyline.speclib` + `<name>.parquet`, or `<name>-lib.tsv.speclib` +
+  `<name>-report.tsv`). The `.blib` has the same name either way.
+- under `-stub-run` the DIA-NN stubs pick the set from the version in the `images.diann` tag
+  (`diann_stub_output_names()`): a version below 1.9 gives the 1.8.x names, anything else the
+  newer names. Stub configs that keep the default image therefore cover the 1.8.x names, and
+  `test-diann-v2-naming.config` covers the newer names. The `BLIB_BUILD_LIBRARY` stub runs the
+  same renaming as the real script, so a consumer that handles only one set fails in CI.
+
 Capabilities:
 
 - supports batch mode
@@ -808,7 +827,7 @@ The repository includes:
 That workflow runs `nextflow run . -stub-run -c test-resources/<config>` for multiple
 configurations, including:
 
-- DIA-NN
+- DIA-NN, with both the 1.8.x and the 2.x output file names
 - DIA-NN multi-batch with replicate metadata
 - Cascadia
 - EncyclopeDIA with and without narrow-window data
