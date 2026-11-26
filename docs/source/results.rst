@@ -210,6 +210,10 @@ The document is named after the ``skyline.document_name`` parameter (``final`` b
 In multi-batch mode, one document per batch is produced, with the batch name inserted after the document name
 (e.g., ``final_BatchA_annotated.sky.zip``, ``final_BatchB_annotated.sky.zip``); see :doc:`workflow_parameters` for batch-mode details.
 
+If the document name (or, in multi-batch mode, the batch name) ends in an underscore, that underscore is replaced by the suffix rather than
+doubled: with ``skyline.document_name = 'mydoc_'`` the documents are ``mydoc_.sky.zip``, ``mydoc_annotated.sky.zip``, ``mydoc_minimized.sky.zip``
+and ``mydoc_annotated_minimized.sky.zip``. The log and hash files of the annotate and minimize steps are named the same way.
+
 ``skyline/reports`` Subdirectory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If ``.skyr`` files are specified in the parameters, all reports defined in those files will be run after the Skyline document is populated. The files generated are:

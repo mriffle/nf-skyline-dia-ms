@@ -6,8 +6,53 @@ include { ANNOTATION_TSV_TO_CSV } from "../modules/skyline"
 include { SKYLINE_MINIMIZE_DOCUMENT } from "../modules/skyline"
 include { SKYLINE_ANNOTATE_DOCUMENT } from "../modules/skyline"
 
+// functions
+include { annotated_basename } from "../modules/skyline"
+include { minimized_basename } from "../modules/skyline"
+
 def get_skyline_doc_name_per_batch(document_basename, batch_name) {
     return "${document_basename}${batch_name == null ? '' : '_' + batch_name}"
+}
+
+// Annotation runs when replicate metadata or PDC annotations are available.
+def skyline_annotation_enabled() {
+    return params.replicate_metadata != null || params.pdc.study_id != null
+}
+
+// Base name of the final document of a batch: the merged document name followed by the
+// suffix of each optional step that runs. It is built with the helpers that name the
+// outputs of those steps, so it is always the name of the file the last step writes. The
+// workflow matches final documents to batches by this name; it does not take file names
+// apart to guess which document they belong to.
+def get_final_skyline_doc_name(document_basename, batch_name) {
+    def name = get_skyline_doc_name_per_batch(document_basename, batch_name)
+    if(skyline_annotation_enabled()) {
+        name = annotated_basename(name)
+    }
+    if(params.skyline.minimize) {
+        name = minimized_basename(name)
+    }
+    return name
+}
+
+// Two batches must not end up with the same final document name: their documents are
+// published to the same directory and one would overwrite the other. The annotate and
+// minimize suffixes replace a trailing underscore, so batches 'A' and 'A_' collide when one
+// of those steps runs. Which batches collide does not depend on the document name, so this
+// can be checked before the name is known (on PDC runs it is only known once the study
+// metadata has been fetched).
+def check_final_skyline_doc_names(batch_name_list) {
+    batch_name_list
+        .findAll{ it != null }
+        .groupBy{ get_final_skyline_doc_name('<document_name>', it) }
+        .each{ name, batches ->
+            if(batches.size() > 1) {
+                error "Batch names ${batches.collect{ "'${it}'" }.join(' and ')} would produce the same " +
+                      "Skyline document name (${name}.sky.zip).\n" +
+                      "  A trailing underscore in a batch name is dropped when the annotation or " +
+                      "minimize suffix is added. Rename one of the batches."
+            }
+        }
 }
 
 workflow skyline_import {
@@ -42,7 +87,7 @@ workflow skyline_import {
         // Each Skyline step shares (zips) the document only when it is the last one. Between
         // adjacent steps the document is handed off as a directory, so the chromatogram
         // cache is not zipped and unzipped again at every step.
-        def annotate = params.replicate_metadata != null || params.pdc.study_id != null
+        def annotate = skyline_annotation_enabled()
         def minimize = params.skyline.minimize
 
         SKYLINE_MERGE_RESULTS(
