@@ -29,6 +29,8 @@ jobs:
           'test-diann-multi-batch-metadata.config',
           'test-diann-minimize.config',
           'test-diann-minimize-no-metadata.config',
+          'test-diann-document-name-results.config',
+          'test-diann-template-named-results.config',
           'test-diann-panorama-upload.config',
           'test-diann-pdc-upload.config',
           'test-diann-pdc-gene-reports.config',
