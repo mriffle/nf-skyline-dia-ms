@@ -49,7 +49,13 @@ jobs:
           'test-diann-batch-name-underscore.config',
           'test-diann-document-name-suffix.config',
           'test-document-name-spaces.config',
-          'test-document-name-spaces-batch.config'
+          'test-document-name-spaces-batch.config',
+          'test-input-file-spaces.config',
+          'test-input-file-spaces-encyclopedia.config',
+          'test-input-file-spaces-library.config',
+          'test-input-file-spaces-pdc.config',
+          'test-input-file-spaces-carafe.config',
+          'test-input-file-spaces-cascadia.config'
         ]
 
     steps:
@@ -127,6 +133,8 @@ jobs:
             expect: 'Parameter `pdc.study_name` contains characters that cannot be used in a Skyline document name'
           - config: 'test-batch-name-document-characters.config'
             expect: 'Parameter `quant_spectra_dir` contains a batch name with characters that cannot be used in a Skyline document name'
+          - config: 'test-pdc-gene-data-spaces.config'
+            expect: 'Parameter `pdc.gene_level_data` points to a file with whitespace in its name'
 
     steps:
     - name: Checkout repository
@@ -167,6 +175,19 @@ jobs:
           exit 1
         fi
         echo "Negative test passed: failed as expected with the attributed error message."
+
+  # Stub blocks only `touch` files, so a process script that hands a tool a file name that
+  # does not exist passes every config above. This checks the two quoting rules that keep
+  # input files with spaces in their names working (SPECIFICATION.md, "Input File Names").
+  script-quoting:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Check how process scripts write input file names
+      run: python3 test-resources/check-script-quoting.py
 
   # Slack notifications must never fail a run. With slack.enabled = true, each case below sets
   # the SLACK_WEBHOOK_URL secret to something unusable (or leaves it unset) and expects the run

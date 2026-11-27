@@ -83,6 +83,11 @@ process DIANN_BUILD_LIB {
         path("*.stdout"), emit: stdout
         path("${fasta_file.baseName}.predicted.speclib"), emit: speclib
 
+    // `--out-lib ${fasta_file.baseName}.speclib` below is not quoted, and is left that way on
+    // purpose. DIA-NN joins its arguments back into one string, so a FASTA name with a space
+    // still gives the right library name (real runs, DIA-NN 1.8.1 and 2.3.0). Quoting it
+    // would change this script, and Nextflow would then repeat library prediction and the
+    // whole search for anyone resuming a run that was started before the change.
     script:
         """
         diann --fasta ${fasta_file} \
@@ -94,7 +99,7 @@ process DIANN_BUILD_LIB {
 
     stub:
         """
-        touch ${fasta_file.baseName}.predicted.speclib predict_lib_stub.stdout predict_lib_stub.stderr
+        touch "${fasta_file.baseName}.predicted.speclib" predict_lib_stub.stdout predict_lib_stub.stderr
         """
 }
 

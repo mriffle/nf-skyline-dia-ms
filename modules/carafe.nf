@@ -57,8 +57,8 @@ process CARAFE {
 
         ${exec_java_command(task.memory)} \\
             -ms "." \\
-            -db "${fasta_file}" \\
-            -i "${peptide_results_file}" \\
+            -db ${fasta_file} \\
+            -i ${peptide_results_file} \\
             -se "DIA-NN" \\
             -lf_type ${lf_type_param} \\
             -device cpu \\

@@ -31,6 +31,7 @@ include { validate_batch_names } from "./modules/utils.nf"
 include { normalize_batch_map } from "./modules/utils.nf"
 include { validate_document_name } from "./modules/utils.nf"
 include { validate_batch_names_for_documents } from "./modules/utils.nf"
+include { reject_whitespace_in_file_name } from "./modules/utils.nf"
 
 // Check if old Skyline parameter variables are defined.
 // If the old variable is defnied, return the params value of the old variable,
@@ -176,6 +177,17 @@ workflow {
         if(pdc_batch_map != null) {
             validate_batch_names_for_documents(pdc_batch_map.values().toList().unique(), 'pdc.batch_file')
         }
+    }
+
+    // Input files may have spaces in their names, with one exception. The gene-level table
+    // is read by EXPORT_GENE_REPORTS, which is part of the QC reporting code and has not
+    // been made to cope with one. That step runs last, so without this check the run would
+    // fail only after everything else had finished. Checked only when the step will run.
+    if(!params.msconvert_only && !params.skyline.skip &&
+       (!params.qc_report.skip || !params.batch_report.skip)) {
+        reject_whitespace_in_file_name(
+            params.pdc.gene_level_data, 'pdc.gene_level_data',
+            'The gene report step cannot read a table whose file name contains a space.')
     }
 
     quant_spectra_file_json = Channel.empty()

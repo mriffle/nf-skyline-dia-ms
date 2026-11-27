@@ -112,6 +112,9 @@ The implementation standardizes:
   check when it replaces the default document name. In multi-batch mode the batch names
   (`quant_spectra_dir` keys or `pdc.batch_file` values) are checked for the same forbidden
   characters.
+- rejects `pdc.gene_level_data` when its file name contains whitespace and the gene report
+  step will run (`reject_whitespace_in_file_name` in `modules/utils.nf`). It is the one input
+  whose name cannot contain a space; see "Input File Names"
 - registers the Slack notification handlers as the first statements of the workflow block,
   before `validateParameters()`, and sends the Slack "started" message as its last statement
   (see "Slack notifications" under Configuration Model)
@@ -623,7 +626,8 @@ Document and batch names in file names:
   - a `path` variable is written bare (`unzip ${skyline_zipfile}`): Nextflow
     backslash-escapes it for exactly that use. It must not be put inside quotes, where the
     backslash survives (`"my\ doc.blib"`) and the program is given a file name that does not
-    exist. To get a quoted file name use `"${file.name}"`.
+    exist. To get a quoted file name use `"${file.name}"`. The same rules make input file names
+    with spaces work; they are set out in full under "Input File Names".
   - anything that parses a file name out of text must not split on whitespace (see
     `parse_md5sum_line` in `subworkflows/combine_file_hashes.nf`)
 - `validate_document_name` rejects, at startup, only the names that cannot work: path
@@ -883,6 +887,87 @@ Current implementation support is uneven by input type:
   PDC-only; subset of the PDC quant download is reused as Carafe input
   (no separate file resolution; mutually exclusive with the four other Carafe input modes)
 
+## Input File Names
+
+Every user-supplied input file may have spaces in its name, and so may the directories it is
+in: the MS files (`.raw`, `.mzML`, `.d.zip`, from local directories, Panorama or the PDC), the
+FASTA files, the spectral library, the Skyline template, `.skyr` files, the replicate metadata,
+`pdc.metadata_tsv`, `pdc.batch_file` and the Carafe inputs. Names are never rewritten: an MS
+file `Sample 01.raw` becomes `Sample 01.mzML` and the replicate `Sample 01`.
+
+The one exception is `pdc.gene_level_data`. It is read only by `EXPORT_GENE_REPORTS`, part of
+the QC reporting code, whose script was left as it is; `main.nf` rejects a name with
+whitespace at startup when that step will run.
+
+What makes this work, and what a change to a process script has to keep:
+
+- Nextflow backslash-escapes a `path` variable written directly in a `script:` or `stub:`
+  block (`${fasta}` renders as `my\ file.fasta`), so that it can be used bare. Nothing else is
+  escaped: `${fasta.name}`, `${fasta.baseName}`, `fasta.toString()`, the elements of
+  `files.join(' ')`, and any string built in a helper function all render with the space as
+  it is. This is the same on Nextflow 24.10, 25.10 and 26.04.
+- So a `path` input is written bare (`-f ${fasta}`) or by name inside quotes
+  (`--import-fasta="${fasta.name}"`), never as `"${fasta}"`: inside quotes the backslash
+  survives and the tool is asked for a file that does not exist. The same goes for a line that
+  is echoed into a Skyline batch file.
+- A name derived from an input is always quoted (`--out "${ms_file.baseName}"`,
+  `touch "${metadata.baseName}.annotations.csv"`), in stub blocks too. The one exception is
+  `--out-lib ${fasta_file.baseName}.speclib` in `DIANN_BUILD_LIB`, which works unquoted
+  because DIA-NN joins its arguments back together and is left alone for the reason given
+  under "Changing a process script" below.
+- Helper functions that build shell text from file names quote each name themselves
+  (`join_ms_files` in `modules/diann.nf`, `shell_quote` in `modules/msconvert.nf`).
+- Shell code that takes a file name apart must quote the result. `ENCYCLOPEDIA_CREATE_ELIB`
+  renames `<name>.mzML.*` to `<name>.dia.*` with `"${0/.mzML/.dia}"`; note that inside double
+  quotes a backslash in the replacement is kept, so it is written without one.
+
+`test-resources/check-script-quoting.py` checks the second and third rules for every process
+in `modules/` and runs in CI. It is needed because stub blocks only `touch` files: a script
+that passes a tool a file name that does not exist still passes every stub config.
+
+Tools that needed nothing: msconvert, DIA-NN (1.8.1 and 2.3.0), EncyclopeDIA's per-file
+search and library conversion, BlibBuild, Carafe, Cascadia, `dia_qc validate` and
+`metadata_convert`, `PDC_client` and SkylineCmd all accept names with spaces when they are
+given them correctly.
+
+Changing a process script:
+
+- Nextflow's resume cache is keyed on the text of the `script:` block, not on what it renders
+  to. Any edit inside that block, a comment included, makes `-resume` repeat the step and
+  everything after it for a run started before the edit. Edits to output declarations, to
+  `stub:` blocks and to helper functions do not.
+- This is why two scripts that would otherwise have been tidied were left exactly as they
+  were. `DIANN_BUILD_LIB` feeds the whole DIA-NN search, and `PANORAMA_GET_FILE` /
+  `PANORAMA_GET_SKYR_FILE` download the FASTA, library and template: re-running either moves
+  its output to a new work directory, and `DIANN_QUANT` and `ENCYCLOPEDIA_SEARCH_FILE` would
+  then run again for every file. Comments explaining them are placed above `script:`.
+- A fix that does have to change a script is still worth making; just say in the commit
+  message which steps a resumed run will repeat.
+
+Panorama downloads:
+
+- the Panorama client names a downloaded file after the decoded last segment of the URL, so
+  `.../my%20library.blib` is saved as `my library.blib`. The download processes declare that
+  name (`panorama_file_name` in `modules/panorama.nf`) as their output. Taking the name
+  straight from the URL (`my%20library.blib`) ends in "Missing output file(s)". For the
+  single-file downloads only the output declaration and the stub know the decoded name; the
+  script, and so the name of its log file (`panorama-get-my%20library.blib.stdout`), is
+  unchanged
+- a single file is given by the user as a URL, in which a space has to be written as `%20`.
+  A literal space is not supported: the client then re-encodes the whole URL, including the
+  escapes already in it (`Panorama%20Public` becomes `Panorama%2520Public`), and gets a 404
+- MS files are found by listing a directory, and the listing is not URL-encoded, so the
+  download URL of `my file.raw` does contain a space. `panorama_request_url` writes it as
+  `%20` before the URL is handed to the client by `PANORAMA_GET_MS_FILE` and
+  `PANORAMA_PUBLIC_GET_MS_FILE`. Those two have a `storeDir`, so changing their script does
+  not make a resumed run download anything again
+- replicate metadata on Panorama is fetched by `dia_qc validate` itself, to an output path the
+  workflow chooses, and keeps the URL's spelling (`my%20metadata.tsv`). That works and is left
+  alone, so as not to rename the files such a run publishes
+
+Not covered: characters other than spaces. A file name with a quote, `$`, a backtick or
+another shell metacharacter is not checked and may not work.
+
 ## Containers and External Programs
 
 The workflow is containerized and wraps these major tools:
@@ -929,6 +1014,15 @@ siblings).
 Names with spaces are covered by `test-document-name-spaces.config` (document name, through
 annotate and minimize, with upload and import) and `test-document-name-spaces-batch.config`
 (document name and batch name in multi-batch mode).
+
+Input files with spaces in their names are covered by the `test-input-file-spaces*.config`
+family, which uses the files under `test-resources/spaced inputs/`: the DIA-NN path with every
+auxiliary input (`test-input-file-spaces.config`, with an upload manifest), EncyclopeDIA with
+narrow-window data, a `.blib` library on the DIA-NN path, PDC inputs, Carafe and Cascadia.
+`test-pdc-gene-data-spaces.config` is the negative test for the one input that is rejected.
+A `script-quoting` job runs `test-resources/check-script-quoting.py`, described under
+"Input File Names". As with document names, the stub configs show what Nextflow and the stub
+blocks do with the names, not what the tools do; that was established with real runs.
 
 A `slack-stub-run` job covers the opposite guarantee: with `slack.enabled = true` and the
 `SLACK_WEBHOOK_URL` secret missing, malformed, or pointing at an unreachable address, the run

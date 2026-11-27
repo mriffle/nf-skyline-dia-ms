@@ -37,14 +37,14 @@ process CASCADIA_SEARCH {
         """
         ${extra_command}
 
-        cascadia sequence ${ms_file} /usr/local/bin/cascadia.ckpt --score_threshold ${params.cascadia.score_threshold} --out ${ms_file.baseName}
+        cascadia sequence ${ms_file} /usr/local/bin/cascadia.ckpt --score_threshold ${params.cascadia.score_threshold} --out "${ms_file.baseName}"
             > >(tee "${ms_file.baseName}.stdout") 2> >(tee "${ms_file.baseName}.stderr" >&2)
 
         echo "${params.images.cascadia}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia_version=%s\n" > cascadia_version.txt
 
-        md5sum '${ms_file.join('\' \'')}' ${ms_file.baseName}.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' ${ms_file.baseName}.ssl | sort > sizes.txt
-        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats_${ms_file.baseName}.txt
+        md5sum '${ms_file.join('\' \'')}' "${ms_file.baseName}.ssl" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' "${ms_file.baseName}.ssl" | sort > sizes.txt
+        join -t\$'\\t' hashes.txt sizes.txt > "output_file_stats_${ms_file.baseName}.txt"
         """
 
     stub:
@@ -55,7 +55,7 @@ process CASCADIA_SEARCH {
 
         md5sum '${ms_file.join('\' \'')}' "${ms_file.baseName}.ssl" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
         stat -L --printf='%n\t%s\n' '${ms_file.join('\' \'')}' "${ms_file.baseName}.ssl" | sort > sizes.txt
-        join -t\$'\\t' hashes.txt sizes.txt > output_file_stats_${ms_file.baseName}.txt
+        join -t\$'\\t' hashes.txt sizes.txt > "output_file_stats_${ms_file.baseName}.txt"
         """
 }
 
@@ -77,13 +77,13 @@ process CASCADIA_FIX_SCAN_NUMBERS {
     script:
 
         """
-        python3 /usr/local/bin/fix_scan_numbers.py ${ssl_file} ${ms_file} ${ssl_file.baseName}.fixed.ssl
+        python3 /usr/local/bin/fix_scan_numbers.py ${ssl_file} ${ms_file} "${ssl_file.baseName}.fixed.ssl"
             > >(tee "fix_scan_numbers.stdout") 2> >(tee "fix_scan_numbers.stderr" >&2)
 
         echo "${params.images.cascadia_utils}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia-utils_version=%s\n" > cascadia-utils_version.txt
 
-        md5sum ${ms_file} ${ssl_file} ${ssl_file.baseName}.fixed.ssl | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' ${ms_file} ${ssl_file} ${ssl_file.baseName}.fixed.ssl | sort > sizes.txt
+        md5sum ${ms_file} ${ssl_file} "${ssl_file.baseName}.fixed.ssl" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' ${ms_file} ${ssl_file} "${ssl_file.baseName}.fixed.ssl" | sort > sizes.txt
         join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 
@@ -116,13 +116,13 @@ process CASCADIA_CREATE_FASTA {
     script:
 
         """
-        python3 /usr/local/bin/create_fasta_from_ssl.py ${ssl_file} ${ssl_file.baseName}.fasta
+        python3 /usr/local/bin/create_fasta_from_ssl.py ${ssl_file} "${ssl_file.baseName}.fasta"
             > >(tee "create_fasta.stdout") 2> >(tee "create_fasta.stderr" >&2)
 
         echo "${params.images.cascadia_utils}" | egrep -o '[0-9]+\\.[0-9]+\\.[0-9]+' | xargs printf "cascadia-utils_version=%s\n" > cascadia-utils_version.txt
 
-        md5sum ${ssl_file} ${ssl_file.baseName}.fasta | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
-        stat -L --printf='%n\t%s\n' ${ssl_file} ${ssl_file.baseName}.fasta | sort > sizes.txt
+        md5sum ${ssl_file} "${ssl_file.baseName}.fasta" | sed -E 's/([a-f0-9]{32}) [ \\*](.*)/\\2\\t\\1/' | sort > hashes.txt
+        stat -L --printf='%n\t%s\n' ${ssl_file} "${ssl_file.baseName}.fasta" | sort > sizes.txt
         join -t\$'\\t' hashes.txt sizes.txt > output_file_stats.txt
         """
 
@@ -183,7 +183,7 @@ process BLIB_BUILD_LIBRARY {
 
     script:
         """
-        BlibBuild "${ssl}" lib_redundant.blib
+        BlibBuild ${ssl} lib_redundant.blib
         BlibFilter -b 1 lib_redundant.blib lib.blib
         """
 

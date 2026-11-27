@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views>
+  <view name="TestReport" rowsource="pwiz.Skyline.Model.Databinding.Entities.Replicate" sublist="Results!*" uimode="proteomic">
+    <column name="" />
+    <column name="Files!*.FileName" />
+  </view>
+</views>

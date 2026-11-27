@@ -105,6 +105,6 @@ process GET_FILE {
 
     stub:
         """
-        touch ${file_name}
+        touch '${file_name}'
         """
 }

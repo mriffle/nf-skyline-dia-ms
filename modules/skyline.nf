@@ -46,7 +46,7 @@ process SKYLINE_ADD_LIB {
 
     # Handle case where the skyline_template_zipfile basename does not match the .sky file inside.
     # This can happen when a .sky.zip file shared to Panorama from the Skyline GUI
-    mapfile -t sky_files < <(unzip -Z1 "${skyline_template_zipfile}" | grep -E '\\.sky\$')
+    mapfile -t sky_files < <(unzip -Z1 ${skyline_template_zipfile} | grep -E '\\.sky\$')
     if [ "\${#sky_files[@]}" -ne 1 ]; then
         echo "Error: expected exactly one .sky in ${skyline_template_zipfile.name}, found \${#sky_files[@]}" >&2
         printf '%s\n' "\${sky_files[@]}" >&2
@@ -56,7 +56,7 @@ process SKYLINE_ADD_LIB {
 
     wine SkylineCmd \
         --in="\$skyfile" \
-        --import-fasta="${fasta}" \
+        --import-fasta="${fasta.name}" \
         --add-library-path="${elib.name}" \
         --out="results.sky" \
         --save \
@@ -212,7 +212,7 @@ process SKYLINE_MERGE_RESULTS {
 
     """
     ${handoff ? 'mkdir skyline-document' : ''}
-    unzip "${skyline_zipfile}" ${handoff ? '-d skyline-document' : ''}
+    unzip ${skyline_zipfile} ${handoff ? '-d skyline-document' : ''}
 
     cp -vaL ${skyd_files} /tmp/
 
@@ -292,7 +292,7 @@ process ANNOTATION_TSV_TO_CSV {
 
     stub:
     """
-    touch ${replicate_metadata.baseName}.definitions.bat ${replicate_metadata.baseName}.annotations.csv
+    touch "${replicate_metadata.baseName}.definitions.bat" "${replicate_metadata.baseName}.annotations.csv"
     """
 }
 
@@ -321,7 +321,7 @@ process SKYLINE_MINIMIZE_DOCUMENT {
 
         """
         wine SkylineCmd \
-            --in="${skyline_document}/${document_basename}.sky" \
+            --in="${skyline_document.name}/${document_basename}.sky" \
             --chromatograms-discard-unused \
             --chromatograms-limit-noise=1 \
             --out="${out_basename}.sky" \
@@ -380,7 +380,7 @@ process SKYLINE_ANNOTATE_DOCUMENT {
     """
     if [ "${handoff}" = true ]; then
         mkdir annotated-document
-        for f in "${skyline_document}"/*; do
+        for f in "${skyline_document.name}"/*; do
             case "\$(basename "\$f")" in
                 "${document_basename}.sky"|"${document_basename}.skyd"|"${document_basename}.skyl"|"${document_basename}.sky.view")
                     ;;
@@ -394,9 +394,9 @@ process SKYLINE_ANNOTATE_DOCUMENT {
     fi
 
     # Create Skyline batch file with annotation definitions
-    echo '--in="${skyline_document}/${document_basename}.sky"' > add_annotations.bat
+    echo '--in="${skyline_document.name}/${document_basename}.sky"' > add_annotations.bat
     cat ${annotation_definitions} >> add_annotations.bat
-    echo '--import-annotations="${annotation_csv}"' >> add_annotations.bat
+    echo '--import-annotations="${annotation_csv.name}"' >> add_annotations.bat
     echo '--save --out="${out_directory}${out_basename}.sky"' >> add_annotations.bat
     ${handoff ? '' : "echo '--share-zip=\"${out_basename}.sky.zip\"' >> add_annotations.bat"}
 

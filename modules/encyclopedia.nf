@@ -90,9 +90,14 @@ process ENCYCLOPEDIA_CREATE_ELIB {
         path("${outputFilePrefix}-combined-results.elib.proteins.txt"), emit: protein_quant, optional: true
         path("encyclopedia_version.txt"), emit: version
 
+    // The first command renames the staged per-file results from <name>.mzML.* to
+    // <name>.dia.*, which is what -libexport looks for. Both names are quoted because an MS
+    // file name may contain spaces. The replacement is written without backslashes
+    // ("${0/.mzML/.dia}"): inside double quotes bash keeps a backslash in the replacement,
+    // and the files would be renamed to <name>\.dia.*.
     script:
     """
-    find * -name '*\\.mzML\\.*' -exec bash -c 'mv \$0 \${0/\\.mzML/\\.dia}' {} \\;
+    find * -name '*\\.mzML\\.*' -exec bash -c 'mv "\$0" "\${0/.mzML/.dia}"' {} \\;
 
     ${exec_java_command(task.memory)} \\
         -numberOfThreadsUsed ${task.cpus} \\
@@ -144,8 +149,8 @@ process ENCYCLOPEDIA_BLIB_TO_DLIB {
         -convert \\
         -blibToLib \\
         -o "${blib.baseName}.dlib" \\
-        -i "${blib}" \\
-        -f "${fasta}" \\
+        -i ${blib} \\
+        -f ${fasta} \\
         > >(tee "encyclopedia-convert-blib.stdout") 2> >(tee "encyclopedia-convert-blib.stderr" >&2)
     """
 
@@ -177,7 +182,7 @@ process ENCYCLOPEDIA_DLIB_TO_TSV {
         -convert \\
         -libraryToOpenswathTSV \\
         -o "${dlib.baseName}.tsv" \\
-        -i "${dlib}" \\
+        -i ${dlib} \\
         > >(tee "encyclopedia-convert-dlib.stdout") 2> >(tee "encyclopedia-convert-dlib.stderr" >&2)
     """
 

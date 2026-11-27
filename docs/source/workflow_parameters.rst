@@ -509,6 +509,51 @@ On PDC runs the default name ``final`` is replaced by the study name. A name fet
 PDC is reduced to letters and underscores first. With ``pdc.metadata_tsv`` the name comes from
 ``pdc.study_name`` (or ``pdc.study_id``) and gets the check above.
 
+.. _input_file_names:
+
+Spaces in input file names
+==========================
+
+The files you give the workflow, and the directories they are in, may have spaces in their
+names. That is true of every input the workflow reads:
+
+- the MS files (``.raw``, ``.mzML``, ``.d.zip``) found by ``quant_spectra_dir``,
+  ``chromatogram_library_spectra_dir`` and ``carafe.spectra_dir``, and ``carafe.spectra_file``
+- ``fasta``, ``skyline.fasta``, ``carafe.carafe_fasta`` and ``carafe.diann_fasta``
+- ``spectral_library`` and ``carafe.peptide_results_file``
+- ``skyline.template_file`` and ``skyline.skyr_file``
+- ``replicate_metadata``
+- ``pdc.metadata_tsv`` and ``pdc.batch_file``, and the file names listed in them
+
+Write the path in the configuration file as it is, inside the quotes:
+
+.. code-block:: groovy
+
+    quant_spectra_dir = '/data/Plasma study/raw files'
+    fasta = '/data/Plasma study/human proteome.fasta'
+
+Names are never changed for you. An MS file called ``Sample 01.raw`` is converted to
+``Sample 01.mzML`` and becomes the replicate ``Sample 01`` in the Skyline document, so
+``Sample 01`` is also what goes in the ``Replicate`` column of the replicate metadata. Result
+files that are named after an input keep its spaces as well: ``fasta = 'human proteome.fasta'``
+gives ``human proteome.predicted.speclib``.
+
+For a file on PanoramaWeb, write each space in the URL as ``%20``. A WebDAV URL copied from
+PanoramaWeb already looks like that:
+
+.. code-block:: groovy
+
+    spectral_library = 'https://panoramaweb.org/_webdav/My%20Project/%40files/my%20library.blib'
+
+The file is saved under its real name (``my library.blib``). MS files in a PanoramaWeb folder
+are found by listing the folder, so nothing needs to be done for spaces in their names.
+
+Two things to be aware of:
+
+- ``pdc.gene_level_data`` is the exception: its file name cannot contain a space.
+- Only spaces are covered. Letters, digits, spaces, ``_``, ``-`` and ``.`` are the safe choice
+  for a file name; other punctuation and non-ASCII letters are not checked and may not work.
+
 Using ``pdc.batch_file`` for PDC runs
 =====================================
 

@@ -1,0 +1,25 @@
+file	destination
+TestReport.report.tsv	<RUN>/results/skyline_reports
+file_checksums.tsv	<RUN>
+final_annotated_minimized.sky.zip	<RUN>/results/skyline
+final_diann_lib.blib	<RUN>/results/diann
+nextflow_run_details.txt	<RUN>
+quant.tsv	<RUN>/results/diann
+quant.tsv.speclib	<RUN>/results/diann
+stub.stderr	<RUN>/results/diann
+stub.stdout	<RUN>/results/diann
+test fasta.fasta	<RUN>/input-files
+test fasta.predicted.speclib	<RUN>/results/diann
+test narrow1.mzML	<RUN>/results/msconvert
+test narrow2.mzML	<RUN>/results/msconvert
+test replicate metadata.tsv	<RUN>/input-files
+test report.skyr	<RUN>/input-files
+test skyline.fasta	<RUN>/input-files
+test template.sky.zip	<RUN>/input-files
+test wide1.mzML	<RUN>/results/msconvert
+test wide1.quant	<RUN>/results/diann
+test wide2.mzML	<RUN>/results/msconvert
+test wide2.quant	<RUN>/results/diann
+test wide3.mzML	<RUN>/results/msconvert
+test wide3.quant	<RUN>/results/diann
+test-input-file-spaces.config	<RUN>

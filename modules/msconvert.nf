@@ -286,13 +286,13 @@ process UNZIP_DIRECTORY {
         base="${zip_file.baseName}"
         tmpdir=\$(mktemp -d)
 
-        unzip "${zip_file}" -d "\$tmpdir"
+        unzip ${zip_file} -d "\$tmpdir"
 
         found=\$(find "\$tmpdir" -type d -name "\$base" -print -quit)
         if [ -z "\$found" ]; then
-           echo "ERROR: Could not locate directory '\$base' inside archive ${zip_file}" >&2
+           echo "ERROR: Could not locate directory '\$base' inside archive ${zip_file.name}" >&2
            echo "Archive listing:" >&2
-           unzip -l "${zip_file}" >&2
+           unzip -l ${zip_file} >&2
            exit 1
         fi
 

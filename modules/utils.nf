@@ -126,6 +126,33 @@ def resolve_user_path(value, String label, Map opts = [:]) {
 }
 
 /**
+ * Reject a user-supplied file whose own name contains whitespace.
+ *
+ * Input files may have spaces in their names (see "Input file names" in SPECIFICATION.md).
+ * This is for the rare input that cannot, so that the run stops before the first task with
+ * a message naming the parameter instead of failing in the step that reads the file. Only
+ * the file name is checked: a space in a directory on the way to the file is harmless,
+ * because a task only ever sees the name the file is staged under.
+ *
+ * @param value The configured path value. Null is ignored.
+ * @param label The parameter name shown in the error message.
+ * @param reason Why this input cannot have a space in its name.
+ */
+def reject_whitespace_in_file_name(value, String label, String reason) {
+    if (value == null) {
+        return
+    }
+    def text = value.toString()
+    def name = text.substring(Math.max(text.lastIndexOf('/'), text.lastIndexOf('\\')) + 1)
+    if (name.any { Character.isWhitespace(it as char) }) {
+        error "Parameter `${label}` points to a file with whitespace in its name (value: \"${text}\").\n" +
+              "  ${reason}\n" +
+              "  Rename the file so that its name has no spaces; spaces in the directories " +
+              "leading to it are fine."
+    }
+}
+
+/**
  * List the entries of a user-supplied directory parameter, attributing the common
  * failure modes (missing, not a directory, unreadable) to the parameter name.
  *
