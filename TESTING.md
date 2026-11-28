@@ -150,9 +150,9 @@ rm -rf work .nextflow .nextflow.log* results reports .nf-cache      # clean up a
 ### The whole suite, as CI runs it
 
 `.github/workflows/push-stub-run.yml` is the suite: 42 positive configs (each followed by the
-upload-manifest check), 15 negative cases that must fail with a given message, 3 Slack cases
+upload-manifest check), 16 negative cases that must fail with a given message, 3 Slack cases
 that must succeed with a given warning, all on Nextflow 24.10.5, 25.10.4 and 26.04.0, plus the
-quoting check. That is 181 jobs.
+quoting check. That is 184 jobs.
 
 ```bash
 test-resources/run-stub-suite.py                      # everything: all three versions
@@ -172,9 +172,10 @@ Two differences from CI, both deliberate: the copy includes uncommitted and untr
 because those are what you are testing (so a file you forgot to `git add` passes here and
 fails in CI: check `git status` before pushing), and Java is whatever `JAVA_HOME` points to.
 
-Measured: all 181 jobs, 0 failed, 9.0 minutes at 6 jobs at a time on an otherwise idle
-machine; 16.4 minutes while two real workflows were running beside it. One version alone
-takes about a third of that. A job that produces no result in 15 minutes is counted as failed.
+Measured: all 184 jobs, 0 failed, 8.9 minutes at 6 jobs at a time on an otherwise idle
+machine; 16.4 minutes (the suite then had 181 jobs) while two real workflows were running
+beside it. One version alone takes about a third of that. A job that produces no result in
+15 minutes is counted as failed.
 
 **Before committing a tier 1 change or higher, run the whole suite, all three versions.**
 The versions do differ (which handlers fire on a startup error, for one), so a pass on one
@@ -188,10 +189,16 @@ Re-run the job before debugging it if you see one of these:
 - `Can't stage file https://github.com/mriffle/nf-skyline-dia-ms/raw/main/resources/template.sky.zip`:
   the default Skyline template is fetched from GitHub at run time, in stub runs too. GitHub
   returned 504 for it for about 15 minutes on 2026-11-27 (audit item R19).
-- `test-batch-name-document-collision.config` fails because the output shows
-  `No spectra files matched` instead of the expected message: a known race (audit item R20),
-  seen in two of six CI runs. Any negative test whose error is raised while the workflow is
-  being built is exposed to it.
+
+A negative job that prints a different error from the one it expects is not on this list, and
+re-running it proves nothing. That was a defect in the workflow once (audit item R20, fixed
+on 2026-11-28): a check inside a channel fired when a run was aborted at startup, and its
+message could replace the real one. It passed on an idle 12-CPU machine and failed on the
+4-CPU CI runners. To see such a race locally, give the job four CPUs and competition for
+them: run eight copies at once under `taskset -c 0-3`, each in its own copy of the tree, and
+look in `.nextflow.log` as well as at the console, because Nextflow 25 and later print only
+the first error they log. SPECIFICATION.md, "Checks inside channels", has the rule that
+prevents it.
 
 ### Adding or changing a stub config
 

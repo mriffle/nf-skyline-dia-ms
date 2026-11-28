@@ -9,6 +9,7 @@ include { UNZIP_DIRECTORY as UNZIP_BRUKER_D } from "../modules/msconvert"
 // useful functions and variables
 include { param_to_list } from "../modules/utils.nf"
 include { list_user_dir } from "../modules/utils.nf"
+include { run_is_aborted } from "../modules/utils.nf"
 
 /**
  * Randomly sample a list and return a list with n elements.
@@ -156,6 +157,13 @@ workflow get_ms_files {
             .groupTuple()
             .toList()
             .map { entries ->
+                // When the run is already being aborted, `entries` is not the listing: it is
+                // what toList() had when Nextflow cut it short, which is nothing at all if the
+                // error was raised while the workflow was being built. Reporting "no spectra
+                // files matched" then would hide the real error (see run_is_aborted()).
+                if (run_is_aborted()) {
+                    return true
+                }
                 def found_batches = entries.collect { it[0] } as Set
                 def missing = expected_batches - found_batches
                 if (missing) {

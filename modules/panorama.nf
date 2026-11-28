@@ -153,6 +153,15 @@ process PANORAMA_PUBLIC_GET_MS_FILE_LIST {
     # Filter raw files by file_glob and prepend web_dav_url to file names
     grep -P '${file_regex}' all_files.txt | xargs -d'\\n' printf '${web_dav_url.replaceAll("%", "%%")}/%s\\n' > download_files.txt
     """
+
+    // No server is asked in a stub run, so the listing is empty: the folder looks as if no
+    // file in it matched. test-panorama-no-spectra-match.config relies on that to reach the
+    // "No spectra files matched" check in get_ms_files, which only a listing can trigger.
+    stub:
+    """
+    touch download_files.txt
+    touch stub.stdout stub.stderr
+    """
 }
 
 process PANORAMA_GET_FILE {

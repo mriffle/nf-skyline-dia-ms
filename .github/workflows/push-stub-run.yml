@@ -135,6 +135,11 @@ jobs:
             expect: 'Parameter `quant_spectra_dir` contains a batch name with characters that cannot be used in a Skyline document name'
           - config: 'test-pdc-gene-data-spaces.config'
             expect: 'Parameter `pdc.gene_level_data` points to a file with whitespace in its name'
+          # The colon right after "regex" matters: this is the check that runs inside the
+          # channels once the listings are in. A local directory without a match is caught by
+          # another check, whose message goes on "... in local directories:".
+          - config: 'test-panorama-no-spectra-match.config'
+            expect: 'No spectra files matched the glob/regex:'
 
     steps:
     - name: Checkout repository

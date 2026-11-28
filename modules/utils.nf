@@ -89,6 +89,40 @@ def get_n_files(files) {
 }
 
 /**
+ * True when Nextflow is already stopping the run because of an earlier error.
+ *
+ * A check that runs inside a channel operator must stay silent when this is true, because
+ * what it is looking at is then not the input but whatever had arrived when the run was cut
+ * short. When a run is aborted, Nextflow terminates every operator, and a collecting operator
+ * (`toList`, `groupTuple`, `ifEmpty`, ...) answers that by emitting what it has gathered so
+ * far. If the abort came from an error raised while the workflow was still being built, no
+ * channel has emitted anything yet, so every one of them emits an empty result, and a check
+ * for "no files" fires although nothing was ever listed. Its error is logged in a race with
+ * the real one, and from Nextflow 25 on the console shows only whichever is logged first, so
+ * a bad config could be reported with the wrong message (audit item R20).
+ *
+ * The session's flag is set before the operators are terminated, so a check that asks here
+ * first cannot run ahead of it. A check that fails on its own, on a healthy run, is asked
+ * before anything has aborted and is not affected.
+ *
+ * `nextflow.Global.session` is not part of Nextflow's documented interface. It behaves this
+ * way on 24.10, 25.10 and 26.04. Should a later version move it, this warns and returns
+ * false, and the checks speak as they did before R20 was fixed: a bad config may again be
+ * reported with the wrong message, but no run fails here.
+ *
+ * @return true if the session has been aborted.
+ */
+def run_is_aborted() {
+    try {
+        return nextflow.Global.session?.aborted == true
+    } catch (Exception e) {
+        log.warn "Could not read the run's state (${e.class.simpleName}). If this run stops on an error, " +
+                 "a second, misleading error may be printed with it or instead of it."
+        return false
+    }
+}
+
+/**
  * Resolve a user-supplied path parameter to a Path with clear, parameter-attributed
  * error messages instead of bare NIO exceptions (e.g. an opaque `ERROR ~ /root`).
  *

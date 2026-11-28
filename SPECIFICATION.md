@@ -120,9 +120,30 @@ The implementation standardizes:
   before `validateParameters()`, and sends the Slack "started" message as its last statement
   (see "Slack notifications" under Configuration Model)
 
+Checks inside channels:
+
+Most checks run while the workflow block is being executed, before any channel carries a
+value, and stop the run with one error. A few can only be made once inputs have been listed
+or downloaded, so they sit inside a channel operator: the validation barrier in
+`get_ms_files` (section 3), the PDC metadata check in `get_pdc_files`, the library check of
+the no-search branch and the DIA-NN file-count check. Each of them asks `run_is_aborted()`
+(`modules/utils.nf`) first and says nothing when it returns true. A new check of this kind
+must do the same. The function reads Nextflow's session object, which is not a documented
+interface; if a Nextflow version hides it, the function warns (`Could not read the run's
+state`) and the checks behave as if no run were ever aborted.
+
+The reason: when Nextflow aborts a run it terminates every operator, and a collecting
+operator (`toList`, `groupTuple`, `ifEmpty`) answers by emitting what it has gathered so far.
+After an error raised while the workflow was still being built that is nothing at all, so a
+check for missing input fires on a run that never listed anything. Its error is logged in a
+race with the real one, and Nextflow 25 and later print only the first error logged, so a bad
+config could be reported with the wrong message, for example "No spectra files matched" for
+directories that do hold files (audit item R20). Nextflow 24 printed both.
+
 Relevant files:
 
 - `main.nf`
+- `modules/utils.nf`
 - `nextflow.config`
 - `nextflow_schema.json`
 
@@ -164,7 +185,12 @@ For non-PDC runs, `get_ms_files`:
 - randomly samples files per batch when `files_per_quant_batch` is set
 - enforces that every expected batch produced at least one matched file, raising a
   user-facing error before any downstream stage so misconfigured globs/regexes do not
-  surface as opaque join-mismatch errors deeper in the workflow
+  surface as opaque join-mismatch errors deeper in the workflow. A local directory without
+  a match is rejected while the workflow is built ("No spectra files matched the glob/regex
+  in local directories"); a Panorama folder without one is only known after its listing, and
+  is rejected by the validation barrier, a channel operator ("No spectra files matched the
+  glob/regex:"). The barrier is silent when the run is already being aborted (section 1,
+  "Checks inside channels")
 - enforces that all matched files have one MS-file type
 - enforces a caller-supplied `allowed_extensions` allow-list, so engine/format
   incompatibilities (e.g., Bruker `.d.zip` with EncyclopeDIA or Cascadia) fail fast
@@ -1010,7 +1036,10 @@ A companion `negative-stub-run` job covers configs that must fail fast, assertin
 non-zero exit and an expected message fragment. It includes `use_vendor_raw` combined with
 `msconvert.do_demultiplex`, `use_vendor_raw` combined with `msconvert_only`, and document
 names that cannot be used as file names (`test-document-name-invalid.config` and its
-siblings).
+siblings). `test-panorama-no-spectra-match.config` is the one case whose error comes from a
+check inside a channel: a batch whose Panorama folder lists no matching file (the stub of
+`PANORAMA_PUBLIC_GET_MS_FILE_LIST` returns an empty listing). It is there so that the rule in
+"Checks inside channels" cannot silence that check on a healthy run.
 
 Names with spaces are covered by `test-document-name-spaces.config` (document name, through
 annotate and minimize, with upload and import) and `test-document-name-spaces-batch.config`

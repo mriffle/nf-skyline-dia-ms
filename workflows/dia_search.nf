@@ -3,6 +3,8 @@ include { encyclopedia } from "../subworkflows/encyclopedia"
 include { diann } from "../subworkflows/diann"
 include { cascadia } from "../subworkflows/cascadia"
 
+include { run_is_aborted } from "../modules/utils.nf"
+
 workflow dia_search{
     take:
         search_engine
@@ -34,8 +36,12 @@ workflow dia_search{
             if (params.skyline.skip == true) {
                 error "Cannot skip DIA search when params.skyline.skip is true!"
             }
+            // An aborted run closes this channel before a downloaded library has arrived, and
+            // "empty" then says nothing about the config (see run_is_aborted()).
             spectral_library.ifEmpty {
-                error "Spectral library is not defined!"
+                if (!run_is_aborted()) {
+                    error "Spectral library is not defined!"
+                }
             }
 
             search_engine_version = Channel.empty()

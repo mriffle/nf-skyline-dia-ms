@@ -8,6 +8,9 @@ include { ENCYCLOPEDIA_BLIB_TO_DLIB } from "../../modules/encyclopedia"
 include { ENCYCLOPEDIA_DLIB_TO_TSV } from "../../modules/encyclopedia"
 include { BLIB_BUILD_LIBRARY } from "../../modules/diann"
 
+// functions
+include { run_is_aborted } from "../../modules/utils.nf"
+
 workflow diann {
     take:
         fasta
@@ -39,6 +42,11 @@ workflow diann {
         }
 
         def validation_ch = wide_count_ch.combine(narrow_count_ch).map { counts ->
+            // In an aborted run the counts are of channels that were cut short, 0 if the error
+            // was raised while the workflow was being built (see run_is_aborted()).
+            if (run_is_aborted()) {
+                return true
+            }
             def wide = counts[0]
             def narrow = counts[1]
             def problems = []

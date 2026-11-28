@@ -6,6 +6,7 @@ include { UNZIP_DIRECTORY as UNZIP_BRUKER_D } from "../modules/msconvert.nf"
 include { param_to_list } from "../modules/utils.nf"
 include { resolve_user_path } from "../modules/utils.nf"
 include { parse_batch_file } from "../modules/utils.nf"
+include { run_is_aborted } from "../modules/utils.nf"
 
 workflow get_pdc_study_metadata {
     main:
@@ -147,7 +148,9 @@ workflow get_pdc_files {
         // for batch_map and extension validation downstream); partition_pdc_entries
         // assumes valid inputs and produces the role-tagged tuples.
         all_entries_ch = tsv_entries.mix(json_entries).toList()
-        all_entries_ch.subscribe { entries -> validate_pdc_partition(entries) }
+        // Not when the run is already being aborted: the list is then cut short, and empty
+        // if the error was raised while the workflow was being built (see run_is_aborted()).
+        all_entries_ch.subscribe { entries -> if (!run_is_aborted()) validate_pdc_partition(entries) }
         tagged_entries = all_entries_ch.flatMap { entries -> partition_pdc_entries(entries) }
 
         // Per-file (file_name, role) and (stem, role) lookups, used to re-tag downloaded
