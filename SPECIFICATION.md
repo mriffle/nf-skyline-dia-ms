@@ -83,7 +83,8 @@ The implementation standardizes:
   Container image mapping for all wrapped tools.
 
 - `test-resources/` and `.github/workflows/push-stub-run.yml`
-  Stub-run coverage for representative branches.
+  Stub-run coverage for representative branches. `test-resources/real-runs/` holds the
+  scenario configs and scripts for real (non-stub) test runs; see `TESTING.md`.
 
 ## Main Runtime Flow
 
@@ -1031,6 +1032,11 @@ the failure paths only; no request leaves the runner, so a real delivery to Slac
 checked by hand.
 
 This validates branching and workflow wiring, not scientific correctness.
+
+`TESTING.md` is the guide to testing a change: which tests a given change needs, how to run
+this suite locally on every Nextflow version in the matrix (`test-resources/run-stub-suite.py`),
+and how to do real (non-stub) runs and compare them against `main`
+(`test-resources/real-runs/`).
 
 ## Project Maintenance Expectations
 
